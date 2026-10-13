@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Switchknife.McpGuard</PackageId>
+    <MinVerTagPrefix>mcp-guard/v</MinVerTagPrefix>
+    <Description>Guards an MCP endpoint served over streamable HTTP: any Origin header is refused (the DNS-rebinding guard), and a bearer token is required, compared in fixed time, failing closed when none is configured. Native AOT compatible.</Description>
+    <PackageTags>mcp;model-context-protocol;security;bearer;origin;dns-rebinding;aspnetcore;aot</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>

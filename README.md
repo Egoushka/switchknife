@@ -5,6 +5,7 @@ Small .NET libraries for services that run on their own: each package does one j
 | Package | What it does | Status |
 |---|---|---|
 | [Switchknife.Journal](src/Switchknife.Journal) | A durable step journal on SQLite: a side effect records its intent before it runs and its result after, so a restarted process finishes or cleans up what it left. Events per flow, replayable. | 0.x |
+| [Switchknife.McpGuard](src/Switchknife.McpGuard) | Guards an MCP endpoint on streamable HTTP: any `Origin` header refused (the DNS-rebinding guard), a bearer token compared in fixed time, closed when no token is configured. | 0.x |
 
 More packages arrive as their code proves itself in more than one project: Docker engine client, GitHub and GitLab clients with app auth, egress proxy, MCP hosting, service defaults, a test kit.
 
