@@ -4,6 +4,7 @@ Small .NET libraries for services that run on their own: each package does one j
 
 | Package | What it does | Status |
 |---|---|---|
+| [Switchknife.Hosting](src/Switchknife.Hosting) | `PollingService`, a `BackgroundService` that polls on start and then every interval and never stops the host: a failed poll is logged and retried with exponential backoff, health hooks are optional and guarded, shutdown is clean. `TimeProvider` throughout. | 0.x |
 | [Switchknife.Journal](src/Switchknife.Journal) | A durable step journal on SQLite: a side effect records its intent before it runs and its result after, so a restarted process finishes or cleans up what it left. Events per flow, replayable. | 0.x |
 | [Switchknife.McpGuard](src/Switchknife.McpGuard) | Guards an MCP endpoint on streamable HTTP: any `Origin` header refused (the DNS-rebinding guard), a bearer token compared in fixed time, closed when no token is configured. | 0.x |
 | [Switchknife.Migrations](src/Switchknife.Migrations) | Applies the SQL scripts embedded in an assembly to PostgreSQL with DbUp, once each, journalled in the database; creates the database when missing, logs through `ILogger`, throws naming the failed script. | 0.x |
