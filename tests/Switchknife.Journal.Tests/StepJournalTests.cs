@@ -74,6 +74,63 @@ public sealed class StepJournalTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Resetting_a_completed_step_makes_the_next_run_a_first_attempt()
+    {
+        await _journal.RunAsync("batch-1", "prep/task-1", (_, _) => Task.CompletedTask);
+
+        var reset = await _journal.ResetAsync("batch-1", "prep/task-1");
+        var removed = await _journal.FindAsync("batch-1", "prep/task-1");
+        StepContext? seen = null;
+        await _journal.RunAsync("batch-1", "prep/task-1", (context, _) =>
+        {
+            seen = context;
+            return Task.CompletedTask;
+        });
+
+        Assert.True(reset);
+        Assert.Null(removed);
+        Assert.Equal(new StepContext("batch-1", "prep/task-1", 1, Resumed: false), seen);
+    }
+
+    [Fact]
+    public async Task Resetting_a_failed_step_makes_the_next_run_a_first_attempt()
+    {
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _journal.RunAsync("batch-1", "handover/task-2", (_, _) => throw new InvalidOperationException("push rejected")));
+
+        var reset = await _journal.ResetAsync("batch-1", "handover/task-2");
+        StepContext? seen = null;
+        await _journal.RunAsync("batch-1", "handover/task-2", (context, _) =>
+        {
+            seen = context;
+            return Task.CompletedTask;
+        });
+
+        Assert.True(reset);
+        Assert.Equal(new StepContext("batch-1", "handover/task-2", 1, Resumed: false), seen);
+    }
+
+    [Fact]
+    public async Task Resetting_an_unknown_key_returns_false()
+    {
+        await _journal.RunAsync("batch-1", "known", (_, _) => Task.CompletedTask);
+
+        Assert.False(await _journal.ResetAsync("batch-1", "unknown"));
+        Assert.False(await _journal.ResetAsync("batch-2", "known"));
+        Assert.NotNull(await _journal.FindAsync("batch-1", "known"));
+    }
+
+    [Fact]
+    public async Task Resetting_a_started_step_is_refused_and_leaves_it_unfinished()
+    {
+        await LeaveStarted("batch-1", "left");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _journal.ResetAsync("batch-1", "left"));
+
+        Assert.Equal("left", Assert.Single(await _journal.UnfinishedAsync("batch-1")).Key);
+    }
+
+    [Fact]
     public async Task Unfinished_lists_only_steps_left_started_and_can_narrow_to_one_flow()
     {
         await _journal.RunAsync("batch-1", "done", (_, _) => Task.CompletedTask);

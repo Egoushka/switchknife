@@ -20,6 +20,13 @@ try
         if (again.Name != "made-1" || events.Count != 1)
             return Fail($"after reopen: {again.Name}, {events.Count} events");
     }
+    await using (var journal = await StepJournal.OpenAsync(path))
+    {
+        var reset = await journal.ResetAsync("flow", "step");
+        var rerun = await journal.RunAsync("flow", "step", (c, _) => Task.FromResult(new Made($"made-{c.Attempt}-{c.Resumed}")), SmokeJson.Default.Made);
+        if (!reset || rerun.Name != "made-1-False" || await journal.ResetAsync("flow", "missing"))
+            return Fail($"after reset: {reset}, {rerun.Name}");
+    }
     Console.WriteLine("ok Switchknife.Journal");
     return 0;
 }

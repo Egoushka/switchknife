@@ -94,6 +94,30 @@ public sealed class StepJournal : IAsyncDisposable, IDisposable
         }, JournalJsonContext.Default.Boolean, ct);
     }
 
+    /// <summary>
+    /// Removes the record of a completed or failed step, so the next <see cref="RunAsync{T}"/> of the key is a first attempt
+    /// (<see cref="StepContext.Attempt"/> 1, <see cref="StepContext.Resumed"/> false). Returns false when the key had no record.
+    /// Calling it states that the earlier effect is gone or may safely happen again; the journal cannot check that.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The step is <see cref="StepState.Started"/>: an interrupted attempt must be resumed, not forgotten.</exception>
+    public Task<bool> ResetAsync(string flow, string key, CancellationToken ct = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(flow);
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        return Locked(async () =>
+        {
+            var command = Command("DELETE FROM steps WHERE flow = $flow AND key = $key AND state <> 0", [("$flow", flow), ("$key", key)]);
+            await using var commandScope = command.ConfigureAwait(false);
+            if (await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false) > 0)
+                return true;
+            var left = await ReadStepsAsync("SELECT flow, key, state, attempt, result, error, started, finished FROM steps WHERE flow = $flow AND key = $key",
+                [("$flow", flow), ("$key", key)], ct).ConfigureAwait(false);
+            return left.Count == 0
+                ? false
+                : throw new InvalidOperationException($"Step '{flow}/{key}' is started: resume it (run it again) instead of resetting it.");
+        }, ct);
+    }
+
     /// <summary>The step as recorded, or null when the key never ran.</summary>
     public Task<StepRecord?> FindAsync(string flow, string key, CancellationToken ct = default)
     {
