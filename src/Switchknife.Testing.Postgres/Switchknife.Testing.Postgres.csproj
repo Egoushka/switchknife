@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Switchknife.Testing.Postgres</PackageId>
+    <MinVerTagPrefix>testing-postgres/v</MinVerTagPrefix>
+    <Description>A PostgreSQL server in a Testcontainers container for integration tests: started once per run, optionally migrated by a callback, with a database per test or a truncate of every table between tests. No test-framework dependency.</Description>
+    <PackageTags>testing;postgresql;npgsql;testcontainers;integration-tests</PackageTags>
+    <!-- Test support: never published with Native AOT, and Testcontainers carries no AOT annotations. -->
+    <IsAotCompatible>false</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+  </ItemGroup>
+
+</Project>

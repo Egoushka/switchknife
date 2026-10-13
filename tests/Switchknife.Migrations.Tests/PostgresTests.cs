@@ -1,44 +1,23 @@
-using DotNet.Testcontainers.Builders;
 using Microsoft.Extensions.Logging;
 using Npgsql;
-using Testcontainers.PostgreSql;
+using Switchknife.Testing.Postgres;
 
 namespace Switchknife.Migrations.Tests;
 
-/// <summary>One PostgreSQL container for the class; each test migrates a database of its own. Skipped without Docker, outside CI.</summary>
+/// <summary>One PostgreSQL server for the class; each test migrates a database of its own. Skipped without Docker, outside CI.</summary>
 public sealed class PostgresFixture : IAsyncLifetime
 {
-    private PostgreSqlContainer? _container;
+    private readonly PostgresDatabase _postgres = new("postgres:18-alpine");
 
-    public string? Unavailable { get; private set; }
+    public async ValueTask InitializeAsync() => await _postgres.StartAsync();
 
-    public async ValueTask InitializeAsync()
-    {
-        try
-        {
-            _container = new PostgreSqlBuilder("postgres:18-alpine").Build();
-            await _container.StartAsync();
-        }
-        // CI has Docker: there a missing engine fails the run instead of skipping the tests.
-        catch (DockerUnavailableException e) when (Environment.GetEnvironmentVariable("CI") != "true")
-        {
-            Unavailable = $"Docker is not available: {e.Message}";
-        }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_container is not null)
-        {
-            await _container.DisposeAsync();
-        }
-    }
+    public ValueTask DisposeAsync() => _postgres.DisposeAsync();
 
     /// <summary>The connection string of a database that does not exist yet.</summary>
     public string NewDatabase()
     {
-        Assert.SkipWhen(Unavailable is not null, Unavailable ?? "");
-        return new NpgsqlConnectionStringBuilder(_container!.GetConnectionString()) { Database = $"m_{Guid.NewGuid():N}" }.ConnectionString;
+        Assert.SkipWhen(_postgres.Unavailable is not null, _postgres.Unavailable ?? "");
+        return _postgres.ConnectionStringFor($"m_{Guid.NewGuid():N}");
     }
 }
 

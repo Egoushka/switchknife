@@ -5,12 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="xunit.v3" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Switchknife.Migrations\Switchknife.Migrations.csproj" />
+    <ProjectReference Include="..\..\src\Switchknife.Testing.Postgres\Switchknife.Testing.Postgres.csproj" />
   </ItemGroup>
 
   <ItemGroup>
