@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Switchknife.Migrations\Switchknife.Migrations.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Embedded as Switchknife.Migrations.Tests.Migrations.<set>.<file>; each test picks its set with ScriptFilter. -->
+    <EmbeddedResource Include="Migrations/**/*.sql" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

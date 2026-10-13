@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Switchknife.Migrations</PackageId>
+    <MinVerTagPrefix>migrations/v</MinVerTagPrefix>
+    <Description>Applies SQL scripts embedded in an assembly to PostgreSQL with DbUp, once each, in name order, journalled in the database. Creates the database when it is missing, writes DbUp's log to an ILogger, and throws naming the script that failed.</Description>
+    <PackageTags>dbup;migrations;postgresql;npgsql;schema</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="dbup-postgresql" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+
+</Project>
