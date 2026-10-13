@@ -3,11 +3,13 @@
     <Project Path="src/Switchknife.Journal/Switchknife.Journal.csproj" />
     <Project Path="src/Switchknife.McpGuard/Switchknife.McpGuard.csproj" />
     <Project Path="src/Switchknife.Migrations/Switchknife.Migrations.csproj" />
+    <Project Path="src/Switchknife.Testing.Http/Switchknife.Testing.Http.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Switchknife.Journal.Tests/Switchknife.Journal.Tests.csproj" />
     <Project Path="tests/Switchknife.McpGuard.Tests/Switchknife.McpGuard.Tests.csproj" />
     <Project Path="tests/Switchknife.Migrations.Tests/Switchknife.Migrations.Tests.csproj" />
+    <Project Path="tests/Switchknife.Testing.Http.Tests/Switchknife.Testing.Http.Tests.csproj" />
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/Switchknife.AotSmoke/Switchknife.AotSmoke.csproj" />

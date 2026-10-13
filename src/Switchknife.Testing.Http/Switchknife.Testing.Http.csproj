@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Switchknife.Testing.Http</PackageId>
+    <MinVerTagPrefix>testing-http/v</MinVerTagPrefix>
+    <Description>A stub HttpMessageHandler for tests: answers each request from a function or a scripted sequence, and records every request with its body and headers, read before the caller disposes it. No test-framework dependency. Native AOT compatible.</Description>
+    <PackageTags>testing;http;httpclient;stub;fake;httpmessagehandler;aot</PackageTags>
+  </PropertyGroup>
+
+</Project>
