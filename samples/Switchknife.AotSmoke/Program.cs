@@ -3,8 +3,11 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using Switchknife.Hosting;
 using Switchknife.Journal;
 using Switchknife.McpGuard;
 using Switchknife.Migrations;
@@ -14,7 +17,7 @@ using Switchknife.Testing.Http;
 // Switchknife.Migrations needs a PostgreSQL server: SWITCHKNIFE_SMOKE_POSTGRES is its connection string (any database
 // on it; the case creates and drops its own). Unset, the case is skipped, except in CI where it fails.
 var exit = 0;
-var smokes = new (string, Func<Task<string?>>)[] { ("Switchknife.Journal", JournalAsync), ("Switchknife.McpGuard", McpGuardAsync), ("Switchknife.Migrations", MigrationsAsync), ("Switchknife.Testing.Http", TestingHttpAsync) };
+var smokes = new (string, Func<Task<string?>>)[] { ("Switchknife.Hosting", HostingAsync), ("Switchknife.Journal", JournalAsync), ("Switchknife.McpGuard", McpGuardAsync), ("Switchknife.Migrations", MigrationsAsync), ("Switchknife.Testing.Http", TestingHttpAsync) };
 foreach (var (package, smoke) in smokes)
 {
     if (package == "Switchknife.Migrations" && Environment.GetEnvironmentVariable("SWITCHKNIFE_SMOKE_POSTGRES") is null or ""
@@ -35,6 +38,25 @@ foreach (var (package, smoke) in smokes)
     }
 }
 return exit;
+
+static async Task<string?> HostingAsync()
+{
+    // A real host, as a service runs it: the first poll throws, the host keeps running, the second poll succeeds.
+    var builder = Host.CreateApplicationBuilder();
+    builder.Logging.ClearProviders();
+    var log = new LineLogger();
+    var poller = new FlakyPoller(log);
+    builder.Services.AddHostedService(_ => poller);
+    using var host = builder.Build();
+    await host.StartAsync();
+    var recovered = await Task.WhenAny(poller.Recovered.Task, Task.Delay(TimeSpan.FromSeconds(10))) == poller.Recovered.Task;
+    var stopping = host.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStopping.IsCancellationRequested;
+    await host.StopAsync();
+    var logged = log.Lines.Any(l => l.StartsWith("flaky poll failed (1 in a row)", StringComparison.Ordinal));
+    return (recovered, stopping, logged, poller.ExecuteTask?.Status) == (true, false, true, TaskStatus.RanToCompletion)
+        ? null
+        : $"recovered {recovered}, host stopping {stopping}, failure logged {logged}, loop {poller.ExecuteTask?.Status}";
+}
 
 static async Task<string?> JournalAsync()
 {
@@ -153,6 +175,26 @@ static async Task<string?> TestingHttpAsync()
 }
 
 internal sealed record Made(string Name);
+
+internal sealed class FlakyPoller(ILogger logger) : PollingService(TimeProvider.System, logger)
+{
+    private int _polls;
+
+    public TaskCompletionSource Recovered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    protected override string Name => "flaky";
+
+    protected override TimeSpan Interval => TimeSpan.FromMilliseconds(10);
+
+    protected override Task PollAsync(CancellationToken cancellationToken) =>
+        ++_polls == 1 ? throw new InvalidOperationException("first poll fails") : Task.CompletedTask;
+
+    protected override Task OnSucceededAsync(CancellationToken cancellationToken)
+    {
+        Recovered.TrySetResult();
+        return Task.CompletedTask;
+    }
+}
 
 internal sealed class LineLogger : ILogger
 {

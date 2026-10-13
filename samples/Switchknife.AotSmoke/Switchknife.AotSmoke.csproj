@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Switchknife.Hosting\Switchknife.Hosting.csproj" />
     <ProjectReference Include="..\..\src\Switchknife.Journal\Switchknife.Journal.csproj" />
     <ProjectReference Include="..\..\src\Switchknife.McpGuard\Switchknife.McpGuard.csproj" />
     <ProjectReference Include="..\..\src\Switchknife.Migrations\Switchknife.Migrations.csproj" />

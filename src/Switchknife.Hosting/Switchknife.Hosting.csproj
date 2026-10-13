@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Switchknife.Hosting</PackageId>
+    <MinVerTagPrefix>hosting/v</MinVerTagPrefix>
+    <Description>A polling BackgroundService that never stops the host: polls on start and then every interval, logs a failed poll and tries again with exponential backoff, reports each outcome to optional hooks whose own failures are logged, and stops cleanly on shutdown. Uses TimeProvider. Native AOT compatible.</Description>
+    <PackageTags>hosting;backgroundservice;polling;worker;backoff;timeprovider;aot</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+</Project>
