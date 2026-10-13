@@ -5,7 +5,7 @@ using Testcontainers.PostgreSql;
 
 namespace Switchknife.Migrations.Tests;
 
-/// <summary>One PostgreSQL container for the class; each test migrates a database of its own. Skipped without Docker.</summary>
+/// <summary>One PostgreSQL container for the class; each test migrates a database of its own. Skipped without Docker, outside CI.</summary>
 public sealed class PostgresFixture : IAsyncLifetime
 {
     private PostgreSqlContainer? _container;
@@ -19,7 +19,8 @@ public sealed class PostgresFixture : IAsyncLifetime
             _container = new PostgreSqlBuilder("postgres:18-alpine").Build();
             await _container.StartAsync();
         }
-        catch (DockerUnavailableException e)
+        // CI has Docker: there a missing engine fails the run instead of skipping the tests.
+        catch (DockerUnavailableException e) when (Environment.GetEnvironmentVariable("CI") != "true")
         {
             Unavailable = $"Docker is not available: {e.Message}";
         }
