@@ -8,12 +8,13 @@ using Npgsql;
 using Switchknife.Journal;
 using Switchknife.McpGuard;
 using Switchknife.Migrations;
+using Switchknife.Testing.Http;
 
 // Exercises each package the way a host would, under Native AOT. Exit 0 and one "ok" line per package.
 // Switchknife.Migrations needs a PostgreSQL server: SWITCHKNIFE_SMOKE_POSTGRES is its connection string (any database
 // on it; the case creates and drops its own). Unset, the case is skipped, except in CI where it fails.
 var exit = 0;
-var smokes = new (string, Func<Task<string?>>)[] { ("Switchknife.Journal", JournalAsync), ("Switchknife.McpGuard", McpGuardAsync), ("Switchknife.Migrations", MigrationsAsync) };
+var smokes = new (string, Func<Task<string?>>)[] { ("Switchknife.Journal", JournalAsync), ("Switchknife.McpGuard", McpGuardAsync), ("Switchknife.Migrations", MigrationsAsync), ("Switchknife.Testing.Http", TestingHttpAsync) };
 foreach (var (package, smoke) in smokes)
 {
     if (package == "Switchknife.Migrations" && Environment.GetEnvironmentVariable("SWITCHKNIFE_SMOKE_POSTGRES") is null or ""
@@ -131,6 +132,24 @@ static async Task<string?> MigrationsAsync()
         await using var drop = new NpgsqlCommand($"drop database if exists {name} with (force)", admin);
         await drop.ExecuteNonQueryAsync();
     }
+}
+
+static async Task<string?> TestingHttpAsync()
+{
+    var stub = StubHttpHandler.Sequence(
+        _ => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable),
+        request => StubHttpHandler.Json($$"""{"path":"{{request.RequestUri!.AbsolutePath}}"}"""));
+    using var http = stub.Client("https://api.example.test/");
+    using var request = new HttpRequestMessage(HttpMethod.Post, "items") { Content = new StringContent("payload") };
+    request.Headers.Add("Authorization", "Bearer smoke");
+    using var first = await http.SendAsync(request);
+    using var second = await http.GetAsync("items/1");
+    var json = await second.Content.ReadAsStringAsync();
+    var (method, uri, body, headers) = stub.Requests[0];
+    return (first.StatusCode, json, method, uri.PathAndQuery, body, headers.GetValueOrDefault("authorization"), stub.Requests.Count)
+        == (HttpStatusCode.ServiceUnavailable, """{"path":"/items/1"}""", HttpMethod.Post, "/items", "payload", "Bearer smoke", 2)
+        ? null
+        : $"first {first.StatusCode}, second {json}, recorded {method} {uri} {body} {headers.GetValueOrDefault("authorization")}, {stub.Requests.Count} request(s)";
 }
 
 internal sealed record Made(string Name);
