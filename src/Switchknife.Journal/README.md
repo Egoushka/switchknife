@@ -24,9 +24,16 @@ var replay = await journal.ReadEventsAsync("batch-7", after: lastSeen);
 var leftovers = await journal.UnfinishedAsync();     // on start: what a crash left mid-step
 ```
 
+To run a side effect again under the same key on purpose (a workspace volume removed and prepared again under the same run id), reset the step first; the next run is a first attempt:
+
+```csharp
+await journal.ResetAsync("batch-7", "prep/task-3");   // true when there was a record; throws when the step is still started
+```
+
 Guarantees and limits:
 
 - A step runs at least once; its result is recorded at most once. A step that finished but crashed before its result was written runs again, resumed, so make each step safe to repeat for its key.
+- `ResetAsync` removes a completed or failed step's record, so its key runs as a first attempt (`Attempt` 1, `Resumed` false); it returns false when the key had no record. Reset is your statement that the earlier effect is gone or may repeat: the journal cannot check it. A started step is refused (`InvalidOperationException`): an interrupted attempt must be resumed, not forgotten.
 - Every commit is synced to disk (`synchronous = FULL`, WAL).
 - One process owns a journal file; calls are serialized inside it. Run one step of a given key at a time.
 - Results are stored as JSON through a `JsonTypeInfo<T>` you pass (source-generated), so it works with Native AOT.
