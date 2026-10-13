@@ -15,6 +15,7 @@ scripts/aot-smoke.sh                   # publishes samples/Switchknife.AotSmoke 
 
 - A package has no chargehand or other consumer types in it; it enters here when a second project needs it, or when chargehand needs it and it has nothing chargehand-specific.
 - Every package: `IsAotCompatible`, no reflection-based JSON (callers pass `JsonTypeInfo<T>`), a case in `samples/Switchknife.AotSmoke`, a README, tests in `tests/<Package>.Tests`.
+  Exception: a test-support package (`Switchknife.Testing.*`) whose dependencies lack AOT support sets `IsAotCompatible` false and has no AOT smoke case.
 - Versions come from tags only (MinVer, `<MinVerTagPrefix>` per project). Never put a `<Version>` in a project.
 - Package versions live in `Directory.Packages.props`. Actions are pinned by commit SHA.
 - Public repository: no hostnames, IP addresses, key names, home paths or employer names in any file.
