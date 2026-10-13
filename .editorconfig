@@ -1,0 +1,26 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.cs]
+indent_size = 4
+csharp_style_namespace_declarations = file_scoped:warning
+dotnet_sort_system_directives_first = true
+# Libraries return to whatever context called them.
+dotnet_diagnostic.CA2007.severity = warning
+
+[tests/**.cs]
+# Test names are sentences with underscores.
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA2007.severity = none
+# Tests here finish in milliseconds; a cancellation token on every call adds noise, not responsiveness.
+dotnet_diagnostic.xUnit1051.severity = none
+
+[samples/**.cs]
+dotnet_diagnostic.CA2007.severity = none
