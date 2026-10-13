@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Switchknife.Journal/Switchknife.Journal.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Switchknife.Journal.Tests/Switchknife.Journal.Tests.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/Switchknife.AotSmoke/Switchknife.AotSmoke.csproj" />
+  </Folder>
+</Solution>

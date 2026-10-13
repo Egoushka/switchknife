@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Published with Native AOT in CI (scripts/aot-smoke.sh): every package must work, not only build, without the JIT. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Switchknife.Journal\Switchknife.Journal.csproj" />
+  </ItemGroup>
+
+</Project>

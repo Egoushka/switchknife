@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Switchknife.Journal</PackageId>
+    <MinVerTagPrefix>journal/v</MinVerTagPrefix>
+    <Description>A durable step journal on SQLite: each side effect of a flow records its intent before it runs and its result after, so a process that restarts finishes or cleans up what it left. Native AOT compatible.</Description>
+    <PackageTags>durable;journal;idempotency;sqlite;workflow;aot</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+  </ItemGroup>
+
+</Project>

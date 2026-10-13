@@ -1,0 +1,43 @@
+name: release
+
+# A tag <package>/v<version> publishes that one package to nuget.org: journal/v0.1.0 publishes Switchknife.Journal 0.1.0.
+# Publishing uses nuget.org trusted publishing (no stored key): the repository variable NUGET_USER names the nuget.org
+# account whose trusted-publishing policy trusts this workflow, and the release environment waits for the owner's approval.
+
+on:
+  push:
+    tags: ["*/v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: The tag names a package
+        id: package
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          prefix="${TAG%%/v*}"
+          project=$(grep -l "<MinVerTagPrefix>$prefix/v</MinVerTagPrefix>" src/*/*.csproj | head -n 1)
+          test -n "$project" || { echo "no package has the tag prefix $prefix/v" >&2; exit 1; }
+          echo "project=$project" >> "$GITHUB_OUTPUT"
+      - run: dotnet test -c Release
+      - run: dotnet pack "${{ steps.package.outputs.project }}" -c Release -o "$RUNNER_TEMP/nupkg"
+      - uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        id: nuget
+        with:
+          user: ${{ vars.NUGET_USER }}
+      - run: dotnet nuget push "$RUNNER_TEMP"/nupkg/*.nupkg --api-key "${{ steps.nuget.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
