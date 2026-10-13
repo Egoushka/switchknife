@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Switchknife.Journal\Switchknife.Journal.csproj" />
+    <ProjectReference Include="..\..\src\Switchknife.McpGuard\Switchknife.McpGuard.csproj" />
   </ItemGroup>
 
 </Project>
