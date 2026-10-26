@@ -9,18 +9,29 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using Switchknife.Hosting;
 using Switchknife.Journal;
+using Switchknife.Journal.Postgres;
 using Switchknife.McpGuard;
 using Switchknife.Migrations;
 using Switchknife.Testing.Http;
 
 // Exercises each package the way a host would, under Native AOT. Exit 0 and one "ok" line per package.
-// Switchknife.Migrations needs a PostgreSQL server: SWITCHKNIFE_SMOKE_POSTGRES is its connection string (any database
-// on it; the case creates and drops its own). Unset, the case is skipped, except in CI where it fails.
+// Switchknife.Migrations and Switchknife.Journal.Postgres need a PostgreSQL server: SWITCHKNIFE_SMOKE_POSTGRES is its
+// connection string (any database on it; each case creates and drops its own). Unset, those cases are skipped,
+// except in CI where they fail.
 var exit = 0;
-var smokes = new (string, Func<Task<string?>>)[] { ("Switchknife.Hosting", HostingAsync), ("Switchknife.Journal", JournalAsync), ("Switchknife.McpGuard", McpGuardAsync), ("Switchknife.Migrations", MigrationsAsync), ("Switchknife.Testing.Http", TestingHttpAsync) };
+var postgresCases = new HashSet<string> { "Switchknife.Migrations", "Switchknife.Journal.Postgres" };
+var smokes = new (string, Func<Task<string?>>)[]
+{
+    ("Switchknife.Hosting", HostingAsync),
+    ("Switchknife.Journal", JournalAsync),
+    ("Switchknife.Journal.Postgres", JournalPostgresAsync),
+    ("Switchknife.McpGuard", McpGuardAsync),
+    ("Switchknife.Migrations", MigrationsAsync),
+    ("Switchknife.Testing.Http", TestingHttpAsync),
+};
 foreach (var (package, smoke) in smokes)
 {
-    if (package == "Switchknife.Migrations" && Environment.GetEnvironmentVariable("SWITCHKNIFE_SMOKE_POSTGRES") is null or ""
+    if (postgresCases.Contains(package) && Environment.GetEnvironmentVariable("SWITCHKNIFE_SMOKE_POSTGRES") is null or ""
         && Environment.GetEnvironmentVariable("CI") != "true")
     {
         Console.WriteLine($"skip {package}: SWITCHKNIFE_SMOKE_POSTGRES is not set");
@@ -90,6 +101,47 @@ static async Task<string?> JournalAsync()
     finally
     {
         Directory.Delete(dir, recursive: true);
+    }
+}
+
+static async Task<string?> JournalPostgresAsync()
+{
+    var server = Environment.GetEnvironmentVariable("SWITCHKNIFE_SMOKE_POSTGRES");
+    if (string.IsNullOrEmpty(server))
+        return "SWITCHKNIFE_SMOKE_POSTGRES is not set";
+
+    var name = $"smoke_{Guid.NewGuid():N}";
+    var admin = new NpgsqlConnectionStringBuilder(server) { Database = "postgres", Pooling = false }.ConnectionString;
+    var database = new NpgsqlConnectionStringBuilder(server) { Database = name, Pooling = false }.ConnectionString;
+    await using (var create = new NpgsqlConnection(admin))
+    {
+        await create.OpenAsync();
+        await using var createDb = new NpgsqlCommand($"create database {name}", create);
+        await createDb.ExecuteNonQueryAsync();
+    }
+    try
+    {
+        await using (var migrate = new NpgsqlConnection(database))
+        {
+            await migrate.OpenAsync();
+            await using var ddl = new NpgsqlCommand(PgStepStoreSchema.Sql, migrate);
+            await ddl.ExecuteNonQueryAsync();
+        }
+
+        await using var dataSource = NpgsqlDataSource.Create(database);
+        await using var journal = StepJournal.Open(new PgStepStore(dataSource));
+        var made = await journal.RunAsync("flow", "step", (c, _) => Task.FromResult(new Made($"made-{c.Attempt}")), SmokeJson.Default.Made);
+        var again = await journal.RunAsync("flow", "step", (_, _) => Task.FromResult(new Made("ran-twice")), SmokeJson.Default.Made);
+        return (made.Name, again.Name) == ("made-1", "made-1")
+            ? null
+            : $"first run {made.Name}, second run {again.Name}";
+    }
+    finally
+    {
+        await using var admin2 = new NpgsqlConnection(admin);
+        await admin2.OpenAsync();
+        await using var drop = new NpgsqlCommand($"drop database if exists {name} with (force)", admin2);
+        await drop.ExecuteNonQueryAsync();
     }
 }
 

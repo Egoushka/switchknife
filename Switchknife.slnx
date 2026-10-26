@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/Switchknife.Hosting/Switchknife.Hosting.csproj" />
     <Project Path="src/Switchknife.Journal/Switchknife.Journal.csproj" />
+    <Project Path="src/Switchknife.Journal.Postgres/Switchknife.Journal.Postgres.csproj" />
     <Project Path="src/Switchknife.McpGuard/Switchknife.McpGuard.csproj" />
     <Project Path="src/Switchknife.Migrations/Switchknife.Migrations.csproj" />
     <Project Path="src/Switchknife.Testing.Http/Switchknife.Testing.Http.csproj" />
@@ -10,6 +11,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/Switchknife.Hosting.Tests/Switchknife.Hosting.Tests.csproj" />
     <Project Path="tests/Switchknife.Journal.Tests/Switchknife.Journal.Tests.csproj" />
+    <Project Path="tests/Switchknife.Journal.Postgres.Tests/Switchknife.Journal.Postgres.Tests.csproj" />
     <Project Path="tests/Switchknife.McpGuard.Tests/Switchknife.McpGuard.Tests.csproj" />
     <Project Path="tests/Switchknife.Migrations.Tests/Switchknife.Migrations.Tests.csproj" />
     <Project Path="tests/Switchknife.Testing.Http.Tests/Switchknife.Testing.Http.Tests.csproj" />
@@ -17,5 +19,8 @@
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/Switchknife.AotSmoke/Switchknife.AotSmoke.csproj" />
+  </Folder>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/Switchknife.Journal.Benchmarks/Switchknife.Journal.Benchmarks.csproj" />
   </Folder>
 </Solution>
