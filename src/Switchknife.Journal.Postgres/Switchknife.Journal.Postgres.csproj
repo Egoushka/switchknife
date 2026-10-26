@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Switchknife.Journal.Postgres</PackageId>
+    <MinVerTagPrefix>journal-postgres/v</MinVerTagPrefix>
+    <Description>A Switchknife.Journal IStepStore on PostgreSQL: a row lease instead of an in-process semaphore, so many processes share one steps table. An optional overload writes a step's result inside the caller's NpgsqlTransaction. Native AOT compatible.</Description>
+    <PackageTags>durable;journal;idempotency;postgresql;npgsql;workflow;aot</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Switchknife.Journal/Switchknife.Journal.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations/*.sql" />
+  </ItemGroup>
+
+</Project>

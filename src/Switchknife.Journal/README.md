@@ -8,6 +8,8 @@ A step is one side effect with a stable key inside a flow (`batch-7`, `prep/task
 - a key whose earlier attempt recorded its intent and never its outcome (a crash, a kill, a cancellation) runs again with `context.Resumed = true`, so the step adopts or removes what that attempt left;
 - a step that throws is recorded as failed and rethrown; the next run of the key is a fresh attempt.
 
+Storage is behind `IStepStore`; `StepJournal.OpenAsync(path)` opens the built-in SQLite store (`SqliteStepStore`). A flow shared by more than one process needs a store with real locking between processes — [Switchknife.Journal.Postgres](../Switchknife.Journal.Postgres)'s `PgStepStore` is one — built with `StepJournal.Open(new PgStepStore(dataSource))` instead.
+
 ```csharp
 await using var journal = await StepJournal.OpenAsync("state/journal.db");
 
@@ -35,6 +37,6 @@ Guarantees and limits:
 - A step runs at least once; its result is recorded at most once. A step that finished but crashed before its result was written runs again, resumed, so make each step safe to repeat for its key.
 - `ResetAsync` removes a completed or failed step's record, so its key runs as a first attempt (`Attempt` 1, `Resumed` false); it returns false when the key had no record. Reset is your statement that the earlier effect is gone or may repeat: the journal cannot check it. A started step is refused (`InvalidOperationException`): an interrupted attempt must be resumed, not forgotten.
 - Every commit is synced to disk (`synchronous = FULL`, WAL).
-- One process owns a journal file; calls are serialized inside it. Run one step of a given key at a time.
+- `SqliteStepStore`: one process owns a journal file; calls are serialized inside it. Run one step of a given key at a time. A store built for more than one process (`PgStepStore`) instead leases the row; see its own README.
 - Results are stored as JSON through a `JsonTypeInfo<T>` you pass (source-generated), so it works with Native AOT.
 - Not a workflow engine: no timers, no scheduling, no distribution. It records what happened so your own code can decide what to do next.

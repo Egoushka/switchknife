@@ -20,3 +20,4 @@ scripts/aot-smoke.sh                   # publishes samples/Switchknife.AotSmoke 
 - Package versions live in `Directory.Packages.props`. Actions are pinned by commit SHA.
 - Public repository: no hostnames, IP addresses, key names, home paths or employer names in any file.
 - Commits: Conventional Commits.
+- Architecturally significant decisions get an ADR under `docs/adr/`, numbered, one per decision.
