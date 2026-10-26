@@ -1,0 +1,18 @@
+# Git hooks, run by lefthook (https://lefthook.dev). After cloning: `lefthook install`.
+# agent-checks messages are written for coding agents: https://github.com/Egoushka/agent-checks
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: agent-checks
+      run: agent-checks check --staged
+    - name: gitleaks
+      run: gitleaks git --staged --redact --no-banner
+
+
+pre-push:
+  jobs:
+    # Whitespace only: `dotnet format style` loads the solution and takes minutes; CI runs the full check.
+    - name: dotnet-format
+      glob: "*.cs"
+      run: dotnet format whitespace --folder --verify-no-changes --include {push_files}

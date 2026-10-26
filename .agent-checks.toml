@@ -1,0 +1,15 @@
+# agent-checks: rules that fail with a message written to the coding agent.
+# Rules, options and the allow marker: https://github.com/Egoushka/agent-checks
+# This file also turns on the Claude Code hook for this repo.
+
+# Rule ids to switch off for this repo (agent-checks rules).
+disable = []
+
+# Paths never checked, on top of the built-in list (lockfiles, generated code, vendored deps).
+exclude = []
+
+# Extra globs for test files (the test-only rules use these).
+tests = []
+
+# Linters whose output is filtered to added lines: typos, ruff, shellcheck.
+linters = ["typos", "ruff", "shellcheck"]
