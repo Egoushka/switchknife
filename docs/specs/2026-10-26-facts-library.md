@@ -60,6 +60,22 @@ Each is a test the slice adds, named here so the name is the contract. "Fake ext
 | A21 | AOT | `scripts/aot-smoke.sh` | the smoke sample ingests with the fake extractor and answers an as-of query without the JIT |
 | A22 | Migrations | `The_schema_applies_through_Switchknife_Migrations_beside_a_consumer_schema` | a second assembly's scripts and the library's both run once; second run applies 0 |
 
+### Look-ahead checks
+
+A query "as of X" must not see what was learned after X. TradingAgents' v0.4 and v0.5 release notes list the ways this went wrong in a backtesting system; each is a test here (ideas only, no code taken). Slice F3 adds them.
+
+| ID | Look-ahead bug there | Test | Passes when |
+|---|---|---|---|
+| L1 | Later revisions served for an earlier date (data vintage not pinned) | `A_revised_fact_is_invisible_before_its_recorded_time` | `known_at` before the correction returns the old value |
+| L2 | Items outside the analysis window leak in | `Facts_recorded_after_known_at_never_appear_in_search` | full-text and vector results obey `known_at` |
+| L3 | Outcomes learned later inform earlier decisions | `Retiring_a_fact_later_does_not_change_an_earlier_known_at_answer` | answer at K is identical before and after a later retirement |
+| L4 | Period ended but not yet filed was served | `A_fact_about_the_past_is_unknown_until_it_is_recorded` | valid time in the past, recorded later: absent at earlier `known_at` |
+| L5 | Present-day profile served to a past-dated run | `Entity_names_and_merges_are_read_as_of_known_at` | a merge recorded after K does not change answers at K |
+| L6 | A date omitted by the caller reached the source | `Omitting_known_at_means_now_and_a_future_known_at_is_refused` | no default other than the clock; future value is an error |
+| L7 | Event treated as known on its occurrence, not its filing | `Recorded_at_comes_from_the_ingest_clock_not_the_episode_time` | `occurred_at` earlier than ingest never lowers `recorded_at` |
+
+L5 shows a gap in the design: entity merges are not bi-temporal yet. F4 must record the merge time and read it as of `known_at`.
+
 ## Acceptance checks for the benchmark gates
 
 These use `bench/` (mechanics, synthetic) and the private labelled set (extraction). Thresholds marked "target" are guesses to be replaced by the first measured baseline; a target changes only by a new ADR line, never silently.

@@ -27,6 +27,7 @@ An earlier review of the memory stack (the workspace's `ai-setup` audit of 2026-
 | Cosine, then BM25, then model for entity resolution | Change | The sibling project `chronicle` measured that the BM25 stage fails across Cyrillic and Latin spellings of one name (`ADR-002-entity-resolution.md` there). Use its phonetic and consonant-skeleton keys as candidate generators. |
 | Contradiction found by a model comparing every new edge with old ones | Change | Typed predicates carry a cardinality and invalidate by rule, with no call. Free-text facts reuse what Nytka already does: show the model the live candidates and accept the `replaces` id it returns only if that fact is live and shares the subject. |
 | pgvector | Keep, exact scan first | Same argument as chronicle's ADR-001: tens of thousands of rows scan exactly in milliseconds, and an approximate index silently loses recall under filters. |
+| Look-ahead safety | Add as a test catalog | TradingAgents v0.4 and v0.5 fixed seven look-ahead leaks (vintages, windows, filing dates, defaulted dates); the spec turns each into a test (L1 to L7). |
 | MCP tools | Keep as definitions, not a server | A new server adds a process, a port and an auth surface. Consumers already host MCP endpoints and guard them. |
 | A new store | Reject | Facts live in each consumer's database, in their own schema, next to the rows they point at. No new container. |
 
