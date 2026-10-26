@@ -7,7 +7,11 @@
     <Project Path="src/Switchknife.Testing.Http/Switchknife.Testing.Http.csproj" />
     <Project Path="src/Switchknife.Testing.Postgres/Switchknife.Testing.Postgres.csproj" />
   </Folder>
+  <Folder Name="/bench/">
+    <Project Path="bench/Switchknife.Facts.Bench/Switchknife.Facts.Bench.csproj" />
+  </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Switchknife.Facts.Bench.Tests/Switchknife.Facts.Bench.Tests.csproj" />
     <Project Path="tests/Switchknife.Hosting.Tests/Switchknife.Hosting.Tests.csproj" />
     <Project Path="tests/Switchknife.Journal.Tests/Switchknife.Journal.Tests.csproj" />
     <Project Path="tests/Switchknife.McpGuard.Tests/Switchknife.McpGuard.Tests.csproj" />
