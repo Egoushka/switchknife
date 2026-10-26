@@ -1,0 +1,14 @@
+# Checks the lines a pull request adds: https://github.com/Egoushka/agent-checks
+name: agent-checks
+on: pull_request
+permissions:
+  contents: read
+jobs:
+  agent-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+      - uses: Egoushka/agent-checks@v0.1.1
