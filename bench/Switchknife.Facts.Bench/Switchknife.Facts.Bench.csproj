@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Not a package: measures the facts library's design (docs/benchmarks/facts-library.md) against PostgreSQL. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+    <EmbeddedResource Include="Schema/*.sql" />
+    <InternalsVisibleTo Include="Switchknife.Facts.Bench.Tests" />
+  </ItemGroup>
+
+</Project>

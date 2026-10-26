@@ -12,6 +12,8 @@ Small .NET libraries for services that run on their own: each package does one j
 | [Switchknife.Testing.Http](src/Switchknife.Testing.Http) | A stub `HttpMessageHandler` for tests: answers from a function or a scripted sequence and records each request with its body and headers, read before the caller disposes it. No test-framework dependency. | 0.x |
 | [Switchknife.Testing.Postgres](src/Switchknife.Testing.Postgres) | A PostgreSQL server in a Testcontainers container for integration tests: started once per run, migrated by a callback, emptied between tests or split into a database per test; reports a missing Docker outside CI so tests can skip. No test-framework dependency. | 0.x |
 
+Designed, not built: a bi-temporal facts store for Nytka and feed-eater, in [`docs/adr/0001-facts-library.md`](docs/adr/0001-facts-library.md) with its [spec](docs/specs/2026-10-26-facts-library.md), [benchmark plan](docs/benchmarks/facts-library.md) and a [harness](bench/Switchknife.Facts.Bench).
+
 More packages arrive as their code proves itself in more than one project: Docker engine client, GitHub and GitLab clients with app auth, egress proxy, MCP hosting, service defaults, a test kit.
 
 ## Rules for every package

@@ -24,3 +24,6 @@ dotnet_diagnostic.xUnit1051.severity = none
 
 [samples/**.cs]
 dotnet_diagnostic.CA2007.severity = none
+
+[bench/**.cs]
+dotnet_diagnostic.CA2007.severity = none
