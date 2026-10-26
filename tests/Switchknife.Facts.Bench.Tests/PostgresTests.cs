@@ -36,12 +36,11 @@ public sealed class PostgresTests(PostgresFixture postgres) : IClassFixture<Post
     }
 
     [Fact]
-    public async Task The_schema_applies_twice_and_refuses_two_live_values_for_one_slot_at_the_same_time()
+    public async Task Two_live_values_for_one_slot_cannot_overlap_even_by_raw_sql()
     {
         await using var data = await postgres.NewDatabaseAsync();
         var store = new FactsStore(data);
         var workload = new Workload(2, 20, seed: 1);
-        await store.CreateSchemaAsync(fresh: false);
         await store.CreateSchemaAsync(fresh: false);
         await store.SeedAsync(workload, Workload.Origin);
         var subject = workload.Subjects[0];

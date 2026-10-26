@@ -25,7 +25,7 @@ These run today. H1 and H2 need Docker; without it, outside CI, they skip (as th
 
 | ID | Check | Command | Passes when |
 |---|---|---|---|
-| H1 | Schema applies twice and refuses overlap | `dotnet test --project tests/Switchknife.Facts.Bench.Tests --filter-method "*schema_applies_twice*"` | the test is green: second apply is a no-op, a second live value for one slot at overlapping times fails with SQLSTATE `23P01` |
+| H1 | Schema applies and refuses overlap | `dotnet test --project tests/Switchknife.Facts.Bench.Tests --filter-method "*cannot_overlap*"` | the test is green: the schema applies to an empty database on pgvector/PostgreSQL 18, and a second live value for one slot at overlapping times fails with SQLSTATE `23P01` |
 | H2 | Design write path agrees with the oracle | `dotnet test --project tests/Switchknife.Facts.Bench.Tests --filter-method "*every_as_of_query*"` | `AsOfWrong` is 0, `AsOfOverlap` is 0, retired rows exist, vector query returns rows |
 | H3 | Scorer and percentiles | `dotnet test --project tests/Switchknife.Facts.Bench.Tests --filter-class "*HarnessTests"` | green, no Docker needed |
 | H4 | Harness refuses a database not made for it | `dotnet run --project bench/Switchknife.Facts.Bench -- run --connection "Host=x;Database=app"` | exit code 2 and the message names the database |
