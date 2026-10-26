@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Time.Testing;
 using Npgsql;
 using Switchknife.Journal.Postgres;
 using Switchknife.Testing.Postgres;
@@ -152,8 +153,9 @@ public sealed class PgStepStoreTests(PostgresFixture fixture) : IClassFixture<Po
     public async Task A_lease_left_by_a_crashed_attempt_expires_and_the_next_claim_is_resumed()
     {
         var postgres = fixture.Running();
-        var options = new StepOptions { Lease = TimeSpan.FromMilliseconds(150), Backoff = TimeSpan.FromMilliseconds(20), Retries = 100 };
-        await using var journal = StepJournal.Open(new PgStepStore(postgres.DataSource, options: options));
+        var clock = new FakeTimeProvider(DateTimeOffset.UtcNow);
+        var options = new StepOptions { Lease = TimeSpan.FromSeconds(30), Retries = 0 };
+        await using var journal = StepJournal.Open(new PgStepStore(postgres.DataSource, clock, options));
 
         using var cancel = new CancellationTokenSource();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => journal.RunAsync("pg-crash", "xfer/run-9", async (_, ct) =>
@@ -162,7 +164,7 @@ public sealed class PgStepStoreTests(PostgresFixture fixture) : IClassFixture<Po
             ct.ThrowIfCancellationRequested();
         }, cancel.Token));
 
-        await Task.Delay(TimeSpan.FromMilliseconds(400));
+        clock.Advance(TimeSpan.FromSeconds(31));
 
         StepContext? seen = null;
         await journal.RunAsync("pg-crash", "xfer/run-9", (context, _) =>
@@ -184,15 +186,21 @@ public sealed class PgStepStoreTests(PostgresFixture fixture) : IClassFixture<Po
         await using var processB = StepJournal.Open(new PgStepStore(postgres.DataSource, options: options));
 
         var runs = 0;
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         async Task<Made> Step(StepContext context, CancellationToken ct)
         {
             Interlocked.Increment(ref runs);
-            await Task.Delay(TimeSpan.FromMilliseconds(300), ct);
+            entered.TrySetResult();
+            await release.Task.WaitAsync(ct);
             return new Made("done", context.Attempt);
         }
 
+        // The step holds its lease until released, so a claim by the other store meanwhile has to wait it out.
         var first = processA.RunAsync("pg-concurrent", "shared-key", Step, PgTestJson.Default.Made);
         var second = processB.RunAsync("pg-concurrent", "shared-key", Step, PgTestJson.Default.Made);
+        await entered.Task;
+        release.SetResult();
         var results = await Task.WhenAll(first, second);
 
         Assert.Equal(1, runs);

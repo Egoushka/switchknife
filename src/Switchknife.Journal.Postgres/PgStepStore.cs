@@ -125,7 +125,7 @@ public sealed class PgStepStore : IStepStore
         command.Parameters.AddWithValue("flow", flow);
         command.Parameters.AddWithValue("key", key);
         command.Parameters.AddWithValue("attempt", attempt);
-        command.Parameters.Add(new NpgsqlParameter("result", NpgsqlDbType.Jsonb) { Value = result });
+        command.Parameters.Add(new NpgsqlParameter("result", NpgsqlDbType.Json) { Value = result });
         command.Parameters.AddWithValue("now", _clock.GetUtcNow());
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
@@ -211,7 +211,7 @@ public sealed class PgStepStore : IStepStore
         command.Parameters.AddWithValue("flow", flow);
         command.Parameters.AddWithValue("kind", kind);
         command.Parameters.AddWithValue("at", _clock.GetUtcNow());
-        command.Parameters.Add(new NpgsqlParameter("payload", NpgsqlDbType.Jsonb) { Value = payload });
+        command.Parameters.Add(new NpgsqlParameter("payload", NpgsqlDbType.Json) { Value = payload });
         return (long)(await command.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
     }
 
@@ -299,7 +299,7 @@ public sealed class PgStepStore : IStepStore
         upsert.Parameters.AddWithValue("flow", flow);
         upsert.Parameters.AddWithValue("key", key);
         upsert.Parameters.AddWithValue("attempt", attempt);
-        upsert.Parameters.Add(new NpgsqlParameter("result", NpgsqlDbType.Jsonb) { Value = json });
+        upsert.Parameters.Add(new NpgsqlParameter("result", NpgsqlDbType.Json) { Value = json });
         upsert.Parameters.AddWithValue("now", now);
         await upsert.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
         return value;

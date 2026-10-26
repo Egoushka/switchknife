@@ -5,7 +5,7 @@ create table if not exists steps (
     key         text        not null,
     state       smallint    not null,
     attempt     integer     not null,
-    result      jsonb,
+    result      json,
     error       text,
     started     timestamptz not null,
     finished    timestamptz,
@@ -18,7 +18,7 @@ create table if not exists step_events (
     flow    text        not null,
     kind    text        not null,
     at      timestamptz not null,
-    payload jsonb       not null
+    payload json        not null
 );
 
 create index if not exists step_events_by_flow on step_events (flow, seq);

@@ -1,12 +1,10 @@
-# 1. A Postgres step store for Switchknife.Journal
+# 2. A Postgres step store for Switchknife.Journal
 
 Status: accepted
 
 ## Context
 
 `Switchknife.Journal` memoises steps (record intent, store result, a completed key never reruns, an unfinished one resumes with `StepContext.Resumed`) on one SQLite file. Two consumer services run their own PostgreSQL 18 databases and want the same guarantees shared across their own processes, which SQLite's single-writer file cannot give them without the services building locking of their own.
-
-This is the first ADR in this repository; there was no prior convention to follow for where it lives or its format. It lives at `docs/adr/`, numbered, one per decision, Markdown.
 
 ## Decision
 

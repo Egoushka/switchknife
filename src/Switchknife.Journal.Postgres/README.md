@@ -24,7 +24,7 @@ var container = await journal.RunAsync("batch-7", "prep/task-3", async (step, ct
 
 ## Schema
 
-`PgStepStoreSchema.Sql` (embedded from `Migrations/0001_steps.sql`) creates `steps` (one row per `flow, key`, its `state`, `attempt`, `result jsonb`, `lease_until`) and `step_events`. Run it with your own migrator, or with [Switchknife.Migrations](../Switchknife.Migrations) by embedding the same script in your host's assembly. `PgStepStore` does not create or alter these tables itself.
+`PgStepStoreSchema.Sql` (embedded from `Migrations/0001_steps.sql`) creates `steps` (one row per `flow, key`, its `state`, `attempt`, `result json`, `lease_until`) and `step_events`. Run it with your own migrator, or with [Switchknife.Migrations](../Switchknife.Migrations) by embedding the same script in your host's assembly. `PgStepStore` does not create or alter these tables itself.
 
 ## Multi-process claims
 
