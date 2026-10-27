@@ -28,7 +28,7 @@ What it does not return: the extractor, model and token counts (`episodes` has t
 
 Each source line of a `one` fact keeps its `assertion*` columns (what the episode asked for); `FactSource` does not expose them, since they exist for purge replay and a reader has the validity range already. A narrowed copy or a tail has its parent's sources copied by the write path, so it explains itself without following a link.
 
-`Explain` reads a snapshot: the single batch runs in one implicit transaction, so the version and its sources cannot disagree.
+The batch is one round trip, not one snapshot: its statements run in READ COMMITTED, so a write that lands between two of them can show a source or a successor the version row does not yet reflect. Rows are immutable and sources only grow, so the worst case is an explanation one write ahead of its version; a repeatable-read transaction would cost two more round trips.
 
 **The ADR's "a fact without a source cannot be inserted".** The library never writes a fact row without its source line (both go in one batch), and A14 proves it for the whole benchmark workload. A database constraint would need a deferred trigger on every fact insert, on the path G1 limits to 30 ms; it is not added. Raw SQL can still insert a source-less fact, and `Explain` then returns it with an empty `Sources` list rather than hiding it.
 

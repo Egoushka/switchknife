@@ -306,11 +306,7 @@ public sealed partial class FactsStore
         await using var readerScope = reader.ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
-            versions.Add(new FactVersion(
-                ReadFact(reader),
-                reader.IsDBNull(9) ? null : reader.GetFieldValue<DateTimeOffset>(9),
-                reader.IsDBNull(10) ? null : reader.GetString(10),
-                reader.IsDBNull(11) ? null : reader.GetGuid(11)));
+            versions.Add(ReadVersion(reader));
         }
 
         return versions;
@@ -622,6 +618,12 @@ public sealed partial class FactsStore
 
         return _predicates[predicate] = ParseCardinality(stored);
     }
+
+    private static FactVersion ReadVersion(NpgsqlDataReader reader) => new(
+        ReadFact(reader),
+        reader.IsDBNull(9) ? null : reader.GetFieldValue<DateTimeOffset>(9),
+        reader.IsDBNull(10) ? null : reader.GetString(10),
+        reader.IsDBNull(11) ? null : reader.GetGuid(11));
 
     private static Fact ReadFact(NpgsqlDataReader reader) => new(
         reader.GetGuid(0),

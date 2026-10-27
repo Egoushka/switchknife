@@ -51,6 +51,17 @@ var problems = await facts.VerifySlotAsync(anna, "lives_in");        // empty: t
 
 Purge deletes every version of the source, the facts only it supports (with their embeddings) and its source lines on the rest, then rewrites each single-valued slot it touched by replaying what remains, in recorded order, through the write path itself, so the slot equals one that never saw the source. It is the one operation that deletes rows; rows of a rewritten slot get new ids, and embeddings follow the assertion. `VerifySlotAsync` does the same replay in a transaction it rolls back and lists the rows that differ.
 
+## Explaining a fact
+
+```csharp
+var why = await facts.ExplainAsync(factId);   // FactExplanation, or null for an id this namespace does not hold
+// why.Sources: episode, source kind and ref, content hash, locator, quote, trust; why.Trust: the highest of them
+// why.Version: validity range, recorded_at, retired_at, retired_reason; why.Retraction: when retracted, and restored if so
+// why.Successors: the rows that replaced this one, nearest first; why.Predecessors: the rows it replaced
+```
+
+One round trip. The library never holds your text: hand `SourceKind`, `SourceRef` and `LocatorJson` to your own resolver to get a link or a snippet. The extractor and model are not reported yet (nothing writes them until the extraction contract).
+
 ## Finding facts by meaning
 
 ```csharp
@@ -62,7 +73,7 @@ Vectors are stored compressed (a sign-bit code to scan, an int8 copy to rank, ~1
 
 ## Not in this slice
 
-`Explain`, full-text/vector fusion, entity resolution and merge, the extractor contract, tool definitions. See [the write-path spec](../../docs/specs/2026-10-28-facts-write-path.md) and the slice table for the order.
+Full-text/vector fusion, entity resolution and merge, the extractor contract, tool definitions. See [the write-path spec](../../docs/specs/2026-10-28-facts-write-path.md) and the slice table for the order.
 
 ## Measured
 
