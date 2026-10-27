@@ -42,6 +42,15 @@ new NewFact(anna, "works_at", null, from, Text: "Anna works at Acme", ObjectEnti
 
 A fact is as trusted as its most trusted source. A lower-trust value that would retire a higher-trust one is stored already retired (`outranked`), so it shows in `HistoryAsync` and never in `AsOfAsync`. Retracting a `One` value leaves a gap, not the value it had clipped. Returning to an older content hash counts as the same episode again and does nothing; give reverted text a new hash.
 
+## Deleting a source for privacy
+
+```csharp
+var result = await facts.PurgeSourceAsync("conversation", "c-42");   // PurgeResult: episodes, assertions gone, slots rebuilt
+var problems = await facts.VerifySlotAsync(anna, "lives_in");        // empty: the stored rows are what replaying the history produces
+```
+
+Purge deletes every version of the source, the facts only it supports (with their embeddings) and its source lines on the rest, then rewrites each single-valued slot it touched by replaying what remains, in recorded order, through the write path itself, so the slot equals one that never saw the source. It is the one operation that deletes rows; rows of a rewritten slot get new ids, and embeddings follow the assertion. `VerifySlotAsync` does the same replay in a transaction it rolls back and lists the rows that differ.
+
 ## Finding facts by meaning
 
 ```csharp
@@ -53,7 +62,7 @@ Vectors are stored compressed (a sign-bit code to scan, an int8 copy to rank, ~1
 
 ## Not in this slice
 
-Purge, `Explain`, full-text/vector fusion, entity resolution and merge, the extractor contract, tool definitions. See [the write-path spec](../../docs/specs/2026-10-28-facts-write-path.md) and the slice table for the order.
+`Explain`, full-text/vector fusion, entity resolution and merge, the extractor contract, tool definitions. See [the write-path spec](../../docs/specs/2026-10-28-facts-write-path.md) and the slice table for the order.
 
 ## Measured
 
