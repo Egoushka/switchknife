@@ -1,13 +1,13 @@
 namespace Switchknife.Facts.Bench;
 
 /// <summary>
-/// The thresholds a run must meet: spec checks G1 (ingest), G2 (as-of), G3 (nearest) and G4 (footprint) in
+/// The thresholds a run must meet: spec checks G1 (ingest), G2 (as-of), G3 (nearest), F3d (fusion) and G4 (footprint) in
 /// <c>docs/specs/2026-10-26-facts-library.md</c>, and G3r (tie-aware recall of the quantized nearest search,
-/// <c>docs/specs/2026-10-27-facts-vectors.md</c>). They are the ADR's targets taken as written; a change is an ADR line.
+/// <c>docs/specs/2026-10-27-facts-vectors.md</c>); fusion is <c>docs/specs/2026-10-29-facts-explain-fusion.md</c>. They are the ADR's targets taken as written; a change is an ADR line.
 /// </summary>
-internal sealed record Gates(double IngestP95Ms, double AsOfP95Ms, double NearestP95Ms, double FactsMb, double EmbeddingMb, double NearestTieRecall)
+internal sealed record Gates(double IngestP95Ms, double AsOfP95Ms, double NearestP95Ms, double FusionP95Ms, double FactsMb, double EmbeddingMb, double NearestTieRecall)
 {
-    public static readonly Gates Adr = new(IngestP95Ms: 30, AsOfP95Ms: 10, NearestP95Ms: 50, FactsMb: 150, EmbeddingMb: 100, NearestTieRecall: 0.95);
+    public static readonly Gates Adr = new(IngestP95Ms: 30, AsOfP95Ms: 10, NearestP95Ms: 50, FusionP95Ms: 100, FactsMb: 150, EmbeddingMb: 100, NearestTieRecall: 0.95);
 
     private const double Mb = 1024 * 1024;
 
@@ -18,6 +18,11 @@ internal sealed record Gates(double IngestP95Ms, double AsOfP95Ms, double Neares
         Over(failures, "ingestPerEpisode.p95", report.IngestPerEpisode.P95, IngestP95Ms, "ms");
         Over(failures, "asOf.p95", report.AsOf.P95, AsOfP95Ms, "ms");
         Over(failures, "factsBytes", report.FactsBytes / Mb, FactsMb, "MB");
+        if (report.Fusion is { } fusion)
+        {
+            Over(failures, "fusion.p95", fusion.P95, FusionP95Ms, "ms");
+        }
+
         if (report.Nearest is { } nearest)
         {
             Over(failures, "nearest.p95", nearest.P95, NearestP95Ms, "ms");

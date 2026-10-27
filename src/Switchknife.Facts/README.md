@@ -71,6 +71,15 @@ var near = await facts.NearestAsync("my-model", queryVector, k: 10, validAt: now
 
 Vectors are stored compressed (a sign-bit code to scan, an int8 copy to rank, ~1.4 KB per fact at 1024 dimensions; [ADR 0003](../../docs/adr/0003-facts-vector-storage.md)), so no PostgreSQL extension is needed beyond `btree_gist`. Search honours `validAt` and `knownAt` like `AsOfAsync`. It is approximate: `oversample` (default 40) candidates per result are ranked exactly; raise it for recall, or to cover every row for exact results. At 52,000 facts and 1024 dimensions: p95 21 to 51 ms, 73 MB, results within 0.01 cosine of the exact top ten.
 
+## Searching by words and meaning
+
+```csharp
+var hits = await facts.SearchAsync("jazz concert", queryVector, "my-model", limit: 10, validAt: now);   // text, vector or both
+// hit.Fact, hit.Score, hit.TextRank, hit.VectorRank (null: that list did not hold it), hit.Similarity
+```
+
+A full-text list (`simple` configuration, ranked by `ts_rank_cd`) and a nearest-neighbour list run at once, each `limit × 4` deep, and are fused by reciprocal rank: a fact scores `1 / (60 + rank)` summed over the lists that hold it, so a fact in both beats one that leads a single list. Both obey `validAt` and `knownAt`; retired and other-namespace facts never appear. Pass a blank text or an empty vector to search with one list only. The ranks on each hit say why it is there.
+
 ## Not in this slice
 
 Full-text/vector fusion, entity resolution and merge, the extractor contract, tool definitions. See [the write-path spec](../../docs/specs/2026-10-28-facts-write-path.md) and the slice table for the order.

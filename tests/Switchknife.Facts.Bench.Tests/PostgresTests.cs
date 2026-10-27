@@ -33,6 +33,7 @@ public sealed class PostgresTests(PostgresFixture postgres) : IClassFixture<Post
         Assert.Equal(0, report.AsOfOverlap);
         Assert.True(report.RetiredRows > 0, "Superseding must retire rows, not overwrite them.");
         Assert.NotNull(report.Nearest);
+        Assert.NotNull(report.Fusion);
     }
 
     [Theory]

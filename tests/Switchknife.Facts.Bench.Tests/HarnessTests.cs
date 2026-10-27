@@ -61,7 +61,7 @@ public sealed class HarnessTests
     public void Gates_report_every_threshold_a_run_exceeds()
     {
         var fine = new RunReport(
-            new RunOptions(1, 1, 1, 1, 1, 1), 1, 1, 1, new Latency(1, 1, 5, 6), new Latency(1, 1, 2, 3), 0, 0, new Latency(1, 1, 2, 3), new Latency(1, 1, 20, 30), 0.97, 0.99,
+            new RunOptions(1, 1, 1, 1, 1, 1), 1, 1, 1, new Latency(1, 1, 5, 6), new Latency(1, 1, 2, 3), 0, 0, new Latency(1, 1, 2, 3), new Latency(1, 1, 20, 30), new Latency(1, 1, 60, 80), 0.97, 0.99,
             1, 0, 100 * 1024 * 1024, 60 * 1024 * 1024, "128MB", 10);
 
         var slow = fine with
@@ -69,13 +69,16 @@ public sealed class HarnessTests
             IngestPerEpisode = new Latency(1, 1, 31, 40),
             AsOf = new Latency(1, 1, 10.5, 12),
             Nearest = new Latency(1, 1, 51, 60),
+            Fusion = new Latency(1, 1, 101, 120),
             FactsBytes = 151L * 1024 * 1024,
             EmbeddingBytes = 101L * 1024 * 1024,
             NearestTieRecall = 0.94,
         };
 
         Assert.Empty(Gates.Adr.Check(fine));
-        Assert.Equal(["ingestPerEpisode.p95", "asOf.p95", "factsBytes", "nearest.p95", "embeddingBytes", "nearestTieRecall"], Gates.Adr.Check(slow).Select(f => f.Split(' ')[0]));
+        Assert.Equal(["ingestPerEpisode.p95", "asOf.p95", "factsBytes", "fusion.p95", "nearest.p95", "embeddingBytes", "nearestTieRecall"], Gates.Adr.Check(slow).Select(f => f.Split(' ')[0]));
+        Assert.Equal(["fusion.p95"], Gates.Adr.Check(fine with { Fusion = new Latency(1, 1, 100.5, 120) }).Select(f => f.Split(' ')[0]));
+        Assert.Empty(Gates.Adr.Check(fine with { Fusion = null }));
         Assert.Empty(Gates.Adr.Check(fine with { Nearest = null, NearestTieRecall = null, EmbeddingBytes = 0 }));
         Assert.Single(Gates.Adr.Check(fine with { AsOf = new Latency(0, double.NaN, double.NaN, double.NaN) }));
     }
