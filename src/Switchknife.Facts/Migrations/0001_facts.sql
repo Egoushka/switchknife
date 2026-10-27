@@ -58,7 +58,8 @@ create table facts.episodes (
 -- A fact is immutable. Only retired_at, retired_reason and superseded_by are ever written after the insert.
 -- valid is when the fact was true in the world (unbounded ends are unknown, not "forever"); recorded_at and retired_at
 -- are when this database believed it. slot is set by the library for cardinality 'one' (subject/predicate) and left
--- null otherwise: the exclusion constraint then makes two live, overlapping values for one slot impossible.
+-- null otherwise: the exclusion constraint then makes two live, overlapping values for one slot impossible. Purge is the one
+-- exception to immutability: it deletes rows and rewrites a slot.
 create table facts.facts (
     id             uuid        primary key,
     namespace      text        not null,
@@ -93,20 +94,31 @@ create index facts_by_episode on facts.facts (episode_id);
 create index facts_search on facts.facts using gin (search);
 
 -- A retracted assertion's fingerprint: every write path skips it, so a fact the owner deleted does not come back.
+-- An event log: a row blocks its fingerprint until restored_at is set. Purge replays it.
 create table facts.retractions (
     namespace    text        not null,
     fingerprint  text        not null,
     retracted_at timestamptz not null,
-    primary key (namespace, fingerprint)
+    restored_at  timestamptz null,
+    primary key (namespace, fingerprint, retracted_at)
 );
 
--- Where a fact was read: a line range or a quote inside the episode. Every extracted fact has at least one.
+-- Where a fact was read: a line range or a quote inside the episode. Every extracted fact has at least one. The assertion_*
+-- columns keep what the episode asserted (the assertion's fingerprint, its start, the end it asked for, value or entity, text)
+-- for a single-valued slot, because the row a source lands on can belong to a neighbouring assertion of the same value: purge
+-- replays these, not the rows. Empty for many and event predicates.
 create table facts.fact_sources (
-    fact_id    uuid  not null references facts.facts (id),
-    episode_id uuid  not null references facts.episodes (id),
-    locator    jsonb not null default '{}',
-    quote      text  null,
-    primary key (fact_id, episode_id, locator)
+    fact_id          uuid        not null references facts.facts (id),
+    episode_id       uuid        not null references facts.episodes (id),
+    locator          jsonb       not null default '{}',
+    quote            text        null,
+    assertion        text        not null default '',
+    assertion_from   timestamptz null,
+    assertion_to     timestamptz null,
+    assertion_value  text        null,
+    assertion_entity uuid        null,
+    assertion_text   text        null,
+    primary key (fact_id, episode_id, locator, assertion)
 );
 
 create index fact_sources_by_episode on facts.fact_sources (episode_id);

@@ -39,7 +39,7 @@ public sealed partial class FactsStore
         insert into facts.episodes (id, namespace, source_kind, source_ref, content_hash, occurred_at, recorded_at, trust, status)
         values ($1, $2, $3, $4, $5, $6, $7, $8, 'done')
         on conflict (namespace, source_kind, source_ref, content_hash) do nothing
-        returning (select count(*) from facts.episodes where namespace = $2 and source_kind = $3 and source_ref = $4 and id <> $1)
+        returning (select count(*) from facts.episodes where namespace = $2 and source_kind = $3 and source_ref = $4 and (recorded_at, id) < ($7, $1))
         """;
 
     private const string EpisodeIdSql =
@@ -55,7 +55,7 @@ public sealed partial class FactsStore
             where f.namespace = $1 and f.retired_at is null and f.slot is not null
               and f.id in (
                   select x.fact_id from facts.fact_sources x join facts.episodes e on e.id = x.episode_id
-                  where e.namespace = $1 and e.source_kind = $2 and e.source_ref = $3 and e.id <> $4)
+                  where e.namespace = $1 and e.source_kind = $2 and e.source_ref = $3 and (e.recorded_at, e.id) < ($5, $4))
         ) as slots(slot) order by slot
         """;
 
@@ -77,13 +77,13 @@ public sealed partial class FactsStore
         from facts.facts f where f.slot = $1 and f.retired_at is null order by lower(f.valid)
         """;
 
-    private const string RetractedSql = "select exists (select 1 from facts.retractions where namespace = $1 and fingerprint = $2)";
+    private const string RetractedSql = "select exists (select 1 from facts.retractions where namespace = $1 and fingerprint = $2 and restored_at is null)";
 
     private const string InsertManySql =
         """
         insert into facts.facts (id, namespace, subject_id, predicate, object_value, object_id, text, valid, recorded_at, slot, fingerprint, episode_id)
         select $1, $2, $3, $4, $5, $6, $7, tstzrange($8, $9, $10), $11, $12, $13, $14
-        where not exists (select 1 from facts.retractions where namespace = $2 and fingerprint = $13)
+        where not exists (select 1 from facts.retractions where namespace = $2 and fingerprint = $13 and restored_at is null)
         on conflict (namespace, fingerprint) where retired_at is null and slot is null do nothing
         """;
 
@@ -126,10 +126,17 @@ public sealed partial class FactsStore
         """;
 
     private const string CopySourcesSql =
-        "insert into facts.fact_sources (fact_id, episode_id, locator, quote) select $1, episode_id, locator, quote from facts.fact_sources where fact_id = $2";
+        """
+        insert into facts.fact_sources (fact_id, episode_id, locator, quote, assertion, assertion_from, assertion_to, assertion_value, assertion_entity, assertion_text)
+        select $1, episode_id, locator, quote, assertion, assertion_from, assertion_to, assertion_value, assertion_entity, assertion_text
+        from facts.fact_sources where fact_id = $2
+        """;
 
     private const string AddSourceSql =
-        "insert into facts.fact_sources (fact_id, episode_id, locator, quote) values ($1, $2, $3, $4) on conflict do nothing";
+        """
+        insert into facts.fact_sources (fact_id, episode_id, locator, quote, assertion, assertion_from, assertion_to, assertion_value, assertion_entity, assertion_text)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) on conflict do nothing
+        """;
 
     private const string SupersededBySql = "update facts.facts set superseded_by = $2 where id = $1";
 
@@ -140,10 +147,10 @@ public sealed partial class FactsStore
         where f.namespace = $2 and f.retired_at is null
           and f.id in (
               select x.fact_id from facts.fact_sources x join facts.episodes e on e.id = x.episode_id
-              where e.namespace = $2 and e.source_kind = $3 and e.source_ref = $4 and e.id <> $5)
+              where e.namespace = $2 and e.source_kind = $3 and e.source_ref = $4 and (e.recorded_at, e.id) < ($1, $5))
           and not exists (
               select 1 from facts.fact_sources x join facts.episodes e on e.id = x.episode_id
-              where x.fact_id = f.id and not (e.namespace = $2 and e.source_kind = $3 and e.source_ref = $4 and e.id <> $5))
+              where x.fact_id = f.id and not (e.namespace = $2 and e.source_kind = $3 and e.source_ref = $4 and (e.recorded_at, e.id) < ($1, $5)))
         """;
 
     private const string AsOfColumns =
@@ -358,11 +365,15 @@ public sealed partial class FactsStore
             cardinalities[i] = await CardinalityAsync(connection, transaction, facts[i].Predicate, ct).ConfigureAwait(false);
         }
 
+        // The slots are locked before the clock is read, so writers of one slot are recorded in the order they are applied; a purge
+        // or a verification replays the slot in recorded order and so reproduces it.
+        var slots = facts.Where((f, i) => cardinalities[i] == Cardinality.One).Select(Slot).Distinct(StringComparer.Ordinal).ToArray();
+        await LockSlotsAsync(connection, transaction, slots, ct).ConfigureAwait(false);
+
         // recorded_at is this clock, never the episode's own date: a query "as known at K" cannot see what arrived after K.
         var now = Micro(_time.GetUtcNow());
         var episodeId = Guid.CreateVersion7(now);
-        var slots = facts.Where((f, i) => cardinalities[i] == Cardinality.One).Select(Slot).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
-        var earlierVersions = await OpenEpisodeAsync(connection, transaction, episode, episodeId, now, slots, ct).ConfigureAwait(false);
+        var earlierVersions = await OpenEpisodeAsync(connection, transaction, episode, episodeId, now, ct).ConfigureAwait(false);
         if (earlierVersions is not { } stale)
         {
             var existing = new NpgsqlCommand(EpisodeIdSql, connection, transaction);
@@ -383,6 +394,7 @@ public sealed partial class FactsStore
                 lockStale.Parameters.Add(Text(episode.SourceKind));
                 lockStale.Parameters.Add(Text(episode.SourceRef));
                 lockStale.Parameters.Add(Uuid(episodeId));
+                lockStale.Parameters.Add(Time(now));
                 await lockStale.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
             }
         }
@@ -411,51 +423,41 @@ public sealed partial class FactsStore
         if (stale > 0)
         {
             // After the new facts, so a fact the new version repeats has already gained the new episode as a source.
-            var retire = new NpgsqlCommand(RetireChangedSql, connection, transaction);
-            await using (retire.ConfigureAwait(false))
-            {
-                retire.Parameters.Add(Time(now));
-                retire.Parameters.Add(Text(_namespace));
-                retire.Parameters.Add(Text(episode.SourceKind));
-                retire.Parameters.Add(Text(episode.SourceRef));
-                retire.Parameters.Add(Uuid(episodeId));
-                await retire.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
-            }
+            await RetireChangedAsync(connection, transaction, episode.SourceKind, episode.SourceRef, episodeId, now, ct).ConfigureAwait(false);
         }
 
         return new IngestResult(episodeId, Duplicate: false, written, corroborated, outranked);
     }
 
-    /// <summary>
-    /// Inserts the episode and takes the slot locks in one round trip. Null when the episode (same source and hash) already exists;
-    /// otherwise how many other episodes of the same source exist, which are its earlier versions.
-    /// </summary>
-    private async Task<long?> OpenEpisodeAsync(
-        NpgsqlConnection connection, NpgsqlTransaction transaction, NewEpisode episode, Guid episodeId, DateTimeOffset now, string[] slots, CancellationToken ct)
+    /// <summary>Retires, at <paramref name="now"/>, the live facts whose every source is an earlier version of the source of <paramref name="episodeId"/>.</summary>
+    private async Task RetireChangedAsync(
+        NpgsqlConnection connection, NpgsqlTransaction transaction, string sourceKind, string sourceRef, Guid episodeId, DateTimeOffset now, CancellationToken ct)
     {
-        var batch = new NpgsqlBatch(connection, transaction);
-        await using var batchScope = batch.ConfigureAwait(false);
-        Add(
-            batch,
-            EpisodeSql,
-            Uuid(episodeId), Text(_namespace), Text(episode.SourceKind), Text(episode.SourceRef), Text(episode.ContentHash),
-            Time(Micro(episode.OccurredAt ?? now)), Time(now), Text(ToText(episode.Trust)));
-        foreach (var slot in slots)
-        {
-            Add(batch, LockSlotSql, Text(slot));
-        }
+        var retire = new NpgsqlCommand(RetireChangedSql, connection, transaction);
+        await using var retireScope = retire.ConfigureAwait(false);
+        retire.Parameters.Add(Time(now));
+        retire.Parameters.Add(Text(_namespace));
+        retire.Parameters.Add(Text(sourceKind));
+        retire.Parameters.Add(Text(sourceRef));
+        retire.Parameters.Add(Uuid(episodeId));
+        await retire.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+    }
 
-        var reader = await batch.ExecuteReaderAsync(ct).ConfigureAwait(false);
-        await using var readerScope = reader.ConfigureAwait(false);
-        long? earlierVersions = await reader.ReadAsync(ct).ConfigureAwait(false) ? reader.GetInt64(0) : null;
-        while (await reader.NextResultAsync(ct).ConfigureAwait(false))
-        {
-            while (await reader.ReadAsync(ct).ConfigureAwait(false))
-            {
-            }
-        }
-
-        return earlierVersions;
+    /// <summary>Inserts the episode. Null when it (same source and hash) already exists; otherwise how many other episodes of the same source came before it.</summary>
+    private async Task<long?> OpenEpisodeAsync(
+        NpgsqlConnection connection, NpgsqlTransaction transaction, NewEpisode episode, Guid episodeId, DateTimeOffset now, CancellationToken ct)
+    {
+        var command = new NpgsqlCommand(EpisodeSql, connection, transaction);
+        await using var commandScope = command.ConfigureAwait(false);
+        command.Parameters.Add(Uuid(episodeId));
+        command.Parameters.Add(Text(_namespace));
+        command.Parameters.Add(Text(episode.SourceKind));
+        command.Parameters.Add(Text(episode.SourceRef));
+        command.Parameters.Add(Text(episode.ContentHash));
+        command.Parameters.Add(Time(Micro(episode.OccurredAt ?? now)));
+        command.Parameters.Add(Time(now));
+        command.Parameters.Add(Text(ToText(episode.Trust)));
+        return await command.ExecuteScalarAsync(ct).ConfigureAwait(false) as long?;
     }
 
     /// <summary>A <see cref="Cardinality.Many"/> or <see cref="Cardinality.Event"/> fact: inserted unless the same assertion is live (it gains a source) or was retracted (it is skipped).</summary>
@@ -529,7 +531,7 @@ public sealed partial class FactsStore
         await using var batchScope = batch.ConfigureAwait(false);
         if (plan.SameValue is { } same)
         {
-            Add(batch, AddSourceSql, Uuid(same), Uuid(episodeId), Json(fact.LocatorJson), Text(fact.Quote));
+            Add(batch, AddSourceSql, SourceParameters(same, episodeId, fact, from, fingerprint));
             await batch.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
             return WriteOutcome.Corroborated;
         }
@@ -539,7 +541,7 @@ public sealed partial class FactsStore
         if (plan.Containing is { } higher && higher.Trust > trust)
         {
             Add(batch, InsertOutrankedSql, InsertFactParameters(created, fact, from, end, now, slot, fingerprint, episodeId));
-            Add(batch, AddSourceSql, Uuid(created), Uuid(episodeId), Json(fact.LocatorJson), Text(fact.Quote));
+            Add(batch, AddSourceSql, SourceParameters(created, episodeId, fact, from, fingerprint));
             await batch.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
             return WriteOutcome.Outranked;
         }
@@ -563,7 +565,7 @@ public sealed partial class FactsStore
         }
 
         Add(batch, InsertOneSql, InsertFactParameters(created, fact, from, end, now, slot, fingerprint, episodeId));
-        Add(batch, AddSourceSql, Uuid(created), Uuid(episodeId), Json(fact.LocatorJson), Text(fact.Quote));
+        Add(batch, AddSourceSql, SourceParameters(created, episodeId, fact, from, fingerprint));
         if (plan.Containing is { } retired)
         {
             Add(batch, SupersededBySql, Uuid(retired.Id), Uuid(created));
@@ -578,6 +580,13 @@ public sealed partial class FactsStore
     [
         Uuid(id), Text(_namespace), Uuid(fact.Subject), Text(fact.Predicate), Text(fact.Value), Uuid(fact.ObjectEntity), Text(RenderText(fact)),
         Time(from), Time(to), Text("[)"), Time(now), Text(slot), Text(fingerprint), Uuid(episodeId),
+    ];
+
+    /// <summary>A source line of a single-valued fact: where it was read, and what the episode asserted, which purge replays.</summary>
+    private static NpgsqlParameter[] SourceParameters(Guid factId, Guid episodeId, NewFact fact, DateTimeOffset from, string fingerprint) =>
+    [
+        Uuid(factId), Uuid(episodeId), Json(fact.LocatorJson), Text(fact.Quote), Text(fingerprint), Time(from), Time(Micro(fact.ValidTo)),
+        Text(fact.Value), Uuid(fact.ObjectEntity), Text(RenderText(fact)),
     ];
 
     /// <summary>Decides what a value beginning at <paramref name="from"/> does to the live rows of its slot. Pure, so the rules read in one place.</summary>

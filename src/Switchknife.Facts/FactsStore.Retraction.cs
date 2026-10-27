@@ -10,9 +10,12 @@ public sealed partial class FactsStore
         "update facts.facts set retired_at = $3, retired_reason = 'retracted' where namespace = $1 and fingerprint = $2 and retired_at is null";
 
     private const string BlockSql =
-        "insert into facts.retractions (namespace, fingerprint, retracted_at) values ($1, $2, $3) on conflict do nothing";
+        """
+        insert into facts.retractions (namespace, fingerprint, retracted_at)
+        select $1, $2, $3 where not exists (select 1 from facts.retractions where namespace = $1 and fingerprint = $2 and restored_at is null)
+        """;
 
-    private const string BlockedAtSql = "select retracted_at from facts.retractions where namespace = $1 and fingerprint = $2";
+    private const string BlockedAtSql = "select retracted_at from facts.retractions where namespace = $1 and fingerprint = $2 and restored_at is null";
 
     private const string RetractedRowsSql =
         "select id from facts.facts where namespace = $1 and fingerprint = $2 and retired_reason = 'retracted' and retired_at = $3 order by lower(valid), id";
@@ -30,7 +33,7 @@ public sealed partial class FactsStore
     private const string CopyVectorsSql =
         "insert into facts.fact_vectors (fact_id, model, q8) select $1, model, q8 from facts.fact_vectors where fact_id = $2";
 
-    private const string UnblockSql = "delete from facts.retractions where namespace = $1 and fingerprint = $2";
+    private const string UnblockSql = "update facts.retractions set restored_at = $3 where namespace = $1 and fingerprint = $2 and restored_at is null";
 
     /// <summary>
     /// Retracts an assertion: every live row of it (a clipped or resumed value may be several) is retired with reason
@@ -51,13 +54,7 @@ public sealed partial class FactsStore
             return 0;
         }
 
-        var now = Micro(_time.GetUtcNow());
-        var batch = new NpgsqlBatch(connection, transaction);
-        await using var batchScope = batch.ConfigureAwait(false);
-        Add(batch, RetractSql, Text(_namespace), Text(fingerprint), Time(now));
-        Add(batch, BlockSql, Text(_namespace), Text(fingerprint), Time(now));
-        await batch.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-        var retired = batch.BatchCommands[0].RecordsAffected;
+        var retired = await RetractFingerprintAsync(connection, transaction, fingerprint, Micro(_time.GetUtcNow()), cancellationToken).ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         return retired;
     }
@@ -81,15 +78,34 @@ public sealed partial class FactsStore
             return 0;
         }
 
+        var restored = await RestoreFingerprintAsync(connection, transaction, fingerprint, Micro(_time.GetUtcNow()), cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return restored;
+    }
+
+    /// <summary>Retires every live row of the fingerprint as retracted at <paramref name="now"/> and blocks it. The caller holds the slot lock.</summary>
+    private async Task<int> RetractFingerprintAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, string fingerprint, DateTimeOffset now, CancellationToken ct)
+    {
+        var batch = new NpgsqlBatch(connection, transaction);
+        await using var batchScope = batch.ConfigureAwait(false);
+        Add(batch, RetractSql, Text(_namespace), Text(fingerprint), Time(now));
+        Add(batch, BlockSql, Text(_namespace), Text(fingerprint), Time(now));
+        await batch.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+        return batch.BatchCommands[0].RecordsAffected;
+    }
+
+    /// <summary>Lifts the block of the fingerprint and writes its retracted rows again at <paramref name="now"/>. The caller holds the slot lock.</summary>
+    private async Task<int> RestoreFingerprintAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, string fingerprint, DateTimeOffset now, CancellationToken ct)
+    {
         DateTimeOffset retractedAt;
         var blocked = new NpgsqlCommand(BlockedAtSql, connection, transaction);
         await using (blocked.ConfigureAwait(false))
         {
             blocked.Parameters.Add(Text(_namespace));
             blocked.Parameters.Add(Text(fingerprint));
-            var at = await blocked.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            var at = await blocked.ExecuteReaderAsync(ct).ConfigureAwait(false);
             await using var atScope = at.ConfigureAwait(false);
-            if (!await at.ReadAsync(cancellationToken).ConfigureAwait(false))
+            if (!await at.ReadAsync(ct).ConfigureAwait(false))
             {
                 return 0;
             }
@@ -104,15 +120,14 @@ public sealed partial class FactsStore
             rows.Parameters.Add(Text(_namespace));
             rows.Parameters.Add(Text(fingerprint));
             rows.Parameters.Add(Time(retractedAt));
-            var reader = await rows.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            var reader = await rows.ExecuteReaderAsync(ct).ConfigureAwait(false);
             await using var readerScope = reader.ConfigureAwait(false);
-            while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            while (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
                 ids.Add(reader.GetGuid(0));
             }
         }
 
-        var now = Micro(_time.GetUtcNow());
         var batch = new NpgsqlBatch(connection, transaction);
         await using var batchScope = batch.ConfigureAwait(false);
         foreach (var id in ids)
@@ -124,17 +139,16 @@ public sealed partial class FactsStore
             Add(batch, CopyVectorsSql, Uuid(restored), Uuid(id));
         }
 
-        Add(batch, UnblockSql, Text(_namespace), Text(fingerprint));
+        Add(batch, UnblockSql, Text(_namespace), Text(fingerprint), Time(now));
         try
         {
-            await batch.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            await batch.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
         }
         catch (PostgresException e) when (e.SqlState is PostgresErrorCodes.ExclusionViolation or PostgresErrorCodes.UniqueViolation)
         {
             throw new InvalidOperationException("The retracted fact cannot be restored: a newer fact occupies its interval, or it is live again.", e);
         }
 
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         return ids.Count;
     }
 
