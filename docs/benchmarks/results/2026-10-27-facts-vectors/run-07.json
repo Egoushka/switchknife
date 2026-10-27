@@ -1,0 +1,49 @@
+{
+  "options": {
+    "subjects": 2000,
+    "facts": 50000,
+    "queries": 2000,
+    "episodeSize": 5,
+    "vectorDimensions": 1024,
+    "seed": 1,
+    "vectorNoise": 1,
+    "oversample": 40
+  },
+  "episodes": 10400,
+  "ingestSeconds": 76.5491825,
+  "factsPerSecond": 679.3018331711119,
+  "ingestPerEpisode": {
+    "count": 10400,
+    "p50": 7.3965,
+    "p95": 10.8787,
+    "p99": 16.8973
+  },
+  "asOf": {
+    "count": 2000,
+    "p50": 0.2424,
+    "p95": 0.4284,
+    "p99": 0.6485
+  },
+  "asOfWrong": 0,
+  "asOfOverlap": 0,
+  "search": {
+    "count": 500,
+    "p50": 2.4765,
+    "p95": 4.045,
+    "p99": 4.3608
+  },
+  "nearest": {
+    "count": 200,
+    "p50": 17.6121,
+    "p95": 25.62,
+    "p99": 48.8695
+  },
+  "nearestRecall": 0.8955000000000015,
+  "nearestTieRecall": 1,
+  "liveRows": 52000,
+  "retiredRows": 35618,
+  "factsBytes": 59236352,
+  "embeddingBytes": 76791808,
+  "sharedBuffers": "128MB",
+  "harnessPeakRssMb": 0
+}

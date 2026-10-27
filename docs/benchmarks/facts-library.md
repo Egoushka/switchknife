@@ -106,6 +106,10 @@ After the 50,000-fact run, fill this table in the report:
 
 A line over budget triggers the ordered response in the ADR (scope before distance, fewer dimensions, approximate index), then a re-run. The report is committed as `docs/benchmarks/results/<date>-facts-library.md` with the JSON files beside it.
 
+## Results so far
+
+- Vector gates G3 and G4, ten runs at 50,000 facts: [`results/2026-10-27-facts-vectors.md`](results/2026-10-27-facts-vectors.md). Nearest p95 under 50 ms in 10 of 10 (median 22.9 ms, max 35.2 ms), embeddings 73.2 MB.
+
 ## Order of work
 
 1. Count what exists: Nytka facts and conversations, feed-eater items read per day, supersessions already visible. (Fills the ADR's volume UNKNOWN.)
