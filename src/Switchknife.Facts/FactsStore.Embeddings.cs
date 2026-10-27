@@ -37,7 +37,7 @@ public sealed partial class FactsStore
     // vectors once per matching fact (measured: 21 ms for 400 candidates on a 1,000-fact table, growing with the table).
     private const string VisibleSql =
         """
-        select id, subject_id, predicate, object_value, text, lower(valid), upper(valid), recorded_at from facts.facts
+        select id, subject_id, predicate, object_value, text, lower(valid), upper(valid), recorded_at, object_id from facts.facts
         where id = any($1) and namespace = $2 and valid @> $3 and recorded_at <= $4 and (retired_at is null or retired_at > $4)
         """;
 

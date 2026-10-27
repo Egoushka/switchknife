@@ -29,6 +29,19 @@ var rows = await facts.HistoryAsync(anna, "lives_in");   // the retired Kyiv row
 - **Namespaces.** Every row carries the store's namespace; one store never reads another's facts.
 - Instants are kept to the microsecond, as PostgreSQL keeps them.
 
+## Retracting, trusting, changing sources
+
+```csharp
+await facts.IngestAsync(new NewEpisode("web", "page-9", hash, Trust: EpisodeTrust.ThirdParty), [...]);   // may add and corroborate, never retire an owner's fact
+await facts.IngestAsync(new NewEpisode("note", "note-1", newHash), [...]);   // a new hash for the same source: facts only the old text supports retire (source_changed)
+await facts.RetractAsync(factId);   // retired as retracted; the same assertion is never written again
+await facts.RestoreAsync(factId);   // lifts the block, writes the rows again (throws if a newer fact took the interval)
+new NewFact(anna, "lives_in", "Kyiv", from, ValidTo: to)   // a closed range on a One predicate: the earlier value resumes after it
+new NewFact(anna, "works_at", null, from, Text: "Anna works at Acme", ObjectEntity: acmeId)   // the object is an entity
+```
+
+A fact is as trusted as its most trusted source. A lower-trust value that would retire a higher-trust one is stored already retired (`outranked`), so it shows in `HistoryAsync` and never in `AsOfAsync`. Retracting a `One` value leaves a gap, not the value it had clipped. Returning to an older content hash counts as the same episode again and does nothing; give reverted text a new hash.
+
 ## Finding facts by meaning
 
 ```csharp
@@ -40,7 +53,7 @@ Vectors are stored compressed (a sign-bit code to scan, an int8 copy to rank, ~1
 
 ## Not in this slice
 
-`ValidTo` on a `One` predicate (it throws), entity-valued objects, retraction, trust, changed-source retirement and purge, `Explain` and search, Explain and full-text/vector fusion, entity resolution and merge, the extractor contract, tool definitions. See the spec for the order.
+Purge, `Explain`, full-text/vector fusion, entity resolution and merge, the extractor contract, tool definitions. See [the write-path spec](../../docs/specs/2026-10-28-facts-write-path.md) and the slice table for the order.
 
 ## Measured
 

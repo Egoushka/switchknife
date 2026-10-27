@@ -29,7 +29,7 @@ public sealed class NearestTests(PostgresFixture postgres) : IClassFixture<Postg
         var facts = Enumerable.Range(firstValue, count).Select(i => new NewFact(anna, "likes", $"thing {i}", Harness.Day(0))).ToArray();
         await db.IngestAsync(source, facts);
         var byValue = (await db.Store.AsOfAsync(anna, "likes", Harness.Day(1))).ToDictionary(f => f.Value, f => f.Id);
-        return (anna, [.. facts.Select(f => byValue[f.Value])]);
+        return (anna, [.. facts.Select(f => byValue[f.Value!])]);
     }
 
     [Fact]
