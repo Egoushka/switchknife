@@ -58,5 +58,5 @@ Oversample sweep, loose clusters, same data (earlier candidate query): strict re
 
 ## Reopen if
 
-- Recall measured on real Nytka or feed-eater embeddings is below the synthetic numbers (the labelled set of gate G0 should include a retrieval question).
+- Recall measured on real Nytka or feed-eater embeddings is below the synthetic numbers (the labelled set of gate G0 includes a retrieval question: "Retrieval questions" in `docs/benchmarks/facts-library.md`).
 - A consumer needs more than about 300,000 live facts per model: the scan is linear (about 0.25 ms per 1,000 rows here); then pgvector's `<~>` (measured 9 ms against 12 to 16 ms for the builtin on 52,000 rows) or an HNSW index on the codes.
