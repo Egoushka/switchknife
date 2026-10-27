@@ -16,7 +16,7 @@ namespace Switchknife.Facts;
 /// Writers of one slot (subject and predicate) are serialized by a transaction-scoped advisory lock; the exclusion
 /// constraint in the schema stays the backstop for writers that bypass this class. The store does not own the data source.
 /// </remarks>
-public sealed class FactsStore
+public sealed partial class FactsStore
 {
     private const string DefineSql =
         """

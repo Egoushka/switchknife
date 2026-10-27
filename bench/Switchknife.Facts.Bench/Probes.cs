@@ -1,11 +1,9 @@
-using System.Globalization;
-using System.Text;
 using Npgsql;
 
 namespace Switchknife.Facts.Bench;
 
 /// <summary>
-/// What the library does not offer yet, as plain SQL against its schema: full text, exact vector scan, sizes. Writing and
+/// What the library does not offer yet, as plain SQL against its schema: full text, the live-fact list, sizes. Writing and
 /// the as-of read go through <see cref="Switchknife.Facts.FactsStore"/>, so the numbers measure the code consumers run.
 /// </summary>
 internal sealed class Probes(NpgsqlDataSource data)
@@ -47,74 +45,31 @@ internal sealed class Probes(NpgsqlDataSource data)
         return words;
     }
 
-    public async Task<int> EmbedLiveAsync(int dimensions, int seed)
+    /// <summary>The live facts, and whether each is current (open-ended), which is what a search "valid far in the future" can return.</summary>
+    public async Task<IReadOnlyList<(Guid Id, bool Current)>> LiveFactsAsync()
     {
-        var random = new Random(seed);
-        var ids = new List<Guid>();
-        await using (var command = data.CreateCommand("select id from facts.facts where retired_at is null"))
-        await using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+        await using var command = data.CreateCommand("select id, upper(valid) is null from facts.facts where retired_at is null order by id");
+        var rows = new List<(Guid, bool)>();
+        await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
+        while (await reader.ReadAsync().ConfigureAwait(false))
         {
-            while (await reader.ReadAsync().ConfigureAwait(false))
-            {
-                ids.Add(reader.GetGuid(0));
-            }
+            rows.Add((reader.GetGuid(0), reader.GetBoolean(1)));
         }
 
-        foreach (var chunk in ids.Chunk(500))
-        {
-            await using var connection = await data.OpenConnectionAsync().ConfigureAwait(false);
-            await using var batch = new NpgsqlBatch(connection);
-            foreach (var id in chunk)
-            {
-                var command = new NpgsqlBatchCommand("insert into facts.fact_embeddings values ($1, 'bench', $2::text::halfvec)");
-                command.Parameters.Add(P(id));
-                command.Parameters.Add(P(RandomVector(random, dimensions)));
-                batch.BatchCommands.Add(command);
-            }
-
-            await batch.ExecuteNonQueryAsync().ConfigureAwait(false);
-        }
-
-        return ids.Count;
-    }
-
-    /// <summary>The ten live facts nearest a vector by an exact scan: no index, so recall is 1 by construction.</summary>
-    public async Task<int> NearestAsync(string vector)
-    {
-        await using var command = data.CreateCommand(
-            """
-            select count(*) from (
-              select e.fact_id from facts.fact_embeddings e join facts.facts f on f.id = e.fact_id
-              where f.namespace = $1 and f.retired_at is null
-              order by e.embedding <=> $2::text::halfvec limit 10) nearest
-            """);
-        command.Parameters.Add(P(Namespace));
-        command.Parameters.Add(P(vector));
-        return (int)(long)(await command.ExecuteScalarAsync().ConfigureAwait(false))!;
+        return rows;
     }
 
     public async Task<StoreSizes> SizesAsync()
     {
         await using var command = data.CreateCommand(
             """
-            select pg_total_relation_size('facts.facts'), pg_total_relation_size('facts.fact_embeddings'),
+            select pg_total_relation_size('facts.facts'), pg_total_relation_size('facts.fact_embeddings') + pg_total_relation_size('facts.fact_vectors'),
                    (select count(*) from facts.facts where retired_at is null), (select count(*) from facts.facts where retired_at is not null),
                    current_setting('shared_buffers')
             """);
         await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
         await reader.ReadAsync().ConfigureAwait(false);
         return new StoreSizes(reader.GetInt64(0), reader.GetInt64(1), reader.GetInt64(2), reader.GetInt64(3), reader.GetString(4));
-    }
-
-    public static string RandomVector(Random random, int dimensions)
-    {
-        var text = new StringBuilder("[");
-        for (var i = 0; i < dimensions; i++)
-        {
-            text.Append(i == 0 ? "" : ",").Append((random.NextSingle() - 0.5f).ToString("F4", CultureInfo.InvariantCulture));
-        }
-
-        return text.Append(']').ToString();
     }
 
     private static NpgsqlParameter P(object? value) => new() { Value = value ?? DBNull.Value };
@@ -124,7 +79,6 @@ internal sealed class Probes(NpgsqlDataSource data)
         await using var command = data.CreateCommand(sql);
         await command.ExecuteNonQueryAsync().ConfigureAwait(false);
     }
-
 }
 
 internal sealed record StoreSizes(long FactsBytes, long EmbeddingBytes, long LiveRows, long RetiredRows, string SharedBuffers);

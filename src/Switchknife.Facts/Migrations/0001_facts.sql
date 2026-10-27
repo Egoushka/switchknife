@@ -1,8 +1,7 @@
 -- The facts library's schema (docs/adr/0001-facts-library.md). The benchmark harness applies this file, so
--- the design is executed in CI, not only described. PostgreSQL 18 with pgvector 0.8; btree_gist for the
--- exclusion constraint.
+-- the design is executed in CI, not only described. PostgreSQL 18; btree_gist for the exclusion constraint. No other
+-- extension: vectors are stored as bit codes and int8 (docs/adr/0003-facts-vector-storage.md).
 create extension if not exists btree_gist;
-create extension if not exists vector;
 create schema if not exists facts;
 
 -- A thing facts are about. Consumers that already own the identity (Nytka's people) pass external_ref and the
@@ -99,11 +98,21 @@ create table facts.fact_sources (
     primary key (fact_id, episode_id, locator)
 );
 
--- One vector per fact and model. No dimension on the column: a store re-embeds under a new model by adding rows, and
--- exact scans need no index (ADR section "Retrieval").
+-- Embeddings, two tables per ADR 0003. fact_embeddings is the narrow table a search scans: one sign bit per component
+-- (varbit, no fixed dimension), compared by XOR and bit_count. fact_vectors is the wide table only candidates are read
+-- from: the unit vector as int8 (cosine ignores the scale, so none is kept), ranked by cosine in the application. One row per fact and model, so a new model
+-- adds rows and never forces a migration; a model keeps one dimension (a mismatch is an error at search time).
 create table facts.fact_embeddings (
     fact_id   uuid    not null references facts.facts (id),
     model     text    not null,
-    embedding halfvec not null,
+    namespace text    not null,
+    bits      varbit  not null,
+    primary key (fact_id, model)
+);
+
+create table facts.fact_vectors (
+    fact_id uuid  not null references facts.facts (id),
+    model   text  not null,
+    q8      bytea not null,
     primary key (fact_id, model)
 );

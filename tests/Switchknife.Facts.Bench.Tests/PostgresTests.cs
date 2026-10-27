@@ -4,10 +4,10 @@ using Switchknife.Testing.Postgres;
 
 namespace Switchknife.Facts.Bench.Tests;
 
-/// <summary>One server with pgvector for the class (the image the home server runs); each test takes a database of its own. Skipped without Docker, outside CI.</summary>
+/// <summary>One server for the class; each test takes a database of its own. Skipped without Docker, outside CI.</summary>
 public sealed class PostgresFixture : IAsyncLifetime
 {
-    private readonly PostgresDatabase _postgres = new("pgvector/pgvector:0.8.7-pg18-trixie");
+    private readonly PostgresDatabase _postgres = new("postgres:18-alpine");
 
     public async ValueTask InitializeAsync() => await _postgres.StartAsync();
 
@@ -35,8 +35,10 @@ public sealed class PostgresTests(PostgresFixture postgres) : IClassFixture<Post
         Assert.NotNull(report.Nearest);
     }
 
-    [Fact]
-    public async Task The_adr_gates_hold_at_5000_facts()
+    [Theory]
+    [InlineData(0.5)]
+    [InlineData(1.0)]
+    public async Task The_adr_gates_hold_at_5000_facts(double vectorNoise)
     {
         // Latency on a shared machine is noisy (other containers start beside this one), so the thresholds must hold in the best of
         // three runs; a wrong answer fails any run, and a real regression of the write or read path misses the limit in all three.
@@ -45,7 +47,7 @@ public sealed class PostgresTests(PostgresFixture postgres) : IClassFixture<Post
         {
             await using var data = await postgres.NewDatabaseAsync();
 
-            var report = await Runner.RunAsync(data, new RunOptions(Subjects: 500, Facts: 5000, Queries: 1000, EpisodeSize: 5, VectorDimensions: 0, Seed: 5), fresh: false);
+            var report = await Runner.RunAsync(data, new RunOptions(Subjects: 500, Facts: 5000, Queries: 1000, EpisodeSize: 5, VectorDimensions: 1024, Seed: 5, VectorNoise: vectorNoise), fresh: false);
 
             Assert.Equal(0, report.AsOfWrong);
             Assert.Equal(0, report.AsOfOverlap);

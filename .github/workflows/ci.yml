@@ -33,8 +33,8 @@ jobs:
   aot:
     runs-on: ubuntu-latest
     services:
-      postgres: # the Switchknife.Migrations and Switchknife.Facts cases migrate a real database; Facts needs pgvector
-        image: pgvector/pgvector:0.8.7-pg18-trixie
+      postgres: # the Switchknife.Migrations and Switchknife.Facts cases migrate a real database
+        image: postgres:18-alpine
         env:
           POSTGRES_PASSWORD: smoke
         ports: ["5432:5432"]

@@ -1,6 +1,6 @@
 # 0001. A facts library: bi-temporal facts in the consumer's PostgreSQL
 
-- Status: proposed
+- Status: proposed (vector storage superseded by `0003-facts-vector-storage.md`: sign-bit scan and int8 rerank instead of pgvector `halfvec`)
 - Date: 2026-10-26
 
 ## Context

@@ -17,8 +17,8 @@ using Switchknife.Testing.Http;
 
 // Exercises each package the way a host would, under Native AOT. Exit 0 and one "ok" line per package.
 // Switchknife.Migrations, Switchknife.Journal.Postgres and Switchknife.Facts need a PostgreSQL server: SWITCHKNIFE_SMOKE_POSTGRES
-// is its connection string (any database on it; each case creates and drops its own; Switchknife.Facts needs the pgvector
-// and btree_gist extensions available). Unset, those cases are skipped, except in CI where they fail.
+// is its connection string (any database on it; each case creates and drops its own; Switchknife.Facts needs the btree_gist
+// extension available). Unset, those cases are skipped, except in CI where they fail.
 var exit = 0;
 var postgresCases = new HashSet<string> { "Switchknife.Facts", "Switchknife.Migrations", "Switchknife.Journal.Postgres" };
 var smokes = new (string, Func<Task<string?>>)[]
@@ -89,9 +89,15 @@ static async Task<string?> FactsAsync()
         var before = await store.AsOfAsync(anna, "lives_in", april, new DateTimeOffset(2026, 2, 1, 0, 0, 0, TimeSpan.Zero));
         var after = await store.AsOfAsync(anna, "lives_in", april);
         var history = await store.HistoryAsync(anna, "lives_in");
-        return (before.SingleOrDefault()?.Value, after.SingleOrDefault()?.Value, history.Count, second.Written) == ("Kyiv", "Lviv", 3, 1)
+
+        // The same rows found by meaning: the nearest to a "Lviv" vector is Lviv as known now, and Kyiv as known before Lviv was learned.
+        await store.SetEmbeddingsAsync("smoke", [.. history.Select(v => new FactEmbedding(v.Fact.Id, v.Fact.Value == "Kyiv" ? new float[] { 1, 0, 0, 0 } : new float[] { 0, 1, 0, 0 }))]);
+        var nearNow = await store.NearestAsync("smoke", new float[] { 0, 1, 0, 0 }, 1, april);
+        var nearThen = await store.NearestAsync("smoke", new float[] { 0, 1, 0, 0 }, 1, april, new DateTimeOffset(2026, 2, 1, 0, 0, 0, TimeSpan.Zero));
+        return (before.SingleOrDefault()?.Value, after.SingleOrDefault()?.Value, history.Count, second.Written, nearNow.SingleOrDefault()?.Fact.Value, nearThen.SingleOrDefault()?.Fact.Value)
+            == ("Kyiv", "Lviv", 3, 1, "Lviv", "Kyiv")
             ? null
-            : $"as known before: {before.SingleOrDefault()?.Value}, after: {after.SingleOrDefault()?.Value}, {history.Count} row(s), {second.Written} written";
+            : $"as known before: {before.SingleOrDefault()?.Value}, after: {after.SingleOrDefault()?.Value}, {history.Count} row(s), {second.Written} written, nearest now {nearNow.SingleOrDefault()?.Fact.Value}, then {nearThen.SingleOrDefault()?.Fact.Value}";
     }
     finally
     {
