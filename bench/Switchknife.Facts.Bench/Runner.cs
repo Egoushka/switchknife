@@ -18,6 +18,7 @@ internal sealed record RunReport(
     int AsOfOverlap,
     Latency Search,
     Latency? Nearest,
+    Latency? Fusion,
     double? NearestRecall,
     double? NearestTieRecall,
     long LiveRows,
@@ -33,6 +34,9 @@ internal static class Runner
 
     private const string Model = "bench-model";
     private const double TieEpsilon = 0.01;
+
+    /// <summary>Words in the text of every fact of one predicate (<c>lives in …</c>, <c>works at …</c>, <c>status …</c>, <c>knows …</c>).</summary>
+    private static readonly string[] CommonWords = ["lives", "works", "status", "knows"];
 
     public static async Task<RunReport> RunAsync(NpgsqlDataSource data, RunOptions options, bool fresh)
     {
@@ -100,17 +104,19 @@ internal static class Runner
             search.Add(timer.Elapsed.TotalMilliseconds);
         }
 
-        Latency? nearest = null;
+        Latency? nearest = null, fusion = null;
         double? recall = null, tieRecall = null;
         if (options.VectorDimensions > 0)
         {
-            (nearest, recall, tieRecall) = await MeasureNearestAsync(store, probes, options).ConfigureAwait(false);
+            var generator = new VectorWorkload(options.VectorDimensions, 64, options.VectorNoise, options.Seed + 2);
+            (nearest, recall, tieRecall) = await MeasureNearestAsync(store, probes, options, generator).ConfigureAwait(false);
+            fusion = await MeasureFusionAsync(store, probes, options, generator).ConfigureAwait(false);
         }
 
         var sizes = await probes.SizesAsync().ConfigureAwait(false);
         var totalFacts = workload.Singles.Count + workload.Many.Count;
         return new RunReport(options, perEpisode.Count, ingest.TotalSeconds, totalFacts / ingest.TotalSeconds, Stats.Summarize(perEpisode),
-            Stats.Summarize(asOf), wrong, overlap, Stats.Summarize(search), nearest, recall, tieRecall, sizes.LiveRows, sizes.RetiredRows, sizes.FactsBytes,
+            Stats.Summarize(asOf), wrong, overlap, Stats.Summarize(search), nearest, fusion, recall, tieRecall, sizes.LiveRows, sizes.RetiredRows, sizes.FactsBytes,
             sizes.EmbeddingBytes, sizes.SharedBuffers, Process.GetCurrentProcess().PeakWorkingSet64 / (1024 * 1024));
     }
 
@@ -120,10 +126,9 @@ internal static class Runner
     /// ten facts) and tie-aware (the share of results whose exact cosine is within <see cref="TieEpsilon"/> of the exact tenth best). Synthetic
     /// neighbours are nearly tied, so strict recall punishes swapping two facts whose cosines differ by a hair.
     /// </summary>
-    private static async Task<(Latency, double, double)> MeasureNearestAsync(FactsStore store, Probes probes, RunOptions options)
+    private static async Task<(Latency, double, double)> MeasureNearestAsync(FactsStore store, Probes probes, RunOptions options, VectorWorkload generator)
     {
         const int K = 10;
-        var generator = new VectorWorkload(options.VectorDimensions, 64, options.VectorNoise, options.Seed + 2);
         var live = await probes.LiveFactsAsync().ConfigureAwait(false);
         var vectors = new float[live.Count][];
         foreach (var chunk in Enumerable.Range(0, live.Count).Chunk(2000))
@@ -160,6 +165,28 @@ internal static class Runner
         }
 
         return (Stats.Summarize(timings), recall / queries, tieRecall / queries);
+    }
+
+    /// <summary>
+    /// Latency of <see cref="FactsStore.SearchAsync"/> for the 10 best current facts, text and a fresh vector together. Four in five queries are
+    /// the last word of a random live fact (a value, which few facts share); one in five is a word every fact of a predicate contains
+    /// (<see cref="CommonWords"/>), which makes the full-text list rank thousands of rows: the case that decides the p95.
+    /// </summary>
+    private static async Task<Latency> MeasureFusionAsync(FactsStore store, Probes probes, RunOptions options, VectorWorkload generator)
+    {
+        var validAt = new DateTimeOffset(Workload.Origin.AddDays(5000));
+        var words = await probes.SampleWordsAsync(Math.Min(options.Queries, 500)).ConfigureAwait(false);
+        var timings = new List<double>();
+        for (var i = 0; i < words.Count; i++)
+        {
+            var text = i % 5 == 4 ? CommonWords[(i / 5) % CommonWords.Length] : words[i];
+            var query = generator.Next();
+            var timer = Stopwatch.StartNew();
+            await store.SearchAsync(text, query, Model, 10, validAt).ConfigureAwait(false);
+            timings.Add(timer.Elapsed.TotalMilliseconds);
+        }
+
+        return Stats.Summarize(timings);
     }
 
     private static float[] Unit(float[] vector)

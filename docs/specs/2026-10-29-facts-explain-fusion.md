@@ -79,12 +79,14 @@ xUnit in `tests/Switchknife.Facts.Tests`, Postgres in Docker as the other tests 
 | F3a | `Fusion_ranks_a_fact_found_by_both_above_a_fact_found_by_one` | a fact that is top 3 in both lists beats one that is first in one list and absent from the other |
 | F3b | `Text_only_and_vector_only_searches_work` | a null vector or empty text returns that list alone, in its own order, with the other rank null |
 | F3c | `Search_never_returns_retired_or_other_namespace_facts` | retracted, superseded-and-closed and other-namespace facts are absent |
-| F3e | `Score_is_the_sum_of_reciprocal_ranks_and_ties_break_by_better_rank_then_id` | scores equal `1/(60+r)` summed, computed by hand from the reported ranks, for a fixture with known list orders; two facts with equal scores order by the better rank, and equal ranks by id |
+| F3e | `Score_is_the_sum_of_reciprocal_ranks_and_ties_break_by_better_rank_then_id` | scores equal `1/(60+r)` summed, computed by hand from the ranks each list reports alone, for a fixture with known list orders; the reported ranks equal those |
+| F3e2 | `Equal_scores_with_equal_best_ranks_order_by_id` | two facts first in their list (one per list) tie at 1/61 and order by id, the older row first |
+| F3e3 | `Equal_scores_go_to_the_fact_with_the_better_rank_before_the_id` | a fact first in the text list only and a fact 62nd in both lists score exactly 1/61; the first leads although its id is the larger |
 | F3f | `A_fact_ranked_beyond_limit_in_both_lists_rises_into_the_results` | a fact 12th in both lists with `limit` 10 is returned, above facts that are 1st in one list only (candidate depth is `limit × 4`, not `limit`) |
 | F3g | `Search_rejects_bad_input` | no text and no vector, a vector without a model, `limit` 0 and 1,001, and a future `knownAt` each throw the exception named above |
-| F3d | `Search_stays_inside_its_latency_budget_at_50000_facts` | the harness reports `fusion.p95` for fusion at most 100 ms (twice the vector gate), measured on 2,000 queries of a word from a live fact plus a fresh vector |
+| F3d | `Search_stays_inside_its_latency_budget_at_50000_facts` | the harness reports `fusion.p95` for fusion at most 100 ms (twice the vector gate), measured on up to 500 queries, each a text and a fresh vector: four in five the last word of a random live fact, one in five a word that every fact of a predicate contains (the full-text list then ranks thousands of rows), asking for the best 10 current facts |
 | G3, G4 | the harness gates | `nearest.p95` at most 50 ms and `embeddingBytes` at most 100 MB, as before: fusion adds no table and no write |
-| G3f | `HarnessTests` | a report whose `fusion.p95` is over 100 ms yields a failure naming `fusion.p95`; one without a fusion measurement (no vectors) yields none |
+| G3f | `Gates_report_every_threshold_a_run_exceeds` (`HarnessTests`) | a report whose `fusion.p95` is over 100 ms yields a failure naming `fusion.p95`; one without a fusion measurement (no vectors) yields none |
 
 Every test of both pull requests is shown to fail: the pull request lists the mutation (a line changed in the code) that turns each red.
 
