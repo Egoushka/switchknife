@@ -320,7 +320,7 @@ public sealed class FactsStoreTests(PostgresFixture postgres) : IClassFixture<Po
         var episode = new NewEpisode("test", "bad", "h");
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => db.Store.IngestAsync(episode, [new NewFact(anna, "unknown", "x", Harness.Day(0))]));
-        await Assert.ThrowsAsync<ArgumentException>(() => db.Store.IngestAsync(episode, [new NewFact(anna, "lives_in", "x", Harness.Day(0), Harness.Day(5))]));
+        await Assert.ThrowsAsync<ArgumentException>(() => db.Store.IngestAsync(episode, [new NewFact(anna, "lives_in", "x", Harness.Day(5), Harness.Day(5))]));
         await Assert.ThrowsAsync<ArgumentException>(() => db.Store.IngestAsync(episode, [new NewFact(anna, "likes", "x", Harness.Day(5), Harness.Day(5))]));
         await Assert.ThrowsAsync<ArgumentException>(() => db.Store.IngestAsync(episode, [new NewFact(anna, "likes", new string('x', 400), Harness.Day(0))]));
         await Assert.ThrowsAsync<InvalidOperationException>(() => db.Store.DefinePredicateAsync("lives_in", Cardinality.Many));

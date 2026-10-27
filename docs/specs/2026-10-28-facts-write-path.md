@@ -26,7 +26,7 @@ Schema changes edit `0001_facts.sql` in place: no `facts/v` tag exists yet, so n
 
 **Changed source.** An ingest of a source (`source_kind`, `source_ref`) with a new `content_hash` makes every earlier episode of that source stale. After the new facts are written (so re-asserted facts gain the new episode as a source), live facts whose every source is a stale episode of this source retire with `source_changed`; facts with any other source stay. One statement, once per non-duplicate ingest. Known limit: returning to an older hash is a duplicate episode and does nothing; give the reverted text a new hash.
 
-**Hot path.** No new per-fact round trip. The retracted-fingerprint check rides on the statement that already reads the slot (`one`) or the insert (`many`, `event`); the trust of a live row comes from the same slot query. Beyond today's, an ingest adds one statement: the changed-source retirement. The slot lock statement also covers the slots of stale facts so that retirement cannot race a clip.
+**Hot path.** No new per-fact round trip. The retracted-fingerprint check rides on the statement that already reads the slot (`one`) or the insert (`many`, `event`); the trust of a live row comes from the same slot query. The episode insert reports how many earlier versions the source has; only when there are some does the ingest add two statements (lock the slots of the facts they support, then retire what only they support), so a first version costs what it did before.
 
 ## W1: acceptance checks
 
@@ -46,7 +46,7 @@ xUnit in `tests/Switchknife.Facts.Tests`, Postgres in Docker as the other tests 
 | A23b | `A_one_fact_that_ends_before_it_begins_is_refused` | `ArgumentException`, nothing written |
 | A24 | `Entity_valued_objects_supersede_and_corroborate_by_entity` | `works_at` Acme then Globex supersedes; Acme twice corroborates; both or neither of value and entity, or an entity without `Text`, is refused; `Fact.ObjectEntity` round trips |
 | A26 | `Two_live_copies_of_one_piece_cannot_exist_by_raw_sql` | raw insert of a second live row with the same fingerprint and start fails with SQLSTATE `23505`; two live pieces of one fingerprint with different starts are allowed |
-| A27 | `The_write_path_adds_no_per_fact_round_trip` | a counting `DbDataSource` wrapper over a 5-fact `one` episode and a 5-fact `many` episode: the statement count of each equals the pre-W1 count plus at most 1 (the changed-source statement) |
+| A27 | `The_write_path_adds_no_per_fact_round_trip` | a counting `DbDataSource` wrapper over a 5-fact `one` episode and a 5-fact `many` episode: the statement count of each is at most the pre-W1 count (12 and 6) |
 | G1 | the harness gates | `ingestPerEpisode.p95` at most 30 ms at 50,000 facts, `asOf.p95`, size and G4 as before; numbers in the pull request |
 
 Every test is shown to fail: the pull request lists the mutation (a line changed in the code) that turns each red.

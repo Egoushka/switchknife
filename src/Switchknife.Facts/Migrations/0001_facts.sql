@@ -70,7 +70,7 @@ create table facts.facts (
     valid          tstzrange   not null,
     recorded_at    timestamptz not null,
     retired_at     timestamptz null,
-    retired_reason text        null check (retired_reason in ('superseded', 'retracted', 'source_changed', 'merged')),
+    retired_reason text        null check (retired_reason in ('superseded', 'retracted', 'source_changed', 'outranked', 'merged')),
     superseded_by  uuid        null references facts.facts (id),
     slot           text        null,
     fingerprint    text        not null,
@@ -83,11 +83,22 @@ create table facts.facts (
     exclude using gist (slot with =, valid with &&) where (retired_at is null and slot is not null)
 );
 
-create unique index facts_live_fingerprint on facts.facts (namespace, fingerprint) where retired_at is null;
+-- One live row per assertion for many and event predicates. A one predicate's assertion may live in several pieces (clipped
+-- on one side, resumed after a closed range), all sharing the fingerprint, so there the start tells the pieces apart.
+create unique index facts_live_fingerprint on facts.facts (namespace, fingerprint) where retired_at is null and slot is null;
+create unique index facts_live_piece on facts.facts (namespace, fingerprint, lower(valid)) where retired_at is null and slot is not null;
 create index facts_by_subject on facts.facts (namespace, subject_id, predicate);
 create index facts_by_valid on facts.facts using gist (valid);
 create index facts_by_episode on facts.facts (episode_id);
 create index facts_search on facts.facts using gin (search);
+
+-- A retracted assertion's fingerprint: every write path skips it, so a fact the owner deleted does not come back.
+create table facts.retractions (
+    namespace    text        not null,
+    fingerprint  text        not null,
+    retracted_at timestamptz not null,
+    primary key (namespace, fingerprint)
+);
 
 -- Where a fact was read: a line range or a quote inside the episode. Every extracted fact has at least one.
 create table facts.fact_sources (
@@ -97,6 +108,8 @@ create table facts.fact_sources (
     quote      text  null,
     primary key (fact_id, episode_id, locator)
 );
+
+create index fact_sources_by_episode on facts.fact_sources (episode_id);
 
 -- Embeddings, two tables per ADR 0003. fact_embeddings is the narrow table a search scans: one sign bit per component
 -- (varbit, no fixed dimension), compared by XOR and bit_count. fact_vectors is the wide table only candidates are read
