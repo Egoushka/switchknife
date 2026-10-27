@@ -1,6 +1,6 @@
 # Facts library, F2: the rest of the write path, purge, and search fusion
 
-Part of `docs/specs/2026-10-26-facts-library.md` (slice F2, plus the fusion half of F3). Design and reasons: `docs/adr/0001-facts-library.md`. The typed core is `docs/specs/2026-10-27-facts-core.md`; vectors are `2026-10-27-facts-vectors.md`. Status: this file is committed before the code; each pull request below ticks its own checks.
+Part of `docs/specs/2026-10-26-facts-library.md` (slice F2; its fusion half moved to the F3 spec). Design and reasons: `docs/adr/0001-facts-library.md`. The typed core is `docs/specs/2026-10-27-facts-core.md`; vectors are `2026-10-27-facts-vectors.md`. Status: this file is committed before the code; each pull request below ticks its own checks.
 
 ## Three pull requests, in this order
 
@@ -8,7 +8,7 @@ Part of `docs/specs/2026-10-26-facts-library.md` (slice F2, plus the fusion half
 |---|---|---|
 | **W1** write path | `ValidTo` on `one` predicates, entity-valued objects, retraction and restore, trust, changed source | `FactsStore.cs`, `FactsStore.Retraction.cs` (new), `Models.cs`, `Migrations/0001_facts.sql`, tests |
 | **W2** purge | Delete a source and everything only it supports; rebuild each affected `one` slot by replay; the same replay as an integrity check | `FactsStore.Purge.cs` (new), tests. Needs W1 merged: the replay must understand W1's rows. |
-| **W3** fusion | `SearchAsync(text, vector, …)` by reciprocal rank | `FactsStore.Search.cs` (new), tests. Disjoint from W1 and W2: it calls the public `NearestAsync` and never edits `FactsStore.Embeddings.cs`. |
+| **W3** fusion | moved to `2026-10-29-facts-explain-fusion.md` (slice F3) | |
 
 Schema changes edit `0001_facts.sql` in place: no `facts/v` tag exists yet, so no consumer has applied it. The first tag freezes it; later changes are `0002` and up.
 
@@ -78,20 +78,9 @@ Known limits: two facts of one episode on one slot that start at the same instan
 
 Yehor reads this diff: it deletes data.
 
-## W3: decisions
+## W3: moved
 
-`SearchAsync(string text, ReadOnlyMemory<float> vector, string model, int limit = 10, DateTimeOffset? validAt = null, DateTimeOffset? knownAt = null, …)` returns facts ranked by reciprocal rank fusion, `score = Σ 1 / (60 + rank)` over two rankings: full text (`plainto_tsquery('simple', text)` against `facts.search`, ordered by `ts_rank_cd`) and `NearestAsync`. Both candidate lists are `limit × 4` deep and both obey `validAt` (default: now) and `knownAt` (default: now; a future value is refused, as in `AsOfAsync`). A fact in only one list still scores. Either input may be absent (text only, vector only). The constant 60 is the published default; the benchmark plan in `docs/benchmarks/facts-library.md` decides whether it stays once real labels exist.
-
-## W3: acceptance checks
-
-| ID | Test | Passes when |
-|---|---|---|
-| L2 | `Facts_recorded_after_known_at_never_appear_in_search` | text-only, vector-only and fused searches at a `knownAt` before a fact was recorded never return it; a row retired after `knownAt` still does |
-| L2b | `Facts_not_valid_at_the_instant_never_appear_in_search` | the same for `validAt` outside a fact's range |
-| F3a | `Fusion_ranks_a_fact_found_by_both_above_a_fact_found_by_one` | a fact that is top 3 in both lists beats one that is first in one list and absent from the other |
-| F3b | `Text_only_and_vector_only_searches_work` | a null vector or empty text returns that list alone, in its own order |
-| F3c | `Search_never_returns_retired_or_other_namespace_facts` | retracted, superseded-and-closed and other-namespace facts are absent |
-| F3d | `Search_stays_inside_its_latency_budget_at_50000_facts` | the harness reports `search.p95` for fusion at most 100 ms (twice the vector gate) |
+The fusion decisions and checks (L2, L2b, F3a to F3d, and the ones added since) live in `docs/specs/2026-10-29-facts-explain-fusion.md`, next to Explain, which ships in the same slice (F3). They are not repeated here.
 
 ## Not in this plan
 
