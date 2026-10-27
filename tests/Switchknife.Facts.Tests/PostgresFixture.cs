@@ -4,10 +4,10 @@ using Switchknife.Testing.Postgres;
 
 namespace Switchknife.Facts.Tests;
 
-/// <summary>One server with pgvector for the class (the image the home server runs); each test takes a database of its own. Skipped without Docker, outside CI.</summary>
+/// <summary>One server for the class; each test takes a database of its own. Skipped without Docker, outside CI.</summary>
 public sealed class PostgresFixture : IAsyncLifetime
 {
-    private readonly PostgresDatabase _postgres = new("pgvector/pgvector:0.8.7-pg18-trixie");
+    private readonly PostgresDatabase _postgres = new("postgres:18-alpine");
 
     public async ValueTask InitializeAsync() => await _postgres.StartAsync();
 

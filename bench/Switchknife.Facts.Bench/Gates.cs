@@ -2,11 +2,12 @@ namespace Switchknife.Facts.Bench;
 
 /// <summary>
 /// The thresholds a run must meet: spec checks G1 (ingest), G2 (as-of), G3 (nearest) and G4 (footprint) in
-/// <c>docs/specs/2026-10-26-facts-library.md</c>. They are the ADR's targets taken as written; a change is an ADR line.
+/// <c>docs/specs/2026-10-26-facts-library.md</c>, and G3r (tie-aware recall of the quantized nearest search,
+/// <c>docs/specs/2026-10-27-facts-vectors.md</c>). They are the ADR's targets taken as written; a change is an ADR line.
 /// </summary>
-internal sealed record Gates(double IngestP95Ms, double AsOfP95Ms, double NearestP95Ms, double FactsMb, double EmbeddingMb)
+internal sealed record Gates(double IngestP95Ms, double AsOfP95Ms, double NearestP95Ms, double FactsMb, double EmbeddingMb, double NearestTieRecall)
 {
-    public static readonly Gates Adr = new(IngestP95Ms: 30, AsOfP95Ms: 10, NearestP95Ms: 50, FactsMb: 150, EmbeddingMb: 100);
+    public static readonly Gates Adr = new(IngestP95Ms: 30, AsOfP95Ms: 10, NearestP95Ms: 50, FactsMb: 150, EmbeddingMb: 100, NearestTieRecall: 0.95);
 
     private const double Mb = 1024 * 1024;
 
@@ -21,6 +22,10 @@ internal sealed record Gates(double IngestP95Ms, double AsOfP95Ms, double Neares
         {
             Over(failures, "nearest.p95", nearest.P95, NearestP95Ms, "ms");
             Over(failures, "embeddingBytes", report.EmbeddingBytes / Mb, EmbeddingMb, "MB");
+            if (!(report.NearestTieRecall >= NearestTieRecall))
+            {
+                failures.Add($"nearestTieRecall is {report.NearestTieRecall:F3}, under the limit of {NearestTieRecall:F2}");
+            }
         }
 
         return failures;

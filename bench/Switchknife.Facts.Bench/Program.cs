@@ -4,7 +4,7 @@ using Npgsql;
 using Switchknife.Facts.Bench;
 
 // run:   Switchknife.Facts.Bench run --connection <string> [--subjects 2000] [--facts 50000] [--queries 2000]
-//        [--episode-size 5] [--vector-dims 0] [--seed 1] [--fresh] [--gate]    (the database name must contain "bench")
+//        [--episode-size 5] [--vector-dims 0] [--vector-noise 1.0] [--oversample 40] [--seed 1] [--fresh] [--gate]    (the database name must contain "bench")
 //        --gate also exits 3 when a run exceeds the ADR's latency or size thresholds (Gates.Adr), naming each on stderr
 // score: Switchknife.Facts.Bench score --gold gold.jsonl --pred pred.jsonl
 if (args.Length == 0 || args[0] is not ("run" or "score"))
@@ -38,7 +38,7 @@ if (!database.Contains("bench", StringComparison.OrdinalIgnoreCase))
 
 await using var data = NpgsqlDataSource.Create(connection);
 var report = await Runner.RunAsync(data, new RunOptions(
-    Int("subjects", 2000), Int("facts", 50_000), Int("queries", 2000), Int("episode-size", 5), Int("vector-dims", 0), Int("seed", 1)),
+    Int("subjects", 2000), Int("facts", 50_000), Int("queries", 2000), Int("episode-size", 5), Int("vector-dims", 0), Int("seed", 1), Double("vector-noise", 1.0), Int("oversample", 40)),
     options.ContainsKey("fresh")).ConfigureAwait(false);
 Console.WriteLine(JsonSerializer.Serialize(report, BenchJson.Default.RunReport));
 if (report.AsOfWrong + report.AsOfOverlap != 0)
@@ -75,5 +75,7 @@ static Dictionary<string, string> ParseOptions(IEnumerable<string> arguments)
 }
 
 string Required(string name) => options.GetValueOrDefault(name) is { Length: > 0 } value ? value : throw new ArgumentException($"--{name} is required.");
+
+double Double(string name, double fallback) => options.TryGetValue(name, out var text) && text.Length > 0 ? double.Parse(text, CultureInfo.InvariantCulture) : fallback;
 
 int Int(string name, int fallback) => options.TryGetValue(name, out var text) && text.Length > 0 ? int.Parse(text, CultureInfo.InvariantCulture) : fallback;

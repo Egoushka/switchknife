@@ -4,7 +4,7 @@ using Npgsql;
 
 namespace Switchknife.Facts.Bench;
 
-internal sealed record RunOptions(int Subjects, int Facts, int Queries, int EpisodeSize, int VectorDimensions, int Seed);
+internal sealed record RunOptions(int Subjects, int Facts, int Queries, int EpisodeSize, int VectorDimensions, int Seed, double VectorNoise = 1.0, int Oversample = 40);
 
 /// <summary>Everything one run measured. AsOfWrong and AsOfOverlap must be 0; the rest are the numbers docs/benchmarks/facts-library.md asks for.</summary>
 internal sealed record RunReport(
@@ -18,6 +18,8 @@ internal sealed record RunReport(
     int AsOfOverlap,
     Latency Search,
     Latency? Nearest,
+    double? NearestRecall,
+    double? NearestTieRecall,
     long LiveRows,
     long RetiredRows,
     long FactsBytes,
@@ -28,6 +30,9 @@ internal sealed record RunReport(
 internal static class Runner
 {
     public const string Namespace = Probes.Namespace;
+
+    private const string Model = "bench-model";
+    private const double TieEpsilon = 0.01;
 
     public static async Task<RunReport> RunAsync(NpgsqlDataSource data, RunOptions options, bool fresh)
     {
@@ -96,25 +101,81 @@ internal static class Runner
         }
 
         Latency? nearest = null;
+        double? recall = null, tieRecall = null;
         if (options.VectorDimensions > 0)
         {
-            await probes.EmbedLiveAsync(options.VectorDimensions, options.Seed + 2).ConfigureAwait(false);
-            var timings = new List<double>();
-            for (var i = 0; i < Math.Min(options.Queries, 200); i++)
-            {
-                var vector = Probes.RandomVector(random, options.VectorDimensions);
-                var timer = Stopwatch.StartNew();
-                await probes.NearestAsync(vector).ConfigureAwait(false);
-                timings.Add(timer.Elapsed.TotalMilliseconds);
-            }
-
-            nearest = Stats.Summarize(timings);
+            (nearest, recall, tieRecall) = await MeasureNearestAsync(store, probes, options).ConfigureAwait(false);
         }
 
         var sizes = await probes.SizesAsync().ConfigureAwait(false);
         var totalFacts = workload.Singles.Count + workload.Many.Count;
         return new RunReport(options, perEpisode.Count, ingest.TotalSeconds, totalFacts / ingest.TotalSeconds, Stats.Summarize(perEpisode),
-            Stats.Summarize(asOf), wrong, overlap, Stats.Summarize(search), nearest, sizes.LiveRows, sizes.RetiredRows, sizes.FactsBytes,
+            Stats.Summarize(asOf), wrong, overlap, Stats.Summarize(search), nearest, recall, tieRecall, sizes.LiveRows, sizes.RetiredRows, sizes.FactsBytes,
             sizes.EmbeddingBytes, sizes.SharedBuffers, Process.GetCurrentProcess().PeakWorkingSet64 / (1024 * 1024));
+    }
+
+    /// <summary>
+    /// Embeds every live fact with clustered vectors, then asks for the 10 nearest current facts to fresh draws from the same distribution:
+    /// latency of <see cref="FactsStore.NearestAsync"/>, and recall against exact cosine over the original float vectors: strict (the same
+    /// ten facts) and tie-aware (the share of results whose exact cosine is within <see cref="TieEpsilon"/> of the exact tenth best). Synthetic
+    /// neighbours are nearly tied, so strict recall punishes swapping two facts whose cosines differ by a hair.
+    /// </summary>
+    private static async Task<(Latency, double, double)> MeasureNearestAsync(FactsStore store, Probes probes, RunOptions options)
+    {
+        const int K = 10;
+        var generator = new VectorWorkload(options.VectorDimensions, 64, options.VectorNoise, options.Seed + 2);
+        var live = await probes.LiveFactsAsync().ConfigureAwait(false);
+        var vectors = new float[live.Count][];
+        foreach (var chunk in Enumerable.Range(0, live.Count).Chunk(2000))
+        {
+            var batch = new List<FactEmbedding>(chunk.Length);
+            foreach (var i in chunk)
+            {
+                vectors[i] = generator.Next();
+                batch.Add(new FactEmbedding(live[i].Id, vectors[i]));
+            }
+
+            await store.SetEmbeddingsAsync(Model, batch).ConfigureAwait(false);
+        }
+
+        var current = Enumerable.Range(0, live.Count).Where(i => live[i].Current).Select(i => (live[i].Id, Unit: Unit(vectors[i]))).ToArray();
+        var validAt = new DateTimeOffset(Workload.Origin.AddDays(5000));
+        var timings = new List<double>();
+        double recall = 0, tieRecall = 0;
+        var queries = Math.Min(options.Queries, 200);
+        for (var q = 0; q < queries; q++)
+        {
+            var query = generator.Next();
+            var timer = Stopwatch.StartNew();
+            var found = await store.NearestAsync(Model, query, K, validAt, oversample: options.Oversample).ConfigureAwait(false);
+            timings.Add(timer.Elapsed.TotalMilliseconds);
+
+            var unit = Unit(query);
+            var scored = current.Select(c => (c.Id, Cosine: Dot(unit, c.Unit))).OrderByDescending(c => c.Cosine).ToArray();
+            var exact = scored.Take(K).Select(c => c.Id).ToHashSet();
+            var cosines = scored.ToDictionary(c => c.Id, c => c.Cosine);
+            var floor = scored[K - 1].Cosine - TieEpsilon;
+            recall += (double)found.Count(f => exact.Contains(f.Fact.Id)) / K;
+            tieRecall += (double)found.Count(f => cosines[f.Fact.Id] >= floor) / K;
+        }
+
+        return (Stats.Summarize(timings), recall / queries, tieRecall / queries);
+    }
+
+    private static float[] Unit(float[] vector)
+    {
+        var norm = (float)Math.Sqrt(vector.Sum(x => (double)x * x));
+        return [.. vector.Select(x => x / norm)];
+    }
+
+    private static double Dot(float[] a, float[] b)
+    {
+        double sum = 0;
+        for (var i = 0; i < a.Length; i++)
+        {
+            sum += a[i] * b[i];
+        }
+
+        return sum;
     }
 }
