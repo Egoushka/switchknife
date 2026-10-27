@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using Switchknife.Facts;
 using Switchknife.Hosting;
 using Switchknife.Journal;
 using Switchknife.Journal.Postgres;
@@ -15,13 +16,14 @@ using Switchknife.Migrations;
 using Switchknife.Testing.Http;
 
 // Exercises each package the way a host would, under Native AOT. Exit 0 and one "ok" line per package.
-// Switchknife.Migrations and Switchknife.Journal.Postgres need a PostgreSQL server: SWITCHKNIFE_SMOKE_POSTGRES is its
-// connection string (any database on it; each case creates and drops its own). Unset, those cases are skipped,
-// except in CI where they fail.
+// Switchknife.Migrations, Switchknife.Journal.Postgres and Switchknife.Facts need a PostgreSQL server: SWITCHKNIFE_SMOKE_POSTGRES
+// is its connection string (any database on it; each case creates and drops its own; Switchknife.Facts needs the pgvector
+// and btree_gist extensions available). Unset, those cases are skipped, except in CI where they fail.
 var exit = 0;
-var postgresCases = new HashSet<string> { "Switchknife.Migrations", "Switchknife.Journal.Postgres" };
+var postgresCases = new HashSet<string> { "Switchknife.Facts", "Switchknife.Migrations", "Switchknife.Journal.Postgres" };
 var smokes = new (string, Func<Task<string?>>)[]
 {
+    ("Switchknife.Facts", FactsAsync),
     ("Switchknife.Hosting", HostingAsync),
     ("Switchknife.Journal", JournalAsync),
     ("Switchknife.Journal.Postgres", JournalPostgresAsync),
@@ -49,6 +51,56 @@ foreach (var (package, smoke) in smokes)
     }
 }
 return exit;
+
+static async Task<string?> FactsAsync()
+{
+    var server = Environment.GetEnvironmentVariable("SWITCHKNIFE_SMOKE_POSTGRES");
+    if (string.IsNullOrEmpty(server))
+        return "SWITCHKNIFE_SMOKE_POSTGRES is not set";
+
+    var name = $"smoke_{Guid.NewGuid():N}";
+    var admin = new NpgsqlConnectionStringBuilder(server) { Database = "postgres", Pooling = false }.ConnectionString;
+    var database = new NpgsqlConnectionStringBuilder(server) { Database = name, Pooling = false }.ConnectionString;
+    await using (var create = new NpgsqlConnection(admin))
+    {
+        await create.OpenAsync();
+        await using var createDb = new NpgsqlCommand($"create database {name}", create);
+        await createDb.ExecuteNonQueryAsync();
+    }
+    try
+    {
+        await using (var migrate = new NpgsqlConnection(database))
+        {
+            await migrate.OpenAsync();
+            await using var ddl = new NpgsqlCommand(FactsSchema.Sql, migrate);
+            await ddl.ExecuteNonQueryAsync();
+        }
+
+        // A value superseded later: asked as known before the second episode it is still the first, as known after it is the second.
+        var clock = new SettableClock(new DateTimeOffset(2026, 1, 10, 0, 0, 0, TimeSpan.Zero));
+        await using var dataSource = NpgsqlDataSource.Create(database);
+        var store = new FactsStore(dataSource, "smoke", clock);
+        await store.DefinePredicateAsync("lives_in", Cardinality.One);
+        var anna = await store.EnsureEntityAsync("person", "Anna", "smoke:people/1");
+        await store.IngestAsync(new NewEpisode("note", "1", "h1"), [new NewFact(anna, "lives_in", "Kyiv", new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero))]);
+        clock.Now = new DateTimeOffset(2026, 3, 10, 0, 0, 0, TimeSpan.Zero);
+        var second = await store.IngestAsync(new NewEpisode("note", "2", "h2"), [new NewFact(anna, "lives_in", "Lviv", new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero))]);
+        var april = new DateTimeOffset(2026, 4, 1, 0, 0, 0, TimeSpan.Zero);
+        var before = await store.AsOfAsync(anna, "lives_in", april, new DateTimeOffset(2026, 2, 1, 0, 0, 0, TimeSpan.Zero));
+        var after = await store.AsOfAsync(anna, "lives_in", april);
+        var history = await store.HistoryAsync(anna, "lives_in");
+        return (before.SingleOrDefault()?.Value, after.SingleOrDefault()?.Value, history.Count, second.Written) == ("Kyiv", "Lviv", 3, 1)
+            ? null
+            : $"as known before: {before.SingleOrDefault()?.Value}, after: {after.SingleOrDefault()?.Value}, {history.Count} row(s), {second.Written} written";
+    }
+    finally
+    {
+        await using var admin2 = new NpgsqlConnection(admin);
+        await admin2.OpenAsync();
+        await using var drop = new NpgsqlCommand($"drop database if exists {name} with (force)", admin2);
+        await drop.ExecuteNonQueryAsync();
+    }
+}
 
 static async Task<string?> HostingAsync()
 {
@@ -227,6 +279,13 @@ static async Task<string?> TestingHttpAsync()
 }
 
 internal sealed record Made(string Name);
+
+internal sealed class SettableClock(DateTimeOffset now) : TimeProvider
+{
+    public DateTimeOffset Now { get; set; } = now;
+
+    public override DateTimeOffset GetUtcNow() => Now;
+}
 
 internal sealed class FlakyPoller(ILogger logger) : PollingService(TimeProvider.System, logger)
 {

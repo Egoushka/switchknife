@@ -61,7 +61,7 @@ The MCP SDK is not a dependency. A consumer registers the definitions with its o
 
 ## Design
 
-The executable schema is `bench/Switchknife.Facts.Bench/Schema/0001_facts.sql`; CI applies it, so it cannot drift from this text.
+The executable schema is `src/Switchknife.Facts/Migrations/0001_facts.sql` (embedded in `Switchknife.Facts`); CI applies it, so it cannot drift from this text.
 
 ### Schema
 

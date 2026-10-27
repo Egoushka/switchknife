@@ -36,40 +36,26 @@ public sealed class PostgresTests(PostgresFixture postgres) : IClassFixture<Post
     }
 
     [Fact]
-    public async Task Two_live_values_for_one_slot_cannot_overlap_even_by_raw_sql()
+    public async Task The_adr_gates_hold_at_5000_facts()
     {
-        await using var data = await postgres.NewDatabaseAsync();
-        var store = new FactsStore(data);
-        var workload = new Workload(2, 20, seed: 1);
-        await store.CreateSchemaAsync(fresh: false);
-        await store.SeedAsync(workload, Workload.Origin);
-        var subject = workload.Subjects[0];
-
-        const string Episode =
-            """
-            insert into facts.episodes (id, namespace, source_kind, source_ref, content_hash, occurred_at, recorded_at, status)
-            values ('00000000-0000-0000-0000-000000000001', 'bench', 'k', 'r', 'h', now(), now(), 'done')
-            """;
-        const string Fact =
-            """
-            insert into facts.facts (id, namespace, subject_id, predicate, object_value, text, valid, recorded_at, slot, fingerprint, episode_id)
-            values (gen_random_uuid(), 'bench', $1, 'lives_in', 'x', 'lives in x', tstzrange('2026-01-01', null, '[)'), now(), 'slot-1', $2, '00000000-0000-0000-0000-000000000001')
-            """;
-        await Execute(data, Episode);
-        await Execute(data, Fact, subject, "a");
-        var error = await Assert.ThrowsAsync<PostgresException>(() => Execute(data, Fact, subject, "b"));
-
-        Assert.Equal(PostgresErrorCodes.ExclusionViolation, error.SqlState);
-    }
-
-    private static async Task Execute(NpgsqlDataSource data, string sql, params object[] values)
-    {
-        await using var command = data.CreateCommand(sql);
-        foreach (var value in values)
+        // Latency on a shared machine is noisy (other containers start beside this one), so the thresholds must hold in the best of
+        // three runs; a wrong answer fails any run, and a real regression of the write or read path misses the limit in all three.
+        IReadOnlyList<string> failures = [];
+        for (var attempt = 1; attempt <= 3; attempt++)
         {
-            command.Parameters.Add(new NpgsqlParameter { Value = value });
+            await using var data = await postgres.NewDatabaseAsync();
+
+            var report = await Runner.RunAsync(data, new RunOptions(Subjects: 500, Facts: 5000, Queries: 1000, EpisodeSize: 5, VectorDimensions: 0, Seed: 5), fresh: false);
+
+            Assert.Equal(0, report.AsOfWrong);
+            Assert.Equal(0, report.AsOfOverlap);
+            failures = Gates.Adr.Check(report);
+            if (failures.Count == 0)
+            {
+                break;
+            }
         }
 
-        await command.ExecuteNonQueryAsync();
+        Assert.Empty(failures);
     }
 }

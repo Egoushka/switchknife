@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using Npgsql;
 
 namespace Switchknife.Facts.Bench;
@@ -26,27 +27,40 @@ internal sealed record RunReport(
 
 internal static class Runner
 {
+    public const string Namespace = Probes.Namespace;
+
     public static async Task<RunReport> RunAsync(NpgsqlDataSource data, RunOptions options, bool fresh)
     {
-        var store = new FactsStore(data);
-        var workload = new Workload(options.Subjects, options.Facts, options.Seed);
-        await store.CreateSchemaAsync(fresh).ConfigureAwait(false);
-        await store.SeedAsync(workload, Workload.Origin).ConfigureAwait(false);
+        var clock = new ReplayClock();
+        var store = new FactsStore(data, Namespace, clock);
+        var probes = new Probes(data);
+        var workload = new Workload(options.Subjects, options.Facts, options.Seed, options.EpisodeSize);
+        await probes.CreateSchemaAsync(fresh).ConfigureAwait(false);
+        foreach (var predicate in Workload.SinglePredicates)
+        {
+            await store.DefinePredicateAsync(predicate, Cardinality.One).ConfigureAwait(false);
+        }
 
-        // Learned order is recorded order; singles and many-valued facts are merged into episodes by time.
-        var timeline = workload.Singles.Select(s => (s.RecordedAt, Single: (Learned?)s, Many: (Added?)null))
-            .Concat(workload.Many.Select(m => (m.RecordedAt, Single: (Learned?)null, Many: (Added?)m)))
-            .OrderBy(e => e.RecordedAt).ToList();
+        await store.DefinePredicateAsync(Workload.ManyPredicate, Cardinality.Many).ConfigureAwait(false);
+        var entities = new Dictionary<Guid, Guid>();
+        for (var i = 0; i < workload.Subjects.Count; i++)
+        {
+            entities[workload.Subjects[i]] = await store.EnsureEntityAsync("person", string.Create(CultureInfo.InvariantCulture, $"person {i}"), string.Create(CultureInfo.InvariantCulture, $"bench:person/{i}")).ConfigureAwait(false);
+        }
 
         var perEpisode = new List<double>();
         var total = Stopwatch.StartNew();
-        var episode = 0;
-        foreach (var chunk in timeline.Chunk(options.EpisodeSize))
+        var number = 0;
+        foreach (var episode in workload.Episodes)
         {
-            var clock = Stopwatch.StartNew();
-            await store.IngestAsync([.. chunk.Where(e => e.Single is not null).Select(e => e.Single!)], [.. chunk.Where(e => e.Many is not null).Select(e => e.Many!)], episode++)
-                .ConfigureAwait(false);
-            perEpisode.Add(clock.Elapsed.TotalMilliseconds);
+            clock.Set(episode.RecordedAt);
+            var facts = episode.Singles.Select(s => new NewFact(entities[s.Subject], s.Predicate, s.Value, new DateTimeOffset(s.ValidFrom)))
+                .Concat(episode.Many.Select(m => new NewFact(entities[m.Subject], Workload.ManyPredicate, m.Value, new DateTimeOffset(m.ValidFrom))))
+                .ToArray();
+            var reference = string.Create(CultureInfo.InvariantCulture, $"episode-{number++}");
+            var timer = Stopwatch.StartNew();
+            await store.IngestAsync(new NewEpisode("bench", reference, reference), facts).ConfigureAwait(false);
+            perEpisode.Add(timer.Elapsed.TotalMilliseconds);
         }
 
         var ingest = total.Elapsed;
@@ -54,7 +68,7 @@ internal static class Runner
         var random = new Random(options.Seed + 1);
         var asOf = new List<double>();
         int wrong = 0, overlap = 0;
-        var last = workload.Singles[^1].RecordedAt;
+        var last = workload.Episodes[^1].RecordedAt;
         for (var i = 0; i < options.Queries; i++)
         {
             var subject = workload.Subjects[random.Next(workload.Subjects.Count)];
@@ -66,39 +80,40 @@ internal static class Runner
                 knownAt = last;
             }
 
-            var clock = Stopwatch.StartNew();
-            var values = await store.AsOfAsync(subject, predicate, validAt, knownAt).ConfigureAwait(false);
-            asOf.Add(clock.Elapsed.TotalMilliseconds);
+            var timer = Stopwatch.StartNew();
+            var values = await store.AsOfAsync(entities[subject], predicate, new DateTimeOffset(validAt), new DateTimeOffset(knownAt)).ConfigureAwait(false);
+            asOf.Add(timer.Elapsed.TotalMilliseconds);
             overlap += values.Count > 1 ? 1 : 0;
-            wrong += (values.Count > 0 ? values[0] : null) == workload.Expected(subject, predicate, validAt, knownAt) ? 0 : 1;
+            wrong += (values.Count > 0 ? values[0].Value : null) == workload.Expected(subject, predicate, validAt, knownAt) ? 0 : 1;
         }
 
         var search = new List<double>();
-        foreach (var word in await store.SampleWordsAsync(Math.Min(options.Queries, 500)).ConfigureAwait(false))
+        foreach (var word in await probes.SampleWordsAsync(Math.Min(options.Queries, 500)).ConfigureAwait(false))
         {
-            var clock = Stopwatch.StartNew();
-            await store.SearchAsync(word).ConfigureAwait(false);
-            search.Add(clock.Elapsed.TotalMilliseconds);
+            var timer = Stopwatch.StartNew();
+            await probes.SearchAsync(word).ConfigureAwait(false);
+            search.Add(timer.Elapsed.TotalMilliseconds);
         }
 
         Latency? nearest = null;
         if (options.VectorDimensions > 0)
         {
-            await store.EmbedLiveAsync(options.VectorDimensions, options.Seed + 2).ConfigureAwait(false);
+            await probes.EmbedLiveAsync(options.VectorDimensions, options.Seed + 2).ConfigureAwait(false);
             var timings = new List<double>();
             for (var i = 0; i < Math.Min(options.Queries, 200); i++)
             {
-                var vector = FactsStore.RandomVector(random, options.VectorDimensions);
-                var clock = Stopwatch.StartNew();
-                await store.NearestAsync(vector).ConfigureAwait(false);
-                timings.Add(clock.Elapsed.TotalMilliseconds);
+                var vector = Probes.RandomVector(random, options.VectorDimensions);
+                var timer = Stopwatch.StartNew();
+                await probes.NearestAsync(vector).ConfigureAwait(false);
+                timings.Add(timer.Elapsed.TotalMilliseconds);
             }
 
             nearest = Stats.Summarize(timings);
         }
 
-        var sizes = await store.SizesAsync().ConfigureAwait(false);
-        return new RunReport(options, perEpisode.Count, ingest.TotalSeconds, timeline.Count / ingest.TotalSeconds, Stats.Summarize(perEpisode),
+        var sizes = await probes.SizesAsync().ConfigureAwait(false);
+        var totalFacts = workload.Singles.Count + workload.Many.Count;
+        return new RunReport(options, perEpisode.Count, ingest.TotalSeconds, totalFacts / ingest.TotalSeconds, Stats.Summarize(perEpisode),
             Stats.Summarize(asOf), wrong, overlap, Stats.Summarize(search), nearest, sizes.LiveRows, sizes.RetiredRows, sizes.FactsBytes,
             sizes.EmbeddingBytes, sizes.SharedBuffers, Process.GetCurrentProcess().PeakWorkingSet64 / (1024 * 1024));
     }
