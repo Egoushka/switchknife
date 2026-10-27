@@ -83,6 +83,19 @@ The output has `truePositives`, `falsePositives`, `falseNegatives`, `precision`,
 
 **As-of questions.** For each supersession pair, ask "what was true about S's P on date D" for one date before the change and one after, and "what did we believe on date K" for K between the two episodes' recording times. Gold answers come from the labels; a system answers from its own store (A, B0) or its own reasoning (B1). Report accuracy per system, split by `planted` and real, with intervals. That is the G0 number.
 
+**Retrieval questions (written in the same sitting).** ADR 0003 measured the vector scan on synthetic clusters only; whether real embeddings keep the recall is the open question this section answers, and the labels needed are cheap once the gold facts exist. For about 40 of the 60 episodes, the owner writes two or three questions whose answers are gold facts, 100 in total, to a second file `questions.jsonl` kept beside the gold file:
+
+```json
+{"q":"Where is the owner based these days?","episode":"n-014","kind":"paraphrase","relevant":[{"s":"owner","p":"lives_in","o":"Kyiv"}]}
+{"q":"Where did the owner live in January?","episode":"n-014","kind":"asof","validAt":"2026-01-15","relevant":[{"s":"owner","p":"lives_in","o":"Lviv"}]}
+```
+
+`relevant` lists gold facts by `s`, `p`, `o` (no new labelling: they are looked up in the gold file); `kind` is `paraphrase`, `lexical` or `asof`; `asof` questions carry `validAt` and optionally `knownAt`. The mix is at least 50 `paraphrase` questions (worded so that no content word of the fact text appears in the question; this is what tests embeddings against full-text), at least 25 `lexical` (the question shares words with the fact; the baseline where full-text should already win) and at least 25 `asof` (tests that the filters hold under ranking). At least 20 questions have two or more relevant facts. A hundred questions give a 95% Wilson interval of about plus or minus 6 points on a recall near 0.9.
+
+The store these run against holds the gold facts of all 60 episodes plus distractors: facts extracted by system A from at least 2,000 other episodes of the same two sources, unlabelled, so that the store has at least 5,000 live facts (the "small" size above). Real text at 50,000 facts is out of reach for now; say so beside the numbers, and do not extrapolate. The same embedding model embeds every fact and every question; record its name and dimension. Which model production will use is UNKNOWN; if it changes, rerun.
+
+Methods compared on the same questions: exact cosine over the float vectors (the reference), `NearestAsync` (sign-bit scan with int8 rerank), full-text alone, and, once built, the fusion of the last two. Report recall at 10 (the share of a question's relevant facts in the top 10) and mean reciprocal rank, split by `kind`, with intervals. Proposed rule, to be confirmed by the first run: `NearestAsync` recall at 10 is at least 95% of exact cosine's on `paraphrase` questions; if not, mean-centre before quantization (the first remedy in ADR 0003) and measure again. A fusion that does not beat the better of its two parts on `paraphrase` plus `lexical` together is not worth shipping.
+
 **Model and cost.** The same model (`gpt-6-luna`, through the box gateway) and the same sampling settings for every system; record the model name and the prompt hash in each prediction file. Read tokens in and out and the cost of each call from the gateway's per-call cost header or its log; report cost per 100 episodes (G7). Price per token is UNKNOWN in the repositories, so do not compute cost from a guessed price.
 
 **Repeatability.** Models are not deterministic. Run each system three times, report the mean and the spread, and compare means.
