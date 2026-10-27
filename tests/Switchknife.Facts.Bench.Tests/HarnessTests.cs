@@ -56,4 +56,26 @@ public sealed class HarnessTests
         Assert.Null(first.Expected(learned.Subject, learned.Predicate, learned.ValidFrom, learned.RecordedAt.AddSeconds(-1)));
         Assert.Equal(learned.Value, first.Expected(learned.Subject, learned.Predicate, learned.ValidFrom.AddDays(1), learned.RecordedAt.AddDays(400)));
     }
+
+    [Fact]
+    public void Gates_report_every_threshold_a_run_exceeds()
+    {
+        var fine = new RunReport(
+            new RunOptions(1, 1, 1, 1, 1, 1), 1, 1, 1, new Latency(1, 1, 5, 6), new Latency(1, 1, 2, 3), 0, 0, new Latency(1, 1, 2, 3), new Latency(1, 1, 20, 30),
+            1, 0, 100 * 1024 * 1024, 60 * 1024 * 1024, "128MB", 10);
+
+        var slow = fine with
+        {
+            IngestPerEpisode = new Latency(1, 1, 31, 40),
+            AsOf = new Latency(1, 1, 10.5, 12),
+            Nearest = new Latency(1, 1, 51, 60),
+            FactsBytes = 151L * 1024 * 1024,
+            EmbeddingBytes = 101L * 1024 * 1024,
+        };
+
+        Assert.Empty(Gates.Adr.Check(fine));
+        Assert.Equal(["ingestPerEpisode.p95", "asOf.p95", "factsBytes", "nearest.p95", "embeddingBytes"], Gates.Adr.Check(slow).Select(f => f.Split(' ')[0]));
+        Assert.Empty(Gates.Adr.Check(fine with { Nearest = null, EmbeddingBytes = 0 }));
+        Assert.Single(Gates.Adr.Check(fine with { AsOf = new Latency(0, double.NaN, double.NaN, double.NaN) }));
+    }
 }

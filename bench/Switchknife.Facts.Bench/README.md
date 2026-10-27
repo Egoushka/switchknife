@@ -1,16 +1,17 @@
 # Switchknife.Facts.Bench
 
-Measures the design in [`docs/adr/0001-facts-library.md`](../../docs/adr/0001-facts-library.md) against PostgreSQL before any library exists. Not a package.
+Measures [`Switchknife.Facts`](../../src/Switchknife.Facts) (design: [`docs/adr/0001-facts-library.md`](../../docs/adr/0001-facts-library.md)) against PostgreSQL. Not a package.
 
-- `Schema/0001_facts.sql` is the schema the library will ship. Tests apply it, so the ADR cannot drift from it.
-- `FactsStore.cs` is the write path (supersession by clipping, immutable rows, sources) and the read paths (as of a valid and a transaction time, full text, exact vector scan) as plain SQL. The library is built from it.
+- `Runner.cs` drives the library's own `FactsStore` (ingest, as-of reads), so the numbers measure the code consumers run. The schema is the library's embedded `Migrations/0001_facts.sql`.
+- `Probes.cs` is what the library does not offer yet, as plain SQL: full text, the exact vector scan, relation sizes.
+- `Gates.cs` holds the ADR's thresholds (ingest p95 30 ms, as-of p95 10 ms, nearest p95 50 ms, facts 150 MB, embeddings 100 MB); `run --gate` exits 3 when a run exceeds one.
 - `Workload.cs` generates a deterministic history with late and out-of-order facts, and answers every as-of question itself. A store that disagrees is wrong.
 
 ```bash
 # mechanics: the database name must contain "bench"; the run replaces the facts schema
 dotnet run -c Release --project bench/Switchknife.Facts.Bench -- run \
   --connection "Host=localhost;Database=facts_bench;Username=postgres;Password=..." \
-  --subjects 2000 --facts 50000 --queries 2000 --episode-size 5 --vector-dims 1024 --fresh
+  --subjects 2000 --facts 50000 --queries 2000 --episode-size 5 --vector-dims 1024 --fresh --gate
 
 # extraction quality against a labelled set kept outside this repository
 dotnet run -c Release --project bench/Switchknife.Facts.Bench -- score --gold gold.jsonl --pred predicted.jsonl

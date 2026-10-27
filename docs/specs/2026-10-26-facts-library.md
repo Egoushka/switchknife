@@ -25,7 +25,7 @@ These run today. H1 and H2 need Docker; without it, outside CI, they skip (as th
 
 | ID | Check | Command | Passes when |
 |---|---|---|---|
-| H1 | Schema applies and refuses overlap | `dotnet test --project tests/Switchknife.Facts.Bench.Tests --filter-method "*cannot_overlap*"` | the test is green: the schema applies to an empty database on pgvector/PostgreSQL 18, and a second live value for one slot at overlapping times fails with SQLSTATE `23P01` |
+| H1 | Schema applies and refuses overlap | `dotnet test --project tests/Switchknife.Facts.Tests --filter-method "*cannot_overlap*"` | the test is green: the schema applies to an empty database on pgvector/PostgreSQL 18, and a second live value for one slot at overlapping times fails with SQLSTATE `23P01` |
 | H2 | Design write path agrees with the oracle | `dotnet test --project tests/Switchknife.Facts.Bench.Tests --filter-method "*every_as_of_query*"` | `AsOfWrong` is 0, `AsOfOverlap` is 0, retired rows exist, vector query returns rows |
 | H3 | Scorer and percentiles | `dotnet test --project tests/Switchknife.Facts.Bench.Tests --filter-class "*HarnessTests"` | green, no Docker needed |
 | H4 | Harness refuses a database not made for it | `dotnet run --project bench/Switchknife.Facts.Bench -- run --connection "Host=x;Database=app"` | exit code 2 and the message names the database |
@@ -99,7 +99,7 @@ One pull request each, in this order. "Issue" means a chargehand issue carrying 
 |---|---|---|---|
 | F0 | This pull request: ADR, spec, benchmark plan, harness | H1 to H5 | none |
 | G0 | Run the baseline: B0, B1 and the design on the labelled set; report | G0 to G7 | F0 merged, labelled set drawn by Yehor |
-| F1 | Package skeleton, embedded schema, `Switchknife.Migrations` integration, AOT smoke case, README | A5, A21, A22 | G0 go |
+| F1 | Package skeleton, embedded schema, `Switchknife.Migrations` integration, AOT smoke case, README | A5, A21, A22 | G0 go (started early: `2026-10-27-facts-core.md`) |
 | F2 | Write path: episodes, cardinality, supersession, retraction, trust, purge | A1 to A4, A6 to A13 | F1 |
 | F3 | Retrieval: as-of, history, explain, search | A1, A2, A14, G2, G3 | F1 |
 | F4 | Entities: resolution, aliases, merge | A15 to A17 | F1 |

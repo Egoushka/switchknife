@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Switchknife.Facts</PackageId>
+    <MinVerTagPrefix>facts/v</MinVerTagPrefix>
+    <Description>Bi-temporal facts in the consumer's own PostgreSQL: immutable rows, a valid time and a transaction time, cardinality-typed predicates that supersede by clipping, and "what was true at T, as known at K" reads. Native AOT compatible.</Description>
+    <PackageTags>facts;temporal;bitemporal;knowledge;postgresql;npgsql;aot</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations/*.sql" />
+  </ItemGroup>
+
+</Project>

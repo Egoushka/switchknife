@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Switchknife.Facts/Switchknife.Facts.csproj" />
     <Project Path="src/Switchknife.Hosting/Switchknife.Hosting.csproj" />
     <Project Path="src/Switchknife.Journal/Switchknife.Journal.csproj" />
     <Project Path="src/Switchknife.Journal.Postgres/Switchknife.Journal.Postgres.csproj" />
@@ -13,6 +14,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Switchknife.Facts.Bench.Tests/Switchknife.Facts.Bench.Tests.csproj" />
+    <Project Path="tests/Switchknife.Facts.Tests/Switchknife.Facts.Tests.csproj" />
     <Project Path="tests/Switchknife.Hosting.Tests/Switchknife.Hosting.Tests.csproj" />
     <Project Path="tests/Switchknife.Journal.Tests/Switchknife.Journal.Tests.csproj" />
     <Project Path="tests/Switchknife.Journal.Postgres.Tests/Switchknife.Journal.Postgres.Tests.csproj" />

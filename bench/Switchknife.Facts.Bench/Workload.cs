@@ -8,6 +8,9 @@ internal sealed record Learned(Guid Subject, string Predicate, string Value, Dat
 /// <summary>A many-valued fact (<c>knows</c>): it never supersedes anything.</summary>
 internal sealed record Added(Guid Subject, string Value, DateTime ValidFrom, DateTime RecordedAt);
 
+/// <summary>One ingest: the facts the store hears of together, all recorded at <paramref name="RecordedAt"/>, as a real episode is.</summary>
+internal sealed record WorkloadEpisode(DateTime RecordedAt, IReadOnlyList<Learned> Singles, IReadOnlyList<Added> Many);
+
 /// <summary>
 /// A deterministic history: people whose city, employer and status change over time, learned in an order that
 /// differs from the order they happened in. The oracle answers "what was true at T, as known at K" from the
@@ -23,12 +26,16 @@ internal sealed class Workload
 
     public IReadOnlyList<Guid> Subjects { get; }
 
+    /// <summary>The ingests in recorded order; every fact in one carries that ingest's time, since the store stamps a whole episode with its clock.</summary>
+    public IReadOnlyList<WorkloadEpisode> Episodes { get; }
+
     public IReadOnlyList<Learned> Singles { get; }
 
     public IReadOnlyList<Added> Many { get; }
 
-    public Workload(int subjects, int factsTarget, int seed)
+    public Workload(int subjects, int factsTarget, int seed, int episodeSize = 1)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(episodeSize, 1);
         var random = new Random(seed);
         Subjects = [.. Enumerable.Range(0, subjects).Select(_ => new Guid(Bytes(random)))];
         var manyShare = factsTarget / 5;
@@ -51,17 +58,35 @@ internal sealed class Workload
                     list.Add(learned);
                 }
 
-                _slots[(subject, predicate)] = list;
                 singles.AddRange(list);
             }
         }
 
-        Singles = [.. singles.OrderBy(l => l.RecordedAt).ThenBy(l => l.ValidFrom)];
-        Many = [.. Enumerable.Range(0, manyShare).Select(i =>
+        var learnedInOrder = singles.OrderBy(l => l.RecordedAt).ThenBy(l => l.ValidFrom).ToList();
+        var addedInOrder = Enumerable.Range(0, manyShare).Select(i =>
         {
             var at = Origin.AddDays(random.Next(700));
             return new Added(Subjects[random.Next(Subjects.Count)], string.Create(CultureInfo.InvariantCulture, $"person-{i}"), at, at.AddDays(random.Next(10)));
-        }).OrderBy(a => a.RecordedAt)];
+        }).OrderBy(a => a.RecordedAt).ToList();
+
+        // Learned order is recorded order. Facts are grouped into episodes by time, and an episode is recorded when its last fact arrived.
+        var timeline = learnedInOrder.Select(s => (s.RecordedAt, Single: (Learned?)s, Many: (Added?)null))
+            .Concat(addedInOrder.Select(m => (m.RecordedAt, Single: (Learned?)null, Many: (Added?)m)))
+            .OrderBy(e => e.RecordedAt).ToList();
+        Episodes = [.. timeline.Chunk(episodeSize).Select(chunk =>
+        {
+            var recorded = chunk.Max(e => e.RecordedAt);
+            return new WorkloadEpisode(
+                recorded,
+                [.. chunk.Where(e => e.Single is not null).Select(e => e.Single! with { RecordedAt = recorded })],
+                [.. chunk.Where(e => e.Many is not null).Select(e => e.Many! with { RecordedAt = recorded })]);
+        })];
+        Singles = [.. Episodes.SelectMany(e => e.Singles)];
+        Many = [.. Episodes.SelectMany(e => e.Many)];
+        foreach (var slot in Singles.GroupBy(l => (l.Subject, l.Predicate)))
+        {
+            _slots[slot.Key] = [.. slot];
+        }
     }
 
     /// <summary>The value of a slot valid at <paramref name="validAt"/> among what was recorded by <paramref name="knownAt"/>; null when nothing was known then.</summary>

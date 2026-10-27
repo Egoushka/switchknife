@@ -8,8 +8,12 @@
 
   <ItemGroup>
     <PackageReference Include="Npgsql" />
-    <EmbeddedResource Include="Schema/*.sql" />
     <InternalsVisibleTo Include="Switchknife.Facts.Bench.Tests" />
+    <InternalsVisibleTo Include="Switchknife.Facts.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Switchknife.Facts\Switchknife.Facts.csproj" />
   </ItemGroup>
 
 </Project>

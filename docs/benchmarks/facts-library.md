@@ -79,7 +79,7 @@ The output has `truePositives`, `falsePositives`, `falseNegatives`, `precision`,
 |---|---|---|
 | B0 | Nytka's current extraction (memories with `replaces` and `expires`), mapped to triples | 1 |
 | B1 | Raw episodes: retrieve by date and embedding, a model answers "what is true now / on date D" | 0 at write, 1 per question |
-| A | The design's extraction contract (triples, dates, `replaces`) plus the write path of `FactsStore` | 1 |
+| A | The design's extraction contract (triples, dates, `replaces`) plus the write path of `Switchknife.Facts.FactsStore` | 1 |
 
 **As-of questions.** For each supersession pair, ask "what was true about S's P on date D" for one date before the change and one after, and "what did we believe on date K" for K between the two episodes' recording times. Gold answers come from the labels; a system answers from its own store (A, B0) or its own reasoning (B1). Report accuracy per system, split by `planted` and real, with intervals. That is the G0 number.
 

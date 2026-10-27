@@ -4,7 +4,8 @@ using Npgsql;
 using Switchknife.Facts.Bench;
 
 // run:   Switchknife.Facts.Bench run --connection <string> [--subjects 2000] [--facts 50000] [--queries 2000]
-//        [--episode-size 5] [--vector-dims 0] [--seed 1] [--fresh]    (the database name must contain "bench")
+//        [--episode-size 5] [--vector-dims 0] [--seed 1] [--fresh] [--gate]    (the database name must contain "bench")
+//        --gate also exits 3 when a run exceeds the ADR's latency or size thresholds (Gates.Adr), naming each on stderr
 // score: Switchknife.Facts.Bench score --gold gold.jsonl --pred pred.jsonl
 if (args.Length == 0 || args[0] is not ("run" or "score"))
 {
@@ -40,7 +41,18 @@ var report = await Runner.RunAsync(data, new RunOptions(
     Int("subjects", 2000), Int("facts", 50_000), Int("queries", 2000), Int("episode-size", 5), Int("vector-dims", 0), Int("seed", 1)),
     options.ContainsKey("fresh")).ConfigureAwait(false);
 Console.WriteLine(JsonSerializer.Serialize(report, BenchJson.Default.RunReport));
-return report.AsOfWrong + report.AsOfOverlap == 0 ? 0 : 1;
+if (report.AsOfWrong + report.AsOfOverlap != 0)
+{
+    return 1;
+}
+
+var failures = options.ContainsKey("gate") ? Gates.Adr.Check(report) : [];
+foreach (var failure in failures)
+{
+    Console.Error.WriteLine($"gate failed: {failure}");
+}
+
+return failures.Count == 0 ? 0 : 3;
 
 static Dictionary<string, string> ParseOptions(IEnumerable<string> arguments)
 {
