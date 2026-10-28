@@ -10,8 +10,11 @@ namespace Switchknife.Facts;
 /// <param name="Trust">How far the episode's source is believed.</param>
 /// <param name="OccurredAt">When the source happened, as the ingest said.</param>
 /// <param name="RecordedAt">When the store read the episode.</param>
+/// <param name="Extractor">The extractor that produced the episode's facts (for the kit, <c>kit/1+&lt;prompt hash&gt;</c>); null when written by plain <c>IngestAsync</c>.</param>
+/// <param name="Model">The model the extractor used; null when unknown.</param>
 public sealed record FactSource(
-    Guid EpisodeId, string SourceKind, string SourceRef, string ContentHash, string LocatorJson, string? Quote, EpisodeTrust Trust, DateTimeOffset OccurredAt, DateTimeOffset RecordedAt);
+    Guid EpisodeId, string SourceKind, string SourceRef, string ContentHash, string LocatorJson, string? Quote, EpisodeTrust Trust, DateTimeOffset OccurredAt, DateTimeOffset RecordedAt,
+    string? Extractor = null, string? Model = null);
 
 /// <summary>The latest retraction of a fact's assertion.</summary>
 /// <param name="RetractedAt">When it was retracted.</param>
