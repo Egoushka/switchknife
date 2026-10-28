@@ -2,6 +2,10 @@
 
 Each package is versioned on its own by a tag `<package>/v<version>`. Entries are per package, newest first.
 
+## Switchknife.Facts.Testing 0.1.0 (2026-10-28)
+
+First release (#30). `ScriptedExtractor`, an `IFactExtractor` that replays queued model replies or errors and records each request in `Requests`, so code that extracts facts runs through the full `ExtractAsync` pipeline without calling a model. No test-framework dependency, Native AOT compatible. Depends on Switchknife.Facts 0.1.0.
+
 ## Switchknife.Facts 0.1.0 (2026-10-28)
 
 First release. Bi-temporal facts in your own PostgreSQL, designed in [ADR 0001](docs/adr/0001-facts-library.md).
@@ -14,4 +18,4 @@ First release. Bi-temporal facts in your own PostgreSQL, designed in [ADR 0001](
 
 Measured at 50,000 facts on PostgreSQL 18 in a 384 MB container: nearest p95 27.5 ms (limit 50), embeddings 76.8 MB (limit 100), ingest p95 21.2 ms (limit 30), on a loaded laptop. The F2, F3 and F5 pull requests list a one-line mutation that turns each new test red (23 of 23 in #27).
 
-Not in this release: entity resolution and merge (F4), tool definitions (F6), `Switchknife.Facts.Testing`.
+Not in this release: entity resolution and merge (F4), tool definitions (F6). The scripted extractor ships as `Switchknife.Facts.Testing`.

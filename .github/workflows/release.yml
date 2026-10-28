@@ -35,7 +35,9 @@ jobs:
           test -n "$project" || { echo "no package has the tag prefix $prefix/v" >&2; exit 1; }
           echo "project=$project" >> "$GITHUB_OUTPUT"
       - run: dotnet test -c Release
-      - run: dotnet pack "${{ steps.package.outputs.project }}" -c Release -o "$RUNNER_TEMP/nupkg"
+      # MinVerIgnoreHeight: a project reference resolves to its package's last release (facts/v0.1.0 gives 0.1.0), not a
+      # prerelease of untagged commits that nuget.org does not have. The tagged package itself is at height 0 either way.
+      - run: dotnet pack "${{ steps.package.outputs.project }}" -c Release -o "$RUNNER_TEMP/nupkg" -p:MinVerIgnoreHeight=true
       - uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
         id: nuget
         with:
