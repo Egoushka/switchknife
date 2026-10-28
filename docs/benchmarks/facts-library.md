@@ -73,6 +73,25 @@ dotnet run -c Release --project bench/Switchknife.Facts.Bench -- score --gold go
 
 The output has `truePositives`, `falsePositives`, `falseNegatives`, `precision`, `recall`, `f1` and `dated` (the share of matched facts whose start day also matches). Matching is exact on subject, predicate and object after trimming and ignoring case, so entity spelling mismatches count as errors; that is deliberate, because entity resolution is part of what is tested. The scorer does not forgive paraphrase; if the predictions are free text, normalise them to triples first with the same prompt for every system.
 
+**Drawing it with `label`.** The bench's `label` verbs do the mechanical parts; every verb prints ids and counts only, never episode text. The folder below is the private one outside the repository.
+
+```bash
+B="dotnet bench/Switchknife.Facts.Bench/bin/Release/net10.0/Switchknife.Facts.Bench.dll label"
+$B import --kind nytka --raw conv.json --id n-001 [--window 2] --episodes episodes.jsonl   # Nytka's conversation tool output, one window of at most 4,000 characters
+$B import --kind feed --raw item.json --id f-001 --episodes episodes.jsonl                 # feed-eater's item tool output
+$B plant --episodes episodes.jsonl --from n-001 --id n-001p --at 2026-11-01T10:00:00Z --replace "Lviv=>Kyiv"
+$B prompt --episodes episodes.jsonl --out prompts/        # the F5 kit's prompt for each episode, fixed predicate catalog
+$B draft --episodes episodes.jsonl --outputs outputs/ --gold draft.jsonl   # parse and validate each model output, keep triples
+$B edits --draft draft.jsonl --reviewed reviewed.jsonl --gold gold.jsonl   # mark facts the review changed or added
+$B pairs --episodes episodes.jsonl --gold gold.jsonl --out pairs.jsonl     # supersession pairs for the as-of questions
+$B check --episodes episodes.jsonl --gold gold.jsonl      # counts and format problems; exits 1 on any
+```
+
+- `import` reads the JSON that Nytka's conversation tool and feed-eater's item tool return (the same over MCP or HTTP), cuts it into lines (`l1`…, speaker kept), keeps one window, and prints a count of change cues ("moved", "тепер", "released", …) to rank candidates for supersessions.
+- The predicate catalog is fixed in `Labelling.Predicates`, so every episode and every system gets the same prompt hash. Changing it makes a new labelled set.
+- `draft` drops what the kit's validator rejects and keeps `from` only where the output gave a start date. `edits` compares the reviewed file with the draft by subject, predicate, object and start day, ignoring case, and sets `"edited": true` on facts that differ or are new.
+- A pair is two gold facts with one subject and a one-at-a-time predicate whose objects differ, in start-day order (the episode's day when undated); a pair is `planted` when either side is. The gold file carries `source` and `planted` per episode for the split; `score` ignores both and `edited`.
+
 **Systems compared on the same 60 episodes.**
 
 | System | What it is | Calls per episode |
