@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Switchknife.Facts.Testing</PackageId>
+    <MinVerTagPrefix>facts-testing/v</MinVerTagPrefix>
+    <Description>Test doubles for Switchknife.Facts: a scripted IFactExtractor that replays queued model replies or errors and records each request, so code that extracts facts can be tested without calling a model. No test-framework dependency. Native AOT compatible.</Description>
+    <PackageTags>facts;testing;extraction;fake;stub;aot</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Switchknife.Facts\Switchknife.Facts.csproj" />
+  </ItemGroup>
+
+</Project>

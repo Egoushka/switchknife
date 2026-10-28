@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using Switchknife.Facts;
 using Switchknife.Facts.Extraction;
+using Switchknife.Facts.Testing;
 using Switchknife.Hosting;
 using Switchknife.Journal;
 using Switchknife.Journal.Postgres;
@@ -104,7 +105,9 @@ static async Task<string?> FactsAsync()
             [new EvidenceLine("l1", "I like jazz.", "Anna")],
             [new PredicateSpec("likes", Cardinality.Many, "what a person likes")],
             [new KnownEntity(anna, "person", "Anna")]);
-        var extracted = await store.ExtractAsync(new ScriptedExtractor(), new NewEpisode("note", "3", "h3", extractionContext.OccurredAt), extractionContext);
+        var extracted = await store.ExtractAsync(new ScriptedExtractor(new ExtractorResponse(
+            """{"facts":[{"subject":{"ref":"e1","name":null,"kind":null},"predicate":"likes","value":"jazz","object":null,"text":"Anna likes jazz.","validFrom":"2026-05-01","validTo":null,"replaces":null,"evidence":["l1"],"quote":"like jazz","salience":0.8}]}""",
+            new ExtractorInfo(null, "smoke-model", 10, 5))), new NewEpisode("note", "3", "h3", extractionContext.OccurredAt), extractionContext);
         var liked = await store.AsOfAsync(anna, "likes", new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero));
         var why = liked.Count == 1 ? await store.ExplainAsync(liked[0].Id) : null;
         var source = why?.Sources.SingleOrDefault();
@@ -355,14 +358,6 @@ internal sealed class FlakyPoller(ILogger logger) : PollingService(TimeProvider.
         Recovered.TrySetResult();
         return Task.CompletedTask;
     }
-}
-
-internal sealed class ScriptedExtractor : IFactExtractor
-{
-    public Task<ExtractorResponse> ExtractAsync(ExtractionRequest request, CancellationToken cancellationToken) =>
-        Task.FromResult(new ExtractorResponse(
-            """{"facts":[{"subject":{"ref":"e1","name":null,"kind":null},"predicate":"likes","value":"jazz","object":null,"text":"Anna likes jazz.","validFrom":"2026-05-01","validTo":null,"replaces":null,"evidence":["l1"],"quote":"like jazz","salience":0.8}]}""",
-            new ExtractorInfo(null, "smoke-model", 10, 5)));
 }
 
 internal sealed class LineLogger : ILogger

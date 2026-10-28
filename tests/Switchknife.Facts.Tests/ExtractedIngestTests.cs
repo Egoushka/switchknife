@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using Npgsql;
 using Switchknife.Facts.Extraction;
+using Switchknife.Facts.Testing;
 
 namespace Switchknife.Facts.Tests;
 
@@ -543,35 +544,5 @@ public sealed class ExtractedIngestTests(PostgresFixture postgres) : IClassFixtu
             Asked.Add(name);
             return Task.FromResult(answer(name));
         }
-    }
-}
-
-/// <summary>A scripted <see cref="IFactExtractor"/>: returns queued replies or throws queued errors, counting calls.</summary>
-internal sealed class ScriptedExtractor : IFactExtractor
-{
-    private readonly Queue<Func<CancellationToken, Task<ExtractorResponse>>> _script = new();
-
-    public ScriptedExtractor(params object[] script)
-    {
-        foreach (var step in script)
-        {
-            _script.Enqueue(step switch
-            {
-                string text => _ => Task.FromResult(new ExtractorResponse(text, new ExtractorInfo(null, "scripted"))),
-                ExtractorResponse response => _ => Task.FromResult(response),
-                Exception error => _ => throw error,
-                _ => throw new ArgumentException("A script step is a reply, a response or an exception."),
-            });
-        }
-    }
-
-    public ScriptedExtractor(Func<CancellationToken, Task<ExtractorResponse>> always) => _script.Enqueue(always);
-
-    public int Calls { get; private set; }
-
-    public Task<ExtractorResponse> ExtractAsync(ExtractionRequest request, CancellationToken cancellationToken)
-    {
-        Calls++;
-        return (_script.Count > 1 ? _script.Dequeue() : _script.Peek())(cancellationToken);
     }
 }
