@@ -4,17 +4,37 @@ using System.Text.Json.Serialization;
 
 namespace Switchknife.Facts.Bench;
 
-/// <summary>A fact as a labelled set or an extractor states it: who, which predicate, which value, and the day it began.</summary>
+/// <summary>
+/// A fact as a labelled set or an extractor states it: who, which predicate, which value, and the day it began.
+/// <see cref="Edited"/> marks a gold fact a human (or a reviewer) changed from the model's draft; scoring ignores it.
+/// </summary>
 internal sealed record LabelledFact(
     [property: JsonPropertyName("s")] string Subject,
     [property: JsonPropertyName("p")] string Predicate,
     [property: JsonPropertyName("o")] string Object,
-    [property: JsonPropertyName("from")] string? ValidFrom = null);
+    [property: JsonPropertyName("from")] string? ValidFrom = null)
+{
+    [JsonPropertyName("edited")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? Edited { get; init; }
+}
 
-/// <summary>The facts of one episode; one JSON object per line of a gold or predicted file.</summary>
+/// <summary>
+/// The facts of one episode; one JSON object per line of a gold or predicted file. <see cref="Source"/> and
+/// <see cref="Planted"/> let results be split by source and real against planted; scoring ignores them.
+/// </summary>
 internal sealed record LabelledEpisode(
     [property: JsonPropertyName("episode")] string Episode,
-    [property: JsonPropertyName("facts")] IReadOnlyList<LabelledFact> Facts);
+    [property: JsonPropertyName("facts")] IReadOnlyList<LabelledFact> Facts)
+{
+    [JsonPropertyName("source")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Source { get; init; }
+
+    [JsonPropertyName("planted")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? Planted { get; init; }
+}
 
 /// <summary>Extraction quality against a labelled set. Dated is the share of matched facts with a gold date whose date also matches.</summary>
 internal sealed record ExtractionScore(int TruePositives, int FalsePositives, int FalseNegatives, double Precision, double Recall, double F1, double Dated);

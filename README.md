@@ -4,6 +4,8 @@ Small .NET libraries for services that run on their own: each package does one j
 
 | Package | What it does | Status |
 |---|---|---|
+| [Switchknife.Facts](src/Switchknife.Facts) | Bi-temporal facts in your own PostgreSQL that can explain themselves: "what was true at T, as known at K", retraction, purge of a source by replay, `ExplainAsync`, full-text and vector search fused by reciprocal rank, and a provider-neutral kit for extracting facts with a model. Design: [ADR 0001](docs/adr/0001-facts-library.md). | 0.x |
+| [Switchknife.Facts.Testing](src/Switchknife.Facts.Testing) | Test doubles for `Switchknife.Facts`: a scripted `IFactExtractor` that replays queued model replies or errors and records each request, so extraction code is tested without calling a model. No test-framework dependency. | 0.x |
 | [Switchknife.Hosting](src/Switchknife.Hosting) | `PollingService`, a `BackgroundService` that polls on start and then every interval and never stops the host: a failed poll is logged and retried with exponential backoff, health hooks are optional and guarded, shutdown is clean. `TimeProvider` throughout. | 0.x |
 | [Switchknife.Journal](src/Switchknife.Journal) | A durable step journal on SQLite: a side effect records its intent before it runs and its result after, so a restarted process finishes or cleans up what it left. Events per flow, replayable. | 0.x |
 | [Switchknife.Journal.Postgres](src/Switchknife.Journal.Postgres) | A `Switchknife.Journal` step store on PostgreSQL: a row lease instead of an in-process semaphore, so many processes share one steps table. An optional overload writes a step's result inside the caller's transaction. | 0.x |
@@ -12,7 +14,7 @@ Small .NET libraries for services that run on their own: each package does one j
 | [Switchknife.Testing.Http](src/Switchknife.Testing.Http) | A stub `HttpMessageHandler` for tests: answers from a function or a scripted sequence and records each request with its body and headers, read before the caller disposes it. No test-framework dependency. | 0.x |
 | [Switchknife.Testing.Postgres](src/Switchknife.Testing.Postgres) | A PostgreSQL server in a Testcontainers container for integration tests: started once per run, migrated by a callback, emptied between tests or split into a database per test; reports a missing Docker outside CI so tests can skip. No test-framework dependency. | 0.x |
 
-In progress, not released: [Switchknife.Facts](src/Switchknife.Facts), bi-temporal facts for Nytka and feed-eater. Design in [`docs/adr/0001-facts-library.md`](docs/adr/0001-facts-library.md) with its [spec](docs/specs/2026-10-26-facts-library.md), [first code slice](docs/specs/2026-10-27-facts-core.md), [benchmark plan](docs/benchmarks/facts-library.md) and a [harness](bench/Switchknife.Facts.Bench). Test doubles for it: [Switchknife.Facts.Testing](src/Switchknife.Facts.Testing).
+Facts benchmarks: [plan](docs/benchmarks/facts-library.md) and [harness](bench/Switchknife.Facts.Bench). Changes per release: [CHANGELOG](CHANGELOG.md).
 
 More packages arrive as their code proves itself in more than one project: Docker engine client, GitHub and GitLab clients with app auth, egress proxy, MCP hosting, service defaults, a test kit.
 

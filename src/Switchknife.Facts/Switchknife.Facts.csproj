@@ -3,8 +3,8 @@
   <PropertyGroup>
     <PackageId>Switchknife.Facts</PackageId>
     <MinVerTagPrefix>facts/v</MinVerTagPrefix>
-    <Description>Bi-temporal facts in the consumer's own PostgreSQL: immutable rows, a valid time and a transaction time, cardinality-typed predicates that supersede by clipping, and "what was true at T, as known at K" reads. Native AOT compatible.</Description>
-    <PackageTags>facts;temporal;bitemporal;knowledge;postgresql;npgsql;aot</PackageTags>
+    <Description>Bi-temporal facts in your own PostgreSQL that can explain themselves: immutable rows with a valid time and a transaction time, cardinality-typed predicates, retraction, purge of a source by replay, ExplainAsync for why a fact is believed, full-text and vector search fused by reciprocal rank, and a provider-neutral kit for extracting facts with a language model. Native AOT compatible.</Description>
+    <PackageTags>facts;temporal;bitemporal;knowledge-graph;memory;agents;llm;extraction;vector-search;full-text-search;postgresql;npgsql;aot</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
