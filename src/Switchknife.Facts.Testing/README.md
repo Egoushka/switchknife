@@ -1,6 +1,6 @@
 # Switchknife.Facts.Testing
 
-Test doubles for [Switchknife.Facts](../Switchknife.Facts), so code that extracts facts from conversations can be tested without calling a model. No dependency beyond `Switchknife.Facts` and none on a test framework. Native AOT compatible.
+Test doubles for [Switchknife.Facts](https://github.com/Egoushka/switchknife/tree/main/src/Switchknife.Facts), so code that extracts facts from conversations can be tested without calling a model. No dependency beyond `Switchknife.Facts` and none on a test framework. Native AOT compatible.
 
 ```csharp
 var extractor = new ScriptedExtractor(

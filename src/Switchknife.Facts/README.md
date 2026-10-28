@@ -114,7 +114,7 @@ The validator drops a fact that cites a line outside the episode, has a date bef
 
 ## Not in 0.1.0
 
-Entity resolution beyond exact names and entity merge (F4), tool definitions for agents (F6), and `Switchknife.Facts.Testing` (a scripted extractor for tests). Order and plan: the slice table in [the library spec](https://github.com/Egoushka/switchknife/blob/main/docs/specs/2026-10-26-facts-library.md).
+Entity resolution beyond exact names and entity merge (F4) and tool definitions for agents (F6). A scripted extractor for tests ships separately as `Switchknife.Facts.Testing`. Order and plan: the slice table in [the library spec](https://github.com/Egoushka/switchknife/blob/main/docs/specs/2026-10-26-facts-library.md).
 
 ## Measured
 
