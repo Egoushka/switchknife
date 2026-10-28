@@ -1,6 +1,6 @@
 # Switchknife.Facts
 
-Bi-temporal facts in your own PostgreSQL. A fact carries two timelines: when it was true in the world (`valid`) and when your database learned it (`recorded_at`, `retired_at`). Rows are never edited; a new value ends the old one by retiring it and writing it again, so both "what was true on 1 March" and "what did we believe on 1 March" have an answer. Design and reasons: [`docs/adr/0001-facts-library.md`](../../docs/adr/0001-facts-library.md). **Preview**: the typed core and vector search ([core spec](../../docs/specs/2026-10-27-facts-core.md), [vector spec](../../docs/specs/2026-10-27-facts-vectors.md)); no release yet.
+Bi-temporal facts in your own PostgreSQL. A fact carries two timelines: when it was true in the world (`valid`) and when your database learned it (`recorded_at`, `retired_at`). Rows are never edited; a new value ends the old one by retiring it and writing it again, so both "what was true on 1 March" and "what did we believe on 1 March" have an answer. Design and reasons: [`docs/adr/0001-facts-library.md`](../../docs/adr/0001-facts-library.md). **Preview**: the typed core, vector search, the extraction kit ([core spec](../../docs/specs/2026-10-27-facts-core.md), [vector spec](../../docs/specs/2026-10-27-facts-vectors.md)); no release yet.
 
 ```csharp
 // Once per database: run Migrations/0001_facts.sql with your migrator, or
@@ -80,9 +80,35 @@ var hits = await facts.SearchAsync("jazz concert", queryVector, "my-model", limi
 
 A full-text list (`simple` configuration, ranked by `ts_rank_cd`) and a nearest-neighbour list run at once, each `limit × 4` deep, and are fused by reciprocal rank: a fact scores `1 / (60 + rank)` summed over the lists that hold it, so a fact in both beats one that leads a single list. Both obey `validAt` and `knownAt`; retired and other-namespace facts never appear. Pass a blank text or an empty vector to search with one list only. The ranks on each hit say why it is there.
 
+## Extracting facts with a model
+
+The library never calls a model. It gives you the prompt, the output schema, a parser and a validator; you send the prompt wherever you like.
+
+```csharp
+using Switchknife.Facts.Extraction;
+
+var context = new ExtractionContext(
+    occurredAt: conversationTime,
+    evidence: [new EvidenceLine("seg-41", "I moved to Kyiv last March.", Speaker: "Anna")],   // the lines the model may cite; ids are yours
+    predicates: [new PredicateSpec("lives_in", Cardinality.One, "where a person lives")],      // "statement" (an open sentence) is always allowed
+    entities: [new KnownEntity(annaId, "person", "Anna")],                                     // newest first; the model sees them as e1, e2, ...
+    facts: liveFactsOfThoseEntities);                                                          // newest first; shown as f1, f2, ...: the ones a new fact may replace
+
+var prompt = ExtractionPrompt.Build(context);          // prompt.System, prompt.User, prompt.Schema (JSON Schema); prompt.ExtractorName = "kit/1+<hash>"
+string reply = await MyModel.CompleteAsync(prompt);    // your adapter: roles, structured-output switch, retries
+
+if (ExtractionParser.TryParse(reply, out var output, out var failure))   // bare JSON, fenced JSON, or JSON inside prose
+{
+    var checkedOutput = ExtractionValidator.Validate(output, context);
+    // checkedOutput.Facts: typed, dated, with a locator {"evidence":[...]}; checkedOutput.Rejections: an index and a reason code, never source text
+}
+```
+
+The validator drops a fact that cites a line outside the episode, has a date before 1900 or past `OccurredAt` plus 730 days, ends before it begins, repeats another, or has no usable object; it keeps a fact and drops its quote when the quote is not in the cited lines, and drops a `replaces` that is not a live fact of the same subject on a `Many` predicate. A missing start date becomes the episode time (`StartDefaulted`). A predicate you did not list becomes an open `statement` unless `ExtractionOptions.UnknownPredicates` says to reject it. Store `prompt.ExtractorName` with the episode: any change to a rule or the schema changes it. Source lines are data in the prompt: line breaks are collapsed and a line cannot close the data block. `IEntityResolver` is the seam where a name becomes an entity.
+
 ## Not in this slice
 
-Full-text/vector fusion, entity resolution and merge, the extractor contract, tool definitions. See [the write-path spec](../../docs/specs/2026-10-28-facts-write-path.md) and the slice table for the order.
+Entity resolution and merge, writing extracted facts into the store (`IngestExtractedAsync`, next), tool definitions. See [the write-path spec](../../docs/specs/2026-10-28-facts-write-path.md) and the slice table for the order.
 
 ## Measured
 
