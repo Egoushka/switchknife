@@ -103,7 +103,7 @@ One pull request each, in this order. "Issue" means a chargehand issue carrying 
 | F2 | Write path: episodes, cardinality, supersession, retraction, trust, purge | A1 to A4, A6 to A13 | F1 |
 | F3 | Retrieval: as-of, history, explain, search | A1, A2, A14, G2, G3 | F1 |
 | F4 | Entities: resolution, aliases, merge | A15 to A17 | F1 |
-| F5 | Extraction contract, prompt kit, `Switchknife.Facts.Testing` | A7, A9, A11 | F2 |
+| F5 | Extraction contract, prompt kit, `Switchknife.Facts.Testing` (plan and checks: `2026-10-30-facts-extraction-contract.md`; the Testing package follows separately) | A7, A9, A11 | F2 |
 | F6 | Tool definitions | A20 | F3 |
 | N1 | Nytka shadow writes (Nytka repository) | counts equal on the labelled set | F5 |
 | E1 | feed-eater episodes and entity timeline (feed-eater repository) | its own spec | F5, F4 |
