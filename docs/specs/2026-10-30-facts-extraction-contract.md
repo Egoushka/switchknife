@@ -65,7 +65,7 @@ I needs K merged. K edits no existing source file but the README and the smoke s
 | `text` blank or over 300 characters | rejected `BadText` |
 | predicate blank | rejected `BadPredicate` |
 | predicate not in `Predicates` and not `statement` | by `options.UnknownPredicates`: `Statement` (default) rewrites the fact to predicate `statement` with `Value` = `text` and counts it as downgraded; `Reject` rejects it as `UnknownPredicate` |
-| neither or both of `value` and `object` (a `statement` takes its value from `text`, so only `object` must be absent) | rejected `BadObject` |
+| neither or both of `value` and `object`; for an explicit `statement` (its value is `text`) any `object` | rejected `BadObject`. A fact downgraded to `statement` keeps `text` and loses its `value` and `object`: the sentence carries them. |
 | a `ref` that is not a handle of the context | rejected `UnknownEntity` |
 | a mention with no `ref` and a blank `name` or `kind` | rejected `BadEntity` |
 | no evidence id | rejected `NoEvidence` |
@@ -120,8 +120,7 @@ xUnit in `tests/Switchknife.Facts.Tests/Extraction/`; none starts Docker. Every 
 | K18 | `The_prompt_hash_changes_with_any_rule_or_the_schema_and_not_with_the_episode` | two episodes give one hash; an extra rule, a changed fragment or a changed schema give three other hashes; the extractor name format is `kit/1+<12 hex>` |
 | K19 | `Context_is_cut_to_its_budget_in_the_given_order_and_reports_the_cut` | 250 facts, budget 200: the first 200 have handles `f1`…`f200`, the cut count is 50, handle `f201` does not resolve |
 | K20 | `Context_rejects_duplicate_or_blank_evidence_ids` | `ArgumentException` for either |
-| K21 | `The_entity_resolver_is_asked_only_about_mentions_without_a_known_id` | on a `ValidatedExtraction` the mentions with `KnownId` set are never passed to a fake resolver (the check I uses; K proves the shape) |
-| A21 | `scripts/aot-smoke.sh` | the smoke sample parses a sample output, validates it and builds a prompt under Native AOT, warnings as errors, and prints the hash |
+| A21 | `scripts/aot-smoke.sh` | the smoke sample (case `Switchknife.Facts.Extraction`, no database) parses a sample output, validates it and builds a prompt under Native AOT, warnings as errors, and prints the hash |
 
 ## I: decisions
 
@@ -202,5 +201,6 @@ Every test of both pull requests is shown to fail: the pull request lists the mu
 
 - Trust is per episode. A conversation that mixes the owner's lines with a stranger's is one episode with one trust; Nytka's plan (ADR) is to ingest the stranger's lines as their own `third_party` episode. The validator does not look at who spoke a cited line.
 - Dates without an offset are UTC midnight; a consumer in another zone shifts them in its adapter.
+- A fact with an end date and no start date ("until March") is rejected: the start would default to the episode time, after the end. A consumer that wants those asks its extractor for a start.
 - A `replaces` on a `one` or `event` predicate is dropped, not translated into a retraction.
 - The kit's English rules and the 20-fact default are guesses until the G0 labelled set scores them; a change to the rules changes the hash, which is the record.

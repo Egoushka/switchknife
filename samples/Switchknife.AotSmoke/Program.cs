@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using Switchknife.Facts;
+using Switchknife.Facts.Extraction;
 using Switchknife.Hosting;
 using Switchknife.Journal;
 using Switchknife.Journal.Postgres;
@@ -24,6 +25,7 @@ var postgresCases = new HashSet<string> { "Switchknife.Facts", "Switchknife.Migr
 var smokes = new (string, Func<Task<string?>>)[]
 {
     ("Switchknife.Facts", FactsAsync),
+    ("Switchknife.Facts.Extraction", FactsExtraction),
     ("Switchknife.Hosting", HostingAsync),
     ("Switchknife.Journal", JournalAsync),
     ("Switchknife.Journal.Postgres", JournalPostgresAsync),
@@ -106,6 +108,34 @@ static async Task<string?> FactsAsync()
         await using var drop = new NpgsqlCommand($"drop database if exists {name} with (force)", admin2);
         await drop.ExecuteNonQueryAsync();
     }
+}
+
+static Task<string?> FactsExtraction()
+{
+    // A model's reply as it comes (fenced, with a sentence before it) is read, checked against the episode and turned into a typed fact; the prompt is built.
+    var anna = Guid.NewGuid();
+    var context = new ExtractionContext(
+        new DateTimeOffset(2026, 10, 27, 10, 0, 0, TimeSpan.Zero),
+        [new EvidenceLine("l1", "I moved to Kyiv in March.", "Anna")],
+        [new PredicateSpec("lives_in", Cardinality.One, "where a person lives")],
+        [new KnownEntity(anna, "person", "Anna")]);
+    const string reply = """
+        Here is what I found:
+        ```json
+        {"facts":[{"subject":{"ref":"e1","name":null,"kind":null},"predicate":"lives_in","value":"Kyiv","object":null,"text":"Anna lives in Kyiv.","validFrom":"2026-03-01","validTo":null,"replaces":null,"evidence":["l1"],"quote":"moved to Kyiv","salience":0.9}]}
+        ```
+        """;
+    if (!ExtractionParser.TryParse(reply, out var episode, out var failure))
+        return Task.FromResult<string?>($"parse failed: {failure}");
+
+    var validated = ExtractionValidator.Validate(episode, context);
+    var prompt = ExtractionPrompt.Build(context);
+    var fact = validated.Facts.SingleOrDefault();
+    return Task.FromResult<string?>(
+        (fact?.Predicate, fact?.Value, fact?.Subject.KnownId, fact?.LocatorJson, validated.Rejections.Count, prompt.User.Contains("[l1] Anna: I moved", StringComparison.Ordinal), prompt.ExtractorName.StartsWith("kit/1+", StringComparison.Ordinal))
+            == ("lives_in", "Kyiv", anna, """{"evidence":["l1"]}""", 0, true, true)
+            ? null
+            : $"accepted {validated.Facts.Count}, rejected {validated.Rejections.Count}, extractor {prompt.ExtractorName}");
 }
 
 static async Task<string?> HostingAsync()
