@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Npgsql;
 using NpgsqlTypes;
+using Switchknife.Facts.Extraction;
 
 namespace Switchknife.Facts;
 
@@ -36,8 +37,8 @@ public sealed partial class FactsStore
 
     private const string EpisodeSql =
         """
-        insert into facts.episodes (id, namespace, source_kind, source_ref, content_hash, occurred_at, recorded_at, trust, status)
-        values ($1, $2, $3, $4, $5, $6, $7, $8, 'done')
+        insert into facts.episodes (id, namespace, source_kind, source_ref, content_hash, occurred_at, recorded_at, trust, status, extractor, model, input_tokens, output_tokens)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, 'done', $9, $10, $11, $12)
         on conflict (namespace, source_kind, source_ref, content_hash) do nothing
         returning (select count(*) from facts.episodes where namespace = $2 and source_kind = $3 and source_ref = $4 and (recorded_at, id) < ($7, $1))
         """;
@@ -233,7 +234,7 @@ public sealed partial class FactsStore
         await using var connectionScope = connection.ConfigureAwait(false);
         var transaction = await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
         await using var transactionScope = transaction.ConfigureAwait(false);
-        var result = await WriteAsync(connection, transaction, episode, facts, cancellationToken).ConfigureAwait(false);
+        var result = await WriteAsync(connection, transaction, episode, facts, null, false, cancellationToken).ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         return result;
     }
@@ -248,7 +249,7 @@ public sealed partial class FactsStore
         ArgumentNullException.ThrowIfNull(connection);
         ArgumentNullException.ThrowIfNull(transaction);
         Validate(episode, facts);
-        return WriteAsync(connection, transaction, episode, facts, cancellationToken);
+        return WriteAsync(connection, transaction, episode, facts, null, false, cancellationToken);
     }
 
     /// <summary>
@@ -352,7 +353,8 @@ public sealed partial class FactsStore
     }
 
     private async Task<IngestResult> WriteAsync(
-        NpgsqlConnection connection, NpgsqlTransaction transaction, NewEpisode episode, IReadOnlyList<NewFact> facts, CancellationToken ct)
+        NpgsqlConnection connection, NpgsqlTransaction transaction, NewEpisode episode, IReadOnlyList<NewFact> facts,
+        ExtractorInfo? extractor, bool replaceFailed, CancellationToken ct)
     {
         // Every predicate is known before the first write, so a bad fact leaves nothing half-written.
         var cardinalities = new Cardinality[facts.Count];
@@ -369,7 +371,12 @@ public sealed partial class FactsStore
         // recorded_at is this clock, never the episode's own date: a query "as known at K" cannot see what arrived after K.
         var now = Micro(_time.GetUtcNow());
         var episodeId = Guid.CreateVersion7(now);
-        var earlierVersions = await OpenEpisodeAsync(connection, transaction, episode, episodeId, now, ct).ConfigureAwait(false);
+        if (replaceFailed)
+        {
+            await DeleteFailedEpisodeAsync(connection, transaction, episode, ct).ConfigureAwait(false);
+        }
+
+        var earlierVersions = await OpenEpisodeAsync(connection, transaction, episode, episodeId, now, extractor, ct).ConfigureAwait(false);
         if (earlierVersions is not { } stale)
         {
             var existing = new NpgsqlCommand(EpisodeIdSql, connection, transaction);
@@ -441,7 +448,7 @@ public sealed partial class FactsStore
 
     /// <summary>Inserts the episode. Null when it (same source and hash) already exists; otherwise how many other episodes of the same source came before it.</summary>
     private async Task<long?> OpenEpisodeAsync(
-        NpgsqlConnection connection, NpgsqlTransaction transaction, NewEpisode episode, Guid episodeId, DateTimeOffset now, CancellationToken ct)
+        NpgsqlConnection connection, NpgsqlTransaction transaction, NewEpisode episode, Guid episodeId, DateTimeOffset now, ExtractorInfo? extractor, CancellationToken ct)
     {
         var command = new NpgsqlCommand(EpisodeSql, connection, transaction);
         await using var commandScope = command.ConfigureAwait(false);
@@ -453,6 +460,10 @@ public sealed partial class FactsStore
         command.Parameters.Add(Time(Micro(episode.OccurredAt ?? now)));
         command.Parameters.Add(Time(now));
         command.Parameters.Add(Text(ToText(episode.Trust)));
+        command.Parameters.Add(Text(extractor?.Name));
+        command.Parameters.Add(Text(extractor?.Model));
+        command.Parameters.Add(Int(extractor?.InputTokens));
+        command.Parameters.Add(Int(extractor?.OutputTokens));
         return await command.ExecuteScalarAsync(ct).ConfigureAwait(false) as long?;
     }
 
@@ -694,6 +705,8 @@ public sealed partial class FactsStore
     }
 
     private static NpgsqlParameter Text(string? value) => new() { NpgsqlDbType = NpgsqlDbType.Text, Value = (object?)value ?? DBNull.Value };
+
+    private static NpgsqlParameter Int(int? value) => new() { NpgsqlDbType = NpgsqlDbType.Integer, Value = value is { } v ? v : DBNull.Value };
 
     private static NpgsqlParameter Uuid(Guid value) => new() { NpgsqlDbType = NpgsqlDbType.Uuid, Value = value };
 

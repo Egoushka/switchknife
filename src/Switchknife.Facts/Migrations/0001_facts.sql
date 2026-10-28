@@ -17,6 +17,8 @@ create table facts.entities (
     unique (namespace, external_ref)
 );
 
+create index entities_by_name on facts.entities (namespace, lower(btrim(name)));
+
 -- Blocking keys for entity resolution (ADR section "Entity resolution"): both are candidate generators, never decisions.
 create table facts.entity_aliases (
     entity_id     uuid not null references facts.entities (id),
@@ -37,7 +39,8 @@ create table facts.predicates (
     primary key (namespace, name)
 );
 
--- One row per piece of source text an extraction read. The text stays with the consumer; this keeps a pointer.
+-- One row per piece of source text an extraction read. The text stays with the consumer; this keeps a pointer. A failed
+-- extraction leaves a 'failed' row with a short snake_case code in failure (never content); the retry replaces it.
 create table facts.episodes (
     id            uuid        primary key,
     namespace     text        not null,
@@ -52,6 +55,7 @@ create table facts.episodes (
     model         text        null,
     input_tokens  int         null,
     output_tokens int         null,
+    failure       text        null check (failure is null or (failure ~ '^[a-z][a-z0-9_]{0,39}$' and status = 'failed')),
     unique (namespace, source_kind, source_ref, content_hash)
 );
 

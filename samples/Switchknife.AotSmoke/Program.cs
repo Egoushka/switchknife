@@ -96,10 +96,24 @@ static async Task<string?> FactsAsync()
         await store.SetEmbeddingsAsync("smoke", [.. history.Select(v => new FactEmbedding(v.Fact.Id, v.Fact.Value == "Kyiv" ? new float[] { 1, 0, 0, 0 } : new float[] { 0, 1, 0, 0 }))]);
         var nearNow = await store.NearestAsync("smoke", new float[] { 0, 1, 0, 0 }, 1, april);
         var nearThen = await store.NearestAsync("smoke", new float[] { 0, 1, 0, 0 }, 1, april, new DateTimeOffset(2026, 2, 1, 0, 0, 0, TimeSpan.Zero));
-        return (before.SingleOrDefault()?.Value, after.SingleOrDefault()?.Value, history.Count, second.Written, nearNow.SingleOrDefault()?.Fact.Value, nearThen.SingleOrDefault()?.Fact.Value)
-            == ("Kyiv", "Lviv", 3, 1, "Lviv", "Kyiv")
+        // A scripted model reply goes through the pipeline; the extractor and model it reports are read back from Explain.
+        await store.DefinePredicateAsync("likes", Cardinality.Many);
+        clock.Now = new DateTimeOffset(2026, 5, 10, 0, 0, 0, TimeSpan.Zero);
+        var extractionContext = new ExtractionContext(
+            new DateTimeOffset(2026, 5, 9, 0, 0, 0, TimeSpan.Zero),
+            [new EvidenceLine("l1", "I like jazz.", "Anna")],
+            [new PredicateSpec("likes", Cardinality.Many, "what a person likes")],
+            [new KnownEntity(anna, "person", "Anna")]);
+        var extracted = await store.ExtractAsync(new ScriptedExtractor(), new NewEpisode("note", "3", "h3", extractionContext.OccurredAt), extractionContext);
+        var liked = await store.AsOfAsync(anna, "likes", new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero));
+        var why = liked.Count == 1 ? await store.ExplainAsync(liked[0].Id) : null;
+        var source = why?.Sources.SingleOrDefault();
+
+        return (before.SingleOrDefault()?.Value, after.SingleOrDefault()?.Value, history.Count, second.Written, nearNow.SingleOrDefault()?.Fact.Value, nearThen.SingleOrDefault()?.Fact.Value,
+                extracted.Status, source?.Extractor?.StartsWith("kit/1+", StringComparison.Ordinal), source?.Model)
+            == ("Kyiv", "Lviv", 3, 1, "Lviv", "Kyiv", ExtractionStatus.Ingested, true, "smoke-model")
             ? null
-            : $"as known before: {before.SingleOrDefault()?.Value}, after: {after.SingleOrDefault()?.Value}, {history.Count} row(s), {second.Written} written, nearest now {nearNow.SingleOrDefault()?.Fact.Value}, then {nearThen.SingleOrDefault()?.Fact.Value}";
+            : $"extraction {extracted.Status}/{extracted.FailureCode}, {liked.Count} liked, extractor {source?.Extractor}, model {source?.Model}; as known before: {before.SingleOrDefault()?.Value}, after: {after.SingleOrDefault()?.Value}, {history.Count} row(s), {second.Written} written, nearest now {nearNow.SingleOrDefault()?.Fact.Value}, then {nearThen.SingleOrDefault()?.Fact.Value}";
     }
     finally
     {
@@ -341,6 +355,14 @@ internal sealed class FlakyPoller(ILogger logger) : PollingService(TimeProvider.
         Recovered.TrySetResult();
         return Task.CompletedTask;
     }
+}
+
+internal sealed class ScriptedExtractor : IFactExtractor
+{
+    public Task<ExtractorResponse> ExtractAsync(ExtractionRequest request, CancellationToken cancellationToken) =>
+        Task.FromResult(new ExtractorResponse(
+            """{"facts":[{"subject":{"ref":"e1","name":null,"kind":null},"predicate":"likes","value":"jazz","object":null,"text":"Anna likes jazz.","validFrom":"2026-05-01","validTo":null,"replaces":null,"evidence":["l1"],"quote":"like jazz","salience":0.8}]}""",
+            new ExtractorInfo(null, "smoke-model", 10, 5)));
 }
 
 internal sealed class LineLogger : ILogger

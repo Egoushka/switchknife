@@ -130,10 +130,10 @@ xUnit in `tests/Switchknife.Facts.Tests/Extraction/`; none starts Docker. Every 
 
 | Member | Does |
 |---|---|
-| `EpisodeStatusAsync(sourceKind, sourceRef, contentHash)` | `Done`, `Failed` or null for an episode of this namespace |
-| `IngestExtractedAsync(episode, validated, extractor, resolver)` and the overload taking the caller's connection and transaction | resolves the mentions, then writes through the existing write path with the extractor recorded on the episode |
+| `EpisodeStatusAsync(sourceKind, sourceRef, contentHash)` | an `EpisodeStatus` (`Done` or `Failed`), or null, for an episode of this namespace |
+| `IngestExtractedAsync(episode, validated, extractor, resolver)` and the overload taking the caller's connection and transaction | resolves the mentions, then writes through the existing write path with the extractor recorded on the episode; returns `ExtractedIngestResult(Ingest, Replaced, ReplacesSkipped, Unresolved)` |
 | `RecordFailureAsync(episode, extractor, code)` | writes (or refreshes) a `failed` episode with the code; never touches a `done` one |
-| `ExtractAsync(extractor, episode, context, resolver, options)` | the pipeline: status lookup → `IFactExtractor` call outside any transaction → parse → validate → ingest; returns an `ExtractionOutcome` |
+| `ExtractAsync(extractor, episode, context, resolver?, options?)` | the pipeline: status lookup → `IFactExtractor` call outside any transaction → parse → validate → ingest; returns `ExtractionOutcome(Status, Ingest, Validation, FailureCode, Error)`, where `Ingest` is the `ExtractedIngestResult` and `Validation` the validator's result |
 
 `ExtractorInfo(Name, Model, InputTokens?, OutputTokens?)` is what an extractor reports; `Name` is the kit's `kit/1+<hash>` or the consumer's own string.
 
@@ -141,7 +141,7 @@ xUnit in `tests/Switchknife.Facts.Tests/Extraction/`; none starts Docker. Every 
 
 **Order and failure handling in `ExtractAsync`.**
 1. Status `Done`: return `Duplicate` without calling the extractor. `Failed` or none: go on.
-2. The extractor runs holding no connection. An exception other than cancellation, text that does not parse, or a shape that fails: `RecordFailureAsync` with code `extractor_error`, `bad_json` or `bad_shape`, and the outcome is `Failed` carrying the exception when there was one. Cancellation records nothing and propagates. Nothing else is written, so a failure leaves no facts.
+2. The extractor runs holding no connection. An exception other than cancellation, text that does not parse, or a shape that fails: `RecordFailureAsync` with code `extractor_error`, `bad_json` or `bad_shape`, and the outcome is `Failed` carrying the exception when there was one. The codes are the constants of `ExtractionFailures`. Cancellation records nothing and propagates. Nothing else is written, so a failure leaves no facts.
 3. A parsed output with nothing valid (empty array or all rejected) is a `done` episode with zero facts; the outcome reports the rejection counts, so a prompt that suddenly gets everything rejected shows up as a number.
 4. Retry follows the consumer's job runner. A `failed` episode is deleted and written again as `done` by the same transaction that writes the facts, so a retry with the same hash succeeds and leaves one episode row. Plain `IngestAsync` stays unaware of `failed` episodes: it reports a failed hash as `Duplicate`, so a consumer that mixes the two paths for one source must use `ExtractAsync` for it.
 5. A failed attempt for a new version of a source retires nothing: the earlier version's facts stay live until a later attempt succeeds (then the changed-source retirement applies as before).
@@ -150,9 +150,9 @@ xUnit in `tests/Switchknife.Facts.Tests/Extraction/`; none starts Docker. Every 
 
 **Default resolver** (`ExactNameEntityResolver`): one entity of the namespace with this kind and this name, compared trimmed and case-insensitive, not merged away: use it; none: create it (no `external_ref`); two or more: null, because a name that two entities share cannot place a fact and a wrong placement poisons the facts (ADR: ties create or refuse, never merge). F4 replaces it with alias, phonetic and embedding matching.
 
-**Applying `replaces`.** After the fact is written, for a fact with an accepted `replaces`, one statement retires the old row `superseded` with `superseded_by` set to the new row, only when all of these still hold: the old row is live, in this namespace, has no slot (`many` or `statement`), has the new fact's subject, and its trust (highest among its sources) is not above the episode's. Otherwise nothing happens and `ReplacesSkipped` counts it. It does nothing when the new fact was skipped (its assertion is retracted); when the new fact only corroborated an existing live row, `superseded_by` points at that row. `IngestResult` gains `Replaced`.
+**Applying `replaces`.** After the fact is written, for a fact with an accepted `replaces`, one statement retires the old row `superseded` with `superseded_by` set to the new row, only when all of these still hold: the old row is live, in this namespace, has no slot (`many` or `statement`), has the new fact's subject, and its trust (highest among its sources) is not above the episode's. Otherwise nothing happens and `ReplacesSkipped` counts it. It does nothing when the new fact was skipped (its assertion is retracted); when the new fact only corroborated an existing live row, `superseded_by` points at that row. `ExtractedIngestResult.Replaced` counts the retirements; `IngestResult` itself is unchanged.
 
-**Purge and a replaced fact.** Purging the episode that wrote the replacing fact deletes that row, and the old row it retired would stay retired for a reason that no longer exists. The purge therefore sets `retired_at`, `retired_reason` and `superseded_by` back to null on rows of a `many` or `statement` assertion whose `superseded_by` pointed at a deleted row (reason `superseded`). This is an exception to immutability of the same kind as purge itself; it is why this pull request needs Yehor's reading.
+**Purge and a replaced fact.** Purging the episode that wrote the replacing fact deletes that row, and the old row it retired would stay retired for a reason that no longer exists. The purge therefore sets `retired_at`, `retired_reason` and `superseded_by` back to null on rows of a `many` or `statement` assertion whose `superseded_by` pointed at a deleted row (reason `superseded`). When another live row of the same assertion exists by then, the old row stays retired (reason kept, pointer cleared) so one assertion never has two live rows. This is an exception to immutability of the same kind as purge itself; it is why this pull request needs Yehor's reading.
 
 **Provenance.** The episode keeps `extractor`, `model` and token counts. `FactSource` gains `Extractor` and `Model` (null for facts written by plain `IngestAsync`), so `ExplainAsync` answers "which prompt and model said this". The Explain statement stays one round trip.
 
@@ -182,8 +182,12 @@ xUnit in `tests/Switchknife.Facts.Tests`, Postgres in Docker as the other tests 
 | I13 | `Extracted_ingest_inside_a_caller_transaction_rolls_back_with_it` | the overload with the caller's transaction: rolled back leaves 0 episodes, facts and sources |
 | I14 | `Recording_a_failure_never_overwrites_a_done_episode` | `RecordFailureAsync` for a `done` hash changes nothing and reports it; for a `failed` hash refreshes the code; a code with spaces, upper case or over 40 characters is refused with `ArgumentException` |
 | I15 | `Nothing_valid_is_a_done_episode_with_zero_facts_and_the_outcome_counts_the_rejections` | an output of three facts all with bad dates: `done`, 0 facts, `Rejected` 3 by reason |
-| I16 | `The_write_path_adds_no_per_fact_round_trip` (A27, unchanged) | the statement counts of 12 and 6 hold |
-| A21 | `scripts/aot-smoke.sh` | the smoke sample runs `ExtractAsync` with a scripted extractor and reads the extractor name back from `ExplainAsync`, under Native AOT |
+| I16 | `The_write_path_adds_no_per_fact_round_trip` (the existing A27 test, unchanged and green) | the statement counts of 12 and 6 hold |
+| I17 | `Cancellation_propagates_and_records_nothing` | a cancelled token during the extractor call throws `OperationCanceledException`; no episode row exists afterwards |
+| I18 | `A_statement_is_stored_with_its_sentence_and_defines_the_predicate_once` | a `statement` fact is stored with its sentence as the value, an unlisted predicate in the same output is downgraded to `statement`, and the `statement` predicate row exists once |
+| I19 | `Purging_the_replacing_episode_leaves_a_replaced_fact_retired_when_its_assertion_is_live_again` | the old row stays retired with a cleared pointer when its assertion has a live row again |
+| I20 | `A_replaces_of_another_subjects_fact_is_not_applied_even_if_the_context_says_otherwise` | the context claims a fact of Anna belongs to Bob; the store still checks the subject: `ReplacesSkipped` 1, the fact stays live |
+| A22 | `scripts/aot-smoke.sh` | the smoke sample runs `ExtractAsync` with a scripted extractor and reads the extractor name back from `ExplainAsync`, under Native AOT |
 | G1, G3, G4 | the harness gates | `ingestPerEpisode.p95` at most 30 ms, `nearest.p95` at most 50 ms, `embeddingBytes` at most 100 MB at 50,000 facts, as before; numbers in the pull request |
 
 Every test of both pull requests is shown to fail: the pull request lists the mutation (a line changed in the code) that turns each red.

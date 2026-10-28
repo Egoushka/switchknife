@@ -13,7 +13,7 @@ public sealed partial class FactsStore
 
     private const string ExplainSourcesSql =
         """
-        select distinct e.recorded_at, e.id, s.locator::text, e.source_kind, e.source_ref, e.content_hash, s.quote, e.trust, e.occurred_at
+        select distinct e.recorded_at, e.id, s.locator::text, e.source_kind, e.source_ref, e.content_hash, s.quote, e.trust, e.occurred_at, e.extractor, e.model
         from facts.fact_sources s join facts.episodes e on e.id = s.episode_id
         where s.fact_id = $2 and e.namespace = $1 order by e.recorded_at, e.id, s.locator::text
         """;
@@ -80,7 +80,8 @@ public sealed partial class FactsStore
         {
             sources.Add(new FactSource(
                 reader.GetGuid(1), reader.GetString(3), reader.GetString(4), reader.GetString(5), reader.GetString(2),
-                reader.IsDBNull(6) ? null : reader.GetString(6), ParseTrust(reader.GetString(7)), reader.GetFieldValue<DateTimeOffset>(8), reader.GetFieldValue<DateTimeOffset>(0)));
+                reader.IsDBNull(6) ? null : reader.GetString(6), ParseTrust(reader.GetString(7)), reader.GetFieldValue<DateTimeOffset>(8), reader.GetFieldValue<DateTimeOffset>(0),
+                reader.IsDBNull(9) ? null : reader.GetString(9), reader.IsDBNull(10) ? null : reader.GetString(10)));
         }
 
         await reader.NextResultAsync(cancellationToken).ConfigureAwait(false);

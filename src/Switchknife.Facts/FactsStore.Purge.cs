@@ -38,6 +38,20 @@ public sealed partial class FactsStore
           and exists (select 1 from facts.fact_sources x where x.fact_id = f.id and x.episode_id <> all($2))
         """;
 
+    // A row a deleted fact replaced (an accepted replaces of the extraction path) comes back, unless a live row of the same assertion exists
+    // by now; either way its pointer to the deleted row goes, or the delete would break the foreign key.
+    private const string ReviveReplacedSql =
+        """
+        update facts.facts f set
+            superseded_by = null,
+            retired_at = case when exists (select 1 from facts.facts l where l.namespace = f.namespace and l.fingerprint = f.fingerprint and l.slot is null and l.retired_at is null)
+                              then f.retired_at else null end,
+            retired_reason = case when exists (select 1 from facts.facts l where l.namespace = f.namespace and l.fingerprint = f.fingerprint and l.slot is null and l.retired_at is null)
+                                  then f.retired_reason else null end
+        where f.namespace = $1 and f.slot is null and f.superseded_by in (
+            select id from facts.facts where namespace = $1 and slot is null and episode_id = any($2))
+        """;
+
     private const string DeleteSourcesOfEpisodesSql = "delete from facts.fact_sources where episode_id = any($1)";
 
     private const string DeleteUnsupportedBitsSql =
@@ -148,6 +162,7 @@ public sealed partial class FactsStore
 
         // Facts outside single-valued slots: the ones only the source supports go; the others keep their other sources.
         await ExecuteAsync(connection, transaction, RepointSql, [Text(_namespace), Ids()], cancellationToken).ConfigureAwait(false);
+        await ExecuteAsync(connection, transaction, ReviveReplacedSql, [Text(_namespace), Ids()], cancellationToken).ConfigureAwait(false);
         await ExecuteAsync(connection, transaction, DeleteSourcesOfEpisodesSql, [Ids()], cancellationToken).ConfigureAwait(false);
         await ExecuteAsync(connection, transaction, DeleteUnsupportedBitsSql, [Text(_namespace), Ids()], cancellationToken).ConfigureAwait(false);
         await ExecuteAsync(connection, transaction, DeleteUnsupportedVectorsSql, [Text(_namespace), Ids()], cancellationToken).ConfigureAwait(false);
