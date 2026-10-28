@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Switchknife.Facts\Switchknife.Facts.csproj" />
+    <ProjectReference Include="..\..\src\Switchknife.Facts.Testing\Switchknife.Facts.Testing.csproj" />
     <ProjectReference Include="..\..\src\Switchknife.Hosting\Switchknife.Hosting.csproj" />
     <ProjectReference Include="..\..\src\Switchknife.Journal\Switchknife.Journal.csproj" />
     <ProjectReference Include="..\..\src\Switchknife.Journal.Postgres\Switchknife.Journal.Postgres.csproj" />
