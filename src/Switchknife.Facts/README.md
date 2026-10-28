@@ -1,6 +1,12 @@
 # Switchknife.Facts
 
-Bi-temporal facts in your own PostgreSQL. A fact carries two timelines: when it was true in the world (`valid`) and when your database learned it (`recorded_at`, `retired_at`). Rows are never edited; a new value ends the old one by retiring it and writing it again, so both "what was true on 1 March" and "what did we believe on 1 March" have an answer. Design and reasons: [`docs/adr/0001-facts-library.md`](../../docs/adr/0001-facts-library.md). **Preview**: the typed core, vector search, the extraction kit ([core spec](../../docs/specs/2026-10-27-facts-core.md), [vector spec](../../docs/specs/2026-10-27-facts-vectors.md)); no release yet.
+Bi-temporal facts in your own PostgreSQL. A fact carries two timelines: when it was true in the world (`valid`) and when your database learned it (`recorded_at`, `retired_at`). Rows are never edited; a new value ends the old one by retiring it and writing it again, so both "what was true on 1 March" and "what did we believe on 1 March" have an answer. Design and reasons: [`docs/adr/0001-facts-library.md`](https://github.com/Egoushka/switchknife/blob/main/docs/adr/0001-facts-library.md).
+
+```bash
+dotnet add package Switchknife.Facts
+```
+
+`0.x`: the API may still change between minor versions. Changes per release: [CHANGELOG](https://github.com/Egoushka/switchknife/blob/main/CHANGELOG.md).
 
 ```csharp
 // Once per database: run Migrations/0001_facts.sql with your migrator, or
@@ -60,7 +66,7 @@ var why = await facts.ExplainAsync(factId);   // FactExplanation, or null for an
 // why.Successors: the rows that replaced this one, nearest first; why.Predecessors: the rows it replaced
 ```
 
-One round trip. The library never holds your text: hand `SourceKind`, `SourceRef` and `LocatorJson` to your own resolver to get a link or a snippet. The extractor and model are not reported yet (nothing writes them until the extraction contract).
+One round trip. The library never holds your text: hand `SourceKind`, `SourceRef` and `LocatorJson` to your own resolver to get a link or a snippet. Each source also carries the extractor and model that produced it, when it came from `ExtractAsync`.
 
 ## Finding facts by meaning
 
@@ -69,7 +75,7 @@ await facts.SetEmbeddingsAsync("my-model", [new FactEmbedding(factId, vector)]);
 var near = await facts.NearestAsync("my-model", queryVector, k: 10, validAt: now, knownAt: null);   // ScoredFact: the fact and its cosine
 ```
 
-Vectors are stored compressed (a sign-bit code to scan, an int8 copy to rank, ~1.4 KB per fact at 1024 dimensions; [ADR 0003](../../docs/adr/0003-facts-vector-storage.md)), so no PostgreSQL extension is needed beyond `btree_gist`. Search honours `validAt` and `knownAt` like `AsOfAsync`. It is approximate: `oversample` (default 40) candidates per result are ranked exactly; raise it for recall, or to cover every row for exact results. At 52,000 facts and 1024 dimensions: p95 21 to 51 ms, 73 MB, results within 0.01 cosine of the exact top ten.
+Vectors are stored compressed (a sign-bit code to scan, an int8 copy to rank, ~1.4 KB per fact at 1024 dimensions; [ADR 0003](https://github.com/Egoushka/switchknife/blob/main/docs/adr/0003-facts-vector-storage.md)), so no PostgreSQL extension is needed beyond `btree_gist`. Search honours `validAt` and `knownAt` like `AsOfAsync`. It is approximate: `oversample` (default 40) candidates per result are ranked exactly; raise it for recall, or to cover every row for exact results. At 52,000 facts and 1024 dimensions: p95 21 to 51 ms, 73 MB, results within 0.01 cosine of the exact top ten.
 
 ## Searching by words and meaning
 
@@ -106,12 +112,12 @@ if (ExtractionParser.TryParse(reply, out var output, out var failure))   // bare
 
 The validator drops a fact that cites a line outside the episode, has a date before 1900 or past `OccurredAt` plus 730 days, ends before it begins, repeats another, or has no usable object; it keeps a fact and drops its quote when the quote is not in the cited lines, and drops a `replaces` that is not a live fact of the same subject on a `Many` predicate. A missing start date becomes the episode time (`StartDefaulted`). A predicate you did not list becomes an open `statement` unless `ExtractionOptions.UnknownPredicates` says to reject it. Store `prompt.ExtractorName` with the episode: any change to a rule or the schema changes it. Source lines are data in the prompt: line breaks are collapsed and a line cannot close the data block. `IEntityResolver` is the seam where a name becomes an entity.
 
-## Not in this slice
+## Not in 0.1.0
 
-Entity resolution and merge, writing extracted facts into the store (`IngestExtractedAsync`, next), tool definitions. See [the write-path spec](../../docs/specs/2026-10-28-facts-write-path.md) and the slice table for the order.
+Entity resolution beyond exact names and entity merge (F4), tool definitions for agents (F6), and `Switchknife.Facts.Testing` (a scripted extractor for tests). Order and plan: the slice table in [the library spec](https://github.com/Egoushka/switchknife/blob/main/docs/specs/2026-10-26-facts-library.md).
 
 ## Measured
 
-`bench/Switchknife.Facts.Bench` drives this package against PostgreSQL 18 in a 384 MB container: 50,000 facts, 5 per episode, ingest p95 about 14 ms, as-of p95 under 0.4 ms, 57 MB of table and indexes, no wrong answer against its oracle. Thresholds and method: [`docs/benchmarks/facts-library.md`](../../docs/benchmarks/facts-library.md).
+`bench/Switchknife.Facts.Bench` drives this package against PostgreSQL 18 in a 384 MB container: 50,000 facts, 5 per episode, ingest p95 about 14 ms, as-of p95 under 0.4 ms, 57 MB of table and indexes, no wrong answer against its oracle. With 1024-dimension embeddings on the same 50,000 facts: nearest p95 27.5 ms (limit 50) and 76.8 MB of embeddings (limit 100), measured on a loaded laptop, so an upper bound. Thresholds and method: [`docs/benchmarks/facts-library.md`](https://github.com/Egoushka/switchknife/blob/main/docs/benchmarks/facts-library.md).
 
 Native AOT: `samples/Switchknife.AotSmoke` publishes with Native AOT, warnings as errors, and runs a superseding pair and an as-of read against a real PostgreSQL.

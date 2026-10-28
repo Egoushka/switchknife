@@ -2,13 +2,15 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
   <!-- Every package: AOT and trim analyzers on, public API checked against the last release, versioned by its own tag
-       (MinVerTagPrefix in each project, e.g. journal/v0.1.0). -->
+       (MinVerTagPrefix in each project, e.g. journal/v0.1.0). Symbols ship as a .snupkg; SourceLink comes with the SDK. -->
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <IsAotCompatible>true</IsAotCompatible>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <EnablePackageValidation>true</EnablePackageValidation>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <MinVerDefaultPreReleaseIdentifiers>preview.0</MinVerDefaultPreReleaseIdentifiers>
   </PropertyGroup>
 
