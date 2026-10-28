@@ -7,10 +7,16 @@ using Switchknife.Facts.Bench;
 //        [--episode-size 5] [--vector-dims 0] [--vector-noise 1.0] [--oversample 40] [--seed 1] [--fresh] [--gate]    (the database name must contain "bench")
 //        --gate also exits 3 when a run exceeds the ADR's latency or size thresholds (Gates.Adr), naming each on stderr
 // score: Switchknife.Facts.Bench score --gold gold.jsonl --pred pred.jsonl
-if (args.Length == 0 || args[0] is not ("run" or "score"))
+// label: Switchknife.Facts.Bench label <verb> [options]    (builds the G0 labelled set; LabelCommand.Usage lists the verbs)
+if (args.Length == 0 || args[0] is not ("run" or "score" or "label"))
 {
-    Console.Error.WriteLine("usage: run --connection <string> [options] | score --gold <file> --pred <file>");
+    Console.Error.WriteLine("usage: run --connection <string> [options] | score --gold <file> --pred <file> | label <verb> [options]");
     return 2;
+}
+
+if (args[0] == "label")
+{
+    return LabelCommand.Run(args.Length > 1 ? args[1] : "", ParseOptions(args.Skip(2)));
 }
 
 var options = ParseOptions(args.Skip(1));
