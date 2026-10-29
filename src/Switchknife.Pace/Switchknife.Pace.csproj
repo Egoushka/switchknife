@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Switchknife.Pace</PackageId>
+    <MinVerTagPrefix>pace/v</MinVerTagPrefix>
+    <Description>A pacing engine for one AI subscription's weekly allowance: windows, a pace line per consumer, states, leases and attribution of an account-wide meter. No I/O; the clock is injected. Native AOT compatible.</Description>
+    <PackageTags>quota;pacing;rate-limit;ledger;subscription;aot</PackageTags>
+  </PropertyGroup>
+
+</Project>
