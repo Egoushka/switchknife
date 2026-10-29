@@ -22,6 +22,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
@@ -37,9 +38,13 @@ jobs:
       - run: dotnet test -c Release
       # MinVerIgnoreHeight: a project reference resolves to its package's last release (facts/v0.1.0 gives 0.1.0), not a
       # prerelease of untagged commits that nuget.org does not have. The tagged package itself is at height 0 either way.
-      - run: dotnet pack "${{ steps.package.outputs.project }}" -c Release -o "$RUNNER_TEMP/nupkg" -p:MinVerIgnoreHeight=true
+      - env:
+          PROJECT: ${{ steps.package.outputs.project }}
+        run: dotnet pack "$PROJECT" -c Release -o "$RUNNER_TEMP/nupkg" -p:MinVerIgnoreHeight=true
       - uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
         id: nuget
         with:
           user: ${{ vars.NUGET_USER }}
-      - run: dotnet nuget push "$RUNNER_TEMP"/nupkg/*.nupkg --api-key "${{ steps.nuget.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+      - env:
+          NUGET_API_KEY: ${{ steps.nuget.outputs.NUGET_API_KEY }}
+        run: dotnet nuget push "$RUNNER_TEMP"/nupkg/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate

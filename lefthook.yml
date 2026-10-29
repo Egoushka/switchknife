@@ -8,6 +8,9 @@ pre-commit:
       run: agent-checks check --staged
     - name: gitleaks
       run: gitleaks git --staged --redact --no-banner
+    - name: zizmor
+      glob: ".github/workflows/*.{yml,yaml}"
+      run: zizmor --offline --no-progress {staged_files}
 
 
 pre-push:
