@@ -30,6 +30,9 @@ public sealed class LedgerState
     /// <summary>The account is limited until this time, if it was ever rejected.</summary>
     public DateTimeOffset? LimitedUntil { get; set; }
 
+    /// <summary>The last fitted k of a finished week, used until the current week has enough quiet-hour use of its own.</summary>
+    public double? PriorK { get; set; }
+
     /// <summary>When the newest meter reading was observed.</summary>
     public DateTimeOffset? LastMeterAt { get; set; }
 
@@ -40,6 +43,7 @@ public sealed class LedgerState
             Week = Week?.Clone(),
             LeaseSequence = LeaseSequence,
             LimitedUntil = LimitedUntil,
+            PriorK = PriorK,
             LastMeterAt = LastMeterAt,
         };
         foreach (var (k, v) in Readings) copy.Readings[k] = v;
@@ -75,6 +79,15 @@ public sealed class WeekState
     /// <summary>Use on the API route this week, dollars.</summary>
     public Dictionary<string, double> ApiUsd { get; init; } = [];
 
+    /// <summary>When the meter last rose (or the week was first read).</summary>
+    public DateTimeOffset? LastRiseAt { get; set; }
+
+    /// <summary>Meter rise over intervals that began and ended in quiet hours.</summary>
+    public double QuietRise { get; set; }
+
+    /// <summary>Model-weighted dollars reported in those intervals.</summary>
+    public double QuietUse { get; set; }
+
     /// <summary>Meter rise with no reported use before it.</summary>
     public double Untracked { get; set; }
 
@@ -84,6 +97,9 @@ public sealed class WeekState
         Baseline = Baseline,
         Utilization = Utilization,
         Untracked = Untracked,
+        LastRiseAt = LastRiseAt,
+        QuietRise = QuietRise,
+        QuietUse = QuietUse,
         Weighted = new(Weighted),
         Apportioned = new(Apportioned),
         SinceRise = new(SinceRise),

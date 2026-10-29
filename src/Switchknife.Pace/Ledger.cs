@@ -19,6 +19,8 @@ public sealed class Ledger
     private const int JobCostWindow = 50;
     private const int MaxEvents = 1000;
     private const double Epsilon = 1e-9;
+    private const double UntrackedStep = 0.01;
+    private const double MinFitUsd = 1.0;
     private static readonly TimeSpan Week = TimeSpan.FromDays(7);
     private static readonly TimeSpan WeekTolerance = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan StaleRetry = TimeSpan.FromMinutes(5);
@@ -226,6 +228,7 @@ public sealed class Ledger
         }
         else if (r.ResetsAt > week.ResetsAt + WeekTolerance)
         {
+            _s.PriorK = FittedK(week) ?? _s.PriorK;
             _s.History.Add(new WeekSummary(week.ResetsAt.Value, week.Utilization, UsedBy(week), week.Untracked));
             if (_s.History.Count > HistoryWeeks)
             {
@@ -241,6 +244,14 @@ public sealed class Ledger
             var rise = r.Utilization - week.Utilization;
             week.Utilization = r.Utilization;
             var used = week.SinceRise.Values.Sum();
+            var at = r.ObservedAt ?? now;
+            if (week.LastRiseAt is { } from && _policy.Quiet.ContainsInterval(from, at))
+            {
+                week.QuietRise += rise;
+                week.QuietUse += used;
+            }
+
+            week.LastRiseAt = at;
             if (used > 0)
             {
                 foreach (var (consumer, amount) in week.SinceRise)
@@ -262,7 +273,11 @@ public sealed class Ledger
         week.ResetsAt = r.ResetsAt;
         week.Baseline = r.Utilization;
         week.Utilization = r.Utilization;
+        week.LastRiseAt = r.ObservedAt;
     }
+
+    /// <summary>k from the quiet-hour intervals so far, once they hold enough reported use to mean something.</summary>
+    private static double? FittedK(WeekState week) => week.QuietUse >= MinFitUsd && week.QuietRise > 0 ? week.QuietRise / week.QuietUse : null;
 
     private static Dictionary<string, double> UsedBy(WeekState week) => new(week.Apportioned);
 
@@ -347,6 +362,8 @@ public sealed class Ledger
         private readonly DateTimeOffset _now;
         private readonly WeekState? _week;
         private readonly double _rate;
+        private readonly double? _k;
+        private readonly bool _calibrated;
         private readonly PaceState? _accountState;
 
         private Context(Ledger l, DateTimeOffset now)
@@ -358,7 +375,10 @@ public sealed class Ledger
             PaceLine = Elapsed * l._policy.TotalShare;
             MeterAge = l._s.LastMeterAt is { } at ? Max(now - at, TimeSpan.Zero) : null;
             LimitedUntil = l._s.LimitedUntil is { } until && until > now ? until : null;
-            _rate = _week is null ? 0 : MeterPerDollar(_week);
+            _k = (_week is null ? null : FittedK(_week)) ?? l._s.PriorK;
+            _calibrated = _week is not null && _k is { } k
+                && _week.Utilization - _week.Baseline - (k * _week.Weighted.Values.Sum()) > UntrackedStep;
+            _rate = _k ?? (_week is null ? 0 : MeterPerDollar(_week));
             _accountState = LimitedUntil is not null ? PaceState.Limited
                 : MeterAge > l._policy.StaleAfter ? PaceState.Stale
                 : null;
@@ -380,12 +400,18 @@ public sealed class Ledger
 
         public AccountStatus Account() => new(
             _accountState ?? (AccountOver ? PaceState.OverPace : PaceState.Ok),
-            Paced ? _week!.Utilization : null, _week?.ResetsAt, Elapsed, PaceLine, _week?.Untracked ?? 0, MeterAge, LimitedUntil);
+            Paced ? _week!.Utilization : null, _week?.ResetsAt, Elapsed, PaceLine, Untracked(), MeterAge, LimitedUntil, _k);
+
+        private double Untracked() => _week is null ? 0
+            : _calibrated ? Math.Max(0, _week.Utilization - _week.Baseline - (_k!.Value * _week.Weighted.Values.Sum()))
+            : _week.Untracked;
 
         public ConsumerStatus Consumer(string name)
         {
             var share = _l._policy.Consumers.TryGetValue(name, out var p) ? p.Share : 0;
-            var used = _week?.Apportioned.GetValueOrDefault(name) ?? 0;
+            var apportioned = _week?.Apportioned.GetValueOrDefault(name) ?? 0;
+            double? calibrated = _k is { } k && _week is not null ? k * _week.Weighted.GetValueOrDefault(name) : null;
+            var used = _calibrated ? calibrated!.Value : apportioned;
             var leases = _l._s.Leases.Values.Where(x => x.Consumer == name).ToArray();
             var reserved = leases.Sum(x => x.EstimateUsd) * _rate;
             var allowance = share * Elapsed;
@@ -393,7 +419,8 @@ public sealed class Ledger
                 ?? (Paced && (used + reserved > allowance + Epsilon || AccountOver) ? PaceState.OverPace : PaceState.Ok);
             return new ConsumerStatus(
                 name, share, used, reserved, allowance, Math.Max(0, allowance - used - reserved), state, leases.Length,
-                _week?.Weighted.GetValueOrDefault(name) ?? 0, _week?.ApiUsd.GetValueOrDefault(name) ?? 0, Estimator.Apportion);
+                _week?.Weighted.GetValueOrDefault(name) ?? 0, _week?.ApiUsd.GetValueOrDefault(name) ?? 0,
+                _calibrated ? Estimator.Calibrated : Estimator.Apportion, apportioned, calibrated);
         }
 
         public TimeSpan RetryAfterOverPace(ConsumerStatus s)

@@ -5,6 +5,8 @@ namespace Switchknife.Pace.Tests;
 /// <summary>A ledger on a fake clock, with a week that resets seven days after the start.</summary>
 internal sealed class Rig
 {
+    public static readonly QuietHours Night = new(new TimeOnly(0, 0), new TimeOnly(8, 0), TimeZoneInfo.Utc);
+
     public static readonly DateTimeOffset Start = new(2026, 11, 2, 0, 0, 0, TimeSpan.Zero);
 
     public Rig(PaceMode mode = PaceMode.Observe)
@@ -15,7 +17,7 @@ internal sealed class Rig
             ["b"] = new(0.10, Decision.Api),
             ["owner"] = new(0.55),
         };
-        Policy = new Policy { Consumers = consumers, Mode = mode };
+        Policy = new Policy { Consumers = consumers, Mode = mode, Quiet = Night };
         Clock = new FakeTimeProvider(Start);
         Ledger = new Ledger(Policy, Clock);
     }
