@@ -15,6 +15,7 @@ using Switchknife.Journal;
 using Switchknife.Journal.Postgres;
 using Switchknife.McpGuard;
 using Switchknife.Migrations;
+using Switchknife.Pace;
 using Switchknife.Testing.Http;
 
 // Exercises each package the way a host would, under Native AOT. Exit 0 and one "ok" line per package.
@@ -32,6 +33,7 @@ var smokes = new (string, Func<Task<string?>>)[]
     ("Switchknife.Journal.Postgres", JournalPostgresAsync),
     ("Switchknife.McpGuard", McpGuardAsync),
     ("Switchknife.Migrations", MigrationsAsync),
+    ("Switchknife.Pace", () => Task.FromResult(Pace())),
     ("Switchknife.Testing.Http", TestingHttpAsync),
 };
 foreach (var (package, smoke) in smokes)
@@ -172,6 +174,27 @@ static async Task<string?> HostingAsync()
     return (recovered, stopping, logged, poller.ExecuteTask?.Status) == (true, false, true, TaskStatus.RanToCompletion)
         ? null
         : $"recovered {recovered}, host stopping {stopping}, failure logged {logged}, loop {poller.ExecuteTask?.Status}";
+}
+
+static string? Pace()
+{
+    var clock = new SettableClock(new DateTimeOffset(2026, 11, 2, 0, 0, 0, TimeSpan.Zero));
+    var policy = new Policy { Consumers = new Dictionary<string, ConsumerPolicy> { ["job"] = new(0.25), ["owner"] = new(0.75) }, Mode = PaceMode.Enforce };
+    var ledger = new Ledger(policy, clock);
+    var reset = clock.GetUtcNow().AddDays(7);
+    ledger.Observe(new MeterReading(MeterWindow.SevenDay, 0.0, reset));
+    clock.Now += TimeSpan.FromDays(1);
+    ledger.Observe(new MeterReading(MeterWindow.SevenDay, 0.0, reset));
+    var lease = ledger.Admit(new AdmitRequest("job", 1));
+    if (lease.Decision != Decision.Allow || lease.LeaseId is null)
+        return $"first admit: {lease.Decision}";
+    ledger.Report(new UsageReport("job", new Dictionary<string, double> { ["m"] = 10 }, lease.LeaseId));
+    ledger.Observe(new MeterReading(MeterWindow.SevenDay, 0.08, reset));
+    var held = ledger.Admit(new AdmitRequest("job"));
+    var restored = new Ledger(policy, clock, ledger.Snapshot()).Status().Consumers["job"];
+    return held.Decision == Decision.Hold && held.RetryAfter > TimeSpan.Zero && Math.Abs(restored.Used - 0.08) < 1e-9
+        ? null
+        : $"over its share: {held.Decision}, used {restored.Used}";
 }
 
 static async Task<string?> JournalAsync()
