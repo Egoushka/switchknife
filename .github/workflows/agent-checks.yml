@@ -11,4 +11,5 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 2
+          persist-credentials: false
       - uses: Egoushka/agent-checks@v0.1.1
