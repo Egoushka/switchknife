@@ -70,6 +70,9 @@ public enum Estimator
 {
     /// <summary>Each meter rise split by the consumers' reported use since the last rise.</summary>
     Apportion = 0,
+
+    /// <summary>Reported weighted use times k, the meter rise per unit of reported use fitted in quiet hours.</summary>
+    Calibrated = 1,
 }
 
 /// <summary>One reading of the plan's meter.</summary>
@@ -119,9 +122,11 @@ public sealed record Admission(
 /// <param name="WeightedUsd">Reported use this week at list price, model-weighted.</param>
 /// <param name="ApiUsd">Reported use on the API route this week.</param>
 /// <param name="Estimator">Which estimate <paramref name="Used"/> is.</param>
+/// <param name="Apportioned">The apportion estimate: each meter rise split over the use reported since the last rise.</param>
+/// <param name="Calibrated">The calibrated estimate, null until k is known.</param>
 public sealed record ConsumerStatus(
     string Name, double Share, double Used, double Reserved, double Allowance, double Remaining, PaceState State,
-    int OpenLeases, double WeightedUsd, double ApiUsd, Estimator Estimator);
+    int OpenLeases, double WeightedUsd, double ApiUsd, Estimator Estimator, double Apportioned, double? Calibrated);
 
 /// <summary>The account as a whole.</summary>
 /// <param name="State">The account's state.</param>
@@ -129,12 +134,13 @@ public sealed record ConsumerStatus(
 /// <param name="ResetsAt">The week's reset, null before the first reading.</param>
 /// <param name="Elapsed">How much of the week has passed, 0 to 1.</param>
 /// <param name="PaceLine">Total share × elapsed: where the meter would be on an even burn.</param>
-/// <param name="Untracked">Meter rise no reported use accounts for, this week.</param>
+/// <param name="Untracked">Meter rise no reported use accounts for, this week, by the estimator in force.</param>
 /// <param name="MeterAge">Age of the newest reading, null before the first.</param>
 /// <param name="LimitedUntil">Set while <paramref name="State"/> is limited.</param>
+/// <param name="K">Meter rise per dollar of reported use, fitted in quiet hours; null until there is enough quiet-hour use.</param>
 public sealed record AccountStatus(
     PaceState State, double? Utilization, DateTimeOffset? ResetsAt, double Elapsed, double PaceLine, double Untracked,
-    TimeSpan? MeterAge, DateTimeOffset? LimitedUntil);
+    TimeSpan? MeterAge, DateTimeOffset? LimitedUntil, double? K);
 
 /// <summary>Everything the ledger knows now.</summary>
 /// <param name="Account">The account.</param>

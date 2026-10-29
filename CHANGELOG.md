@@ -2,6 +2,15 @@
 
 Each package is versioned on its own by a tag `<package>/v<version>`. Entries are per package, newest first.
 
+## Switchknife.Pace 0.1.0 (2026-10-29)
+
+First release. A pacing ledger for one AI subscription's weekly allowance, with no I/O, designed in [ADR 0004](docs/adr/0004-pace-engine.md) for [subgate](https://github.com/Egoushka/subgate).
+
+- **Ledger** (#36): the plan's weekly meter and its week (keyed by the meter's own reset, kept eight weeks), a pace line per consumer (`share × elapsed ÷ 7 days`, unused allowance carries forward), states `Ok`, `OverPace` (a consumer, and the account backstop), `Limited` until a reported reset and `Stale`, leases that reserve an admitted job's estimate until it reports or expires, running session totals, observe and enforce modes, `Snapshot` and restore. `TimeProvider` throughout; the owner is measured and never gated.
+- **Attribution** (#37): an apportioned and a calibrated estimate of each consumer's share of the account-wide meter, k fitted only in quiet hours, switching when reported use stops explaining the meter. Simulated week, 40 seeds, six cells: worst consumer p95 error 1.4 to 1.6 points of the week (limit 5); apportioning alone would be 7 to 21 points when the owner's use goes unreported.
+
+Native AOT compatible, no dependencies beyond the base library.
+
 ## Switchknife.Facts.Testing 0.1.0 (2026-10-28)
 
 First release (#30). `ScriptedExtractor`, an `IFactExtractor` that replays queued model replies or errors and records each request in `Requests`, so code that extracts facts runs through the full `ExtractAsync` pipeline without calling a model. No test-framework dependency, Native AOT compatible. Depends on Switchknife.Facts 0.1.0.

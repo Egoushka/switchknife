@@ -8,6 +8,27 @@ namespace Switchknife.Pace;
 /// <param name="OnStale">What to answer when the meter is stale. Null means <see cref="Decision.Hold"/>. The owner has none.</param>
 public sealed record ConsumerPolicy(double Share, Decision? Action = null, Decision? OnStale = null);
 
+/// <summary>A daily window in which the owner is idle, so the meter's rises come from consumers that report.</summary>
+/// <param name="Start">When it starts, in <paramref name="Zone"/>.</param>
+/// <param name="End">When it ends; before <paramref name="Start"/> means it crosses midnight.</param>
+/// <param name="Zone">The owner's time zone.</param>
+public sealed record QuietHours(TimeOnly Start, TimeOnly End, TimeZoneInfo Zone)
+{
+    /// <summary>00:00 to 08:00 in the machine's time zone.</summary>
+    public static QuietHours Default { get; } = new(new TimeOnly(0, 0), new TimeOnly(8, 0), TimeZoneInfo.Local);
+
+    internal TimeSpan Length => End >= Start ? End - Start : End - Start + TimeSpan.FromDays(1);
+
+    internal bool Contains(DateTimeOffset at)
+    {
+        var local = TimeOnly.FromTimeSpan(TimeZoneInfo.ConvertTime(at, Zone).TimeOfDay);
+        return Start <= End ? local >= Start && local < End : local >= Start || local < End;
+    }
+
+    /// <summary>Both ends inside the window, and close enough to be inside the same one.</summary>
+    internal bool ContainsInterval(DateTimeOffset from, DateTimeOffset to) => to - from < Length && Contains(from) && Contains(to);
+}
+
 /// <summary>The rules the ledger runs by. Build it from a file; <see cref="Validate"/> before use.</summary>
 public sealed record Policy
 {
@@ -25,6 +46,9 @@ public sealed record Policy
 
     /// <summary>How long an admitted job's reservation lasts without a report.</summary>
     public TimeSpan LeaseTtl { get; init; } = TimeSpan.FromHours(2);
+
+    /// <summary>Hours in which only reporting consumers use the plan; the calibration factor k is fitted from them.</summary>
+    public QuietHours Quiet { get; init; } = QuietHours.Default;
 
     /// <summary>A multiplier on a model's reported cost, by model name. Unlisted models weigh 1.</summary>
     public IReadOnlyDictionary<string, double> ModelWeights { get; init; } = new Dictionary<string, double>();
@@ -72,6 +96,11 @@ public sealed record Policy
         if (total > 1 + 1e-9)
         {
             problems.Add(string.Create(CultureInfo.InvariantCulture, $"shares sum to {total:0.####}, past 1"));
+        }
+
+        if (Quiet.Start == Quiet.End)
+        {
+            problems.Add("quiet hours start and end at the same time");
         }
 
         if (StaleAfter <= TimeSpan.Zero)
