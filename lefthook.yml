@@ -6,8 +6,9 @@ pre-commit:
   jobs:
     - name: agent-checks
       run: agent-checks check --staged
-    - name: gitleaks
-      run: gitleaks git --staged --redact --no-banner
+    # generic-password and generic-credential-uri are off: 40 hits in 18 repos, none a live secret.
+    - name: betterleaks
+      run: betterleaks git --staged --redact --no-banner --disable-rule generic-password,generic-credential-uri
     - name: zizmor
       glob: ".github/workflows/*.{yml,yaml}"
       run: zizmor --offline --no-progress {staged_files}
