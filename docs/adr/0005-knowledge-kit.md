@@ -7,9 +7,9 @@
 
 Build `Switchknife.Knowledge`, a library over `Switchknife.Facts` with three layers (source adapters, the facts store, outputs for agents and the approvals shell), but build it in the order the evidence allows, not in the order of the brief.
 
-1. **Money chain first.** Ideas with a value hypothesis and a cheapest test, linked to experiments, results and money. It needs no retrieval quality, it serves the one goal with a number (about 60k UAH a month of extra income), and making money is 1–2% of what reaches the agents today (the workspace audit of 2026-10-10).
-2. **Retrieval repaired before it is shared.** The first instance of this idea already exists: the `prior-art` namespace in feed-eater's database. Its recall gate failed: recall@10 0.145, then 0.183 after reseeding everything written, against a threshold of 0.60 and a plain-text baseline of 0.169 (the workspace's prior-art results of 2026-10-29). Spreading a retriever that does not beat `rg` to cooking and code would make three domains of noise. The kit's retrieval slice must beat that baseline on the same gold set first.
-3. **The cross-domain map last, behind the strictest stop.** Automatic analogies between a cooking technique and a code pattern are the boldest and least proven part. They ship only as proposals a person confirms, and stop if the confirmation rate says they are noise.
+1. **Capture freely; structure only where effort is spent.** Anything worth keeping enters with no gate: a fact, a note, a half-idea. A fact that looks worthless today may pay off years later through a link nobody planned, so the value of a fact is not judged at capture. A value hypothesis and a cheapest test are required only when an idea is promoted to `testing`, the moment it starts to cost hours or money. The kit then measures whether late links really happen (the "late yield" measure below), instead of assuming it either way.
+2. **Retrieval repaired before it is shared.** The first instance of this idea already exists: the `prior-art` namespace in feed-eater's database. Its recall gate failed: recall@10 0.145, then 0.183 after reseeding everything written, against a threshold of 0.60 and a plain-text baseline of 0.169 (the workspace's prior-art results of 2026-10-29). Free capture makes this stage more important, not less: a fact can only pay off later if search and link proposals find it. Spreading a retriever that does not beat `rg` to cooking and code would make three domains of noise. The kit's retrieval slice must beat that baseline on the same gold set first.
+3. **The cross-domain map behind the strictest stop.** Automatic analogies between a cooking technique and a code pattern are the boldest and least proven part. They ship only as proposals a person confirms, and stop if the confirmation rate says they are noise.
 
 No new store, container or front end: the kit's namespaces live where `prior-art` already lives, the approvals shell renders its items, and the MCP tools are definitions the host registers behind `Switchknife.McpGuard`.
 
@@ -86,7 +86,7 @@ The test for each part: does a second consumer need it now, and does it carry no
 | Digest, Telegram, duels, swipe, Instagram, `Memory/WeeklyRetain` | stay | Feed-specific outputs; the kit has no digest (D-39) and no Telegram |
 | `Llm/LiteLlmClient` | stays | The kit never calls a model |
 
-feed-eater is the first consumer: after stage K1 it references the kit, its prior-art tools become the kit's tool definitions, and its behaviour does not change. **Recipes are the second**: the recipe adapter must land without a change to `Switchknife.Knowledge` core. If it needs one, the abstraction was wrong and the change is reviewed as such.
+feed-eater is the first consumer: after stage K1 it references the kit, its prior-art tools become the kit's tool definitions, and its behaviour does not change. **Code practices are the second** (chargehand results, ADRs and docs read from repositories at a commit): they exist today, unlike recipes, and an abstraction needs a consumer with real data. The practice adapters must land without a change to `Switchknife.Knowledge` core; if they need one, the abstraction was wrong and the change is reviewed as such. **Recipes are the third**, started from zero: no recipes are kept anywhere today, so the kitchen namespace begins with capture by URL.
 
 ### Layer 2: storage
 
@@ -125,17 +125,19 @@ A link is a fact in namespace `map`. Its subject and object are `ref` entities w
 
 ### Ideas, value hypothesis and the money chain
 
-An `idea` entity is valid only with all of these, enforced by an `IdeaValidator` in the kit (the same pattern as `ExtractionValidator`): an idea missing any of them is rejected with a reason code, not stored half-done.
+**Capture has no gate.** An idea enters as `seed` with nothing but its text and its source, like any other fact. Seeds are never judged, ranked down or expired for lacking a value: a fact's worth is often visible only after a later link connects it, so a gate at capture would throw away exactly the facts this layer exists for. Seeds take part in search and link proposals like everything else.
 
-| Predicate | Cardinality | Content |
-|---|---|---|
-| `value_kind` | one | `people` or `money` |
-| `value_hypothesis` | one | Who gains what, by how much, and the evidence it rests on. For `money`: the expected UAH per month, so the board can sum it against the goal |
-| `cheapest_test` | one | The action, its cost cap (hours and UAH), the metric, and the pass line that would keep the idea alive. A test without a pass line is rejected |
-| `status` | one | `proposed`, `testing`, `validated`, `killed`, `earning` |
-| `kill_reason` | one | Required when `status` becomes `killed` |
+**Promotion has a gate.** An idea moves to `testing` only with the predicates below, enforced by an `IdeaValidator` in the kit (the same pattern as `ExtractionValidator`). The gate sits where hours or money start to be spent, because that is where a missing pass line makes a test impossible to end.
 
-Sources of ideas: feed-eater's weekly ideas and the idea machine already file GitHub issues. The issue stays the workflow's source of truth; the kit ingests it as a source (`github-issue`, ref `owner/repo#n`, hash of title and body), so an edited issue retires the facts only the old text supported, and the two never disagree. Money facts come from the system of record for income (UNKNOWN which; open question 4), never from typing amounts twice.
+| Predicate | Cardinality | Required from | Content |
+|---|---|---|---|
+| `status` | one | capture | `seed`, `testing`, `validated`, `killed`, `earning`. A seed may stay a seed forever |
+| `value_kind` | one | `testing` | `people` or `money` |
+| `value_hypothesis` | one | `testing` | Who gains what, by how much, and the evidence it rests on. For `money`: the expected UAH per month |
+| `cheapest_test` | one | `testing` | The action, its cost cap (hours and UAH), the metric, and the pass line that would keep the idea alive |
+| `kill_reason` | one | `killed` | Why; a killed idea stays searchable and linkable, so it can come back through a new link |
+
+Sources of ideas: feed-eater's weekly ideas and the idea machine already file GitHub issues. The issue stays the workflow's source of truth; the kit ingests it as a source (`github-issue`, ref `owner/repo#n`, hash of title and body), so an edited issue retires the facts only the old text supported, and the two never disagree. There is no system that records income yet, so `earned` facts are written by the owner through the approvals result item, once; when an income system exists, it becomes the source and the hand-entered path closes.
 
 Chain query: one recursive query walks `inspired` → `tested_by` → `produced` → `earned` and returns, per idea, the stages reached, days in each, and UAH earned.
 
@@ -148,7 +150,8 @@ Read-only SQL in the kit, exposed as one tool (`knowledge_board`) and one JSON p
 | Coverage per domain | live facts, entities, sources; share embedded; share stale (stale is computed on read, as prior-art does) |
 | Question coverage per domain | share of searches answered `hit`, `thin`, `miss` (from a query log of domain, coverage and a hash; question text kept only for public namespaces) |
 | Cross-domain links | confirmed links per pair of domains; share of entities with at least one; proposals confirmed, rejected, pending |
-| Idea funnel | ideas per status; conversion proposed → testing → validated → earning; median days per stage; ideas whose test is older than its own time box |
+| Late yield | for every confirmed link and every idea promoted to `testing`: the age of its oldest end at that moment, and how many times that end was read before. A link whose end is older than 90 days and was never read is a late yield. This is the measure of the "worthless today, valuable later" claim; 90 days is a starting value, chosen as longer than one planning cycle, to calibrate on the first data |
+| Idea funnel | ideas per status; conversion seed → testing → validated → earning; median days per stage; tests older than their own time box |
 | Money | UAH per month earned by kit ideas, and the sum of `value_hypothesis` estimates of ideas in `testing`, against the 60k UAH target |
 
 ### Layer 3: outputs
@@ -161,7 +164,7 @@ Read-only SQL in the kit, exposed as one tool (`knowledge_board`) and one JSON p
 | `knowledge_explain` | Any fact or link: sources with locator, quote, hash, trust; both timelines; successors |
 | `knowledge_practices` | For coding agents; below |
 | `knowledge_ingest` | Writes one source document (the formats of `prior_art_ingest`, plus ADR, recipe, issue) |
-| `knowledge_idea` | Create or move an idea; runs `IdeaValidator` |
+| `knowledge_idea` | Capture a seed (no checks), or promote an idea (runs `IdeaValidator`) |
 | `knowledge_board` | The analytics above |
 
 The employer fence holds: private namespaces (`kitchen`, `ideas`, links touching them) are never served to a session in the employer workspace, and that workspace denies `knowledge_ingest`, as it does `prior_art_research`.
@@ -171,7 +174,7 @@ The employer fence holds: private namespaces (`kitchen`, `ideas`, links touching
 | Item id | Kind | Shows (evidence, body) | Editable | Actions |
 |---|---|---|---|---|
 | `knowledge:link:<fact>` | decision | the two facts with their sources, the model's sentence naming the shared structure | the sentence | Confirm, Reject, Never this pair (`confirm`) |
-| `knowledge:idea:<idea>` | decision | hypothesis, value kind and estimate, cheapest test with cost cap and pass line, the facts that inspired it | hypothesis, test, pass line | Start test, Kill, Snooze |
+| `knowledge:idea:<idea>` | decision | a seed that a new link just connected, with the link and both ends; a draft hypothesis and cheapest test written by the host's model | hypothesis, test, pass line | Start test, Keep as seed, Kill |
 | `knowledge:result:<experiment>` | decision | the test, its pass line, measured metric if the source has one | metric value, UAH, note | Passed, Failed (kills or keeps the idea), Inconclusive |
 | `knowledge:stale:<fact>` | decision | a high-use fact past its stale line, its sources | none | Recheck (starts a chargehand job), Retire, Keep |
 | `knowledge:cooked:<recipe>` | decision | a recipe cooked (from the host's own trigger), its techniques | rating 1–5, what changed | Record, Skip |
@@ -215,9 +218,10 @@ Every benchmark runs from `bench/Switchknife.Knowledge.Bench` against PostgreSQL
 | K1 | feed-eater on the kit | behaviour unchanged | feed-eater's full test suite and `selftest.sh` pass with no test edited except imports | feed-eater CI | Any behaviour test needs a change: the extraction is wrong, revert it |
 | K1 | Ingest throughput, model path excluded | documents per second through dedup and `IngestAsync` | ≥ 50 per second. Reason: 14 ms p95 per 5-fact episode is about 70 per second for one writer; 50 leaves margin | `bench ingest --docs 10000 --scripted-extractor` | Under 50: profile; the model call dominates real ingest anyway, so this gates only regressions |
 | K1 | Idempotence | model calls on a second run over unchanged sources | exactly 0 | `bench ingest --twice` counts extractor calls | Any non-zero: a bug, not a threshold |
-| K2 | Recipes, the second consumer | core untouched | the recipe adapter's PR changes no file in `src/Switchknife.Knowledge/` | `git diff --stat` in CI on that PR | A core change is needed: review the abstraction before merging, and record why in this ADR |
-| K2 | Recipes | recall@5 on a kitchen gold set (20 questions, gold technique or recipe each) | ≥ B0 + 0.15, where B0 is `rg` over the same recipe files. Reason: the same margin as K0; a smaller one is inside the interval at 20 questions | `bench recall --gold <kitchen path>` | Under B0 + 0.10: recipes stay files with `rg`; the namespace keeps only cooked records |
-| K3 | Ideas chain | validator | 100% of stored ideas have value kind, hypothesis, cheapest test with cost cap and pass line | `knowledge doctor` | Not a threshold: the validator rejects |
+| K2 | Practices, the second consumer | core untouched | the practice adapters' PR (chargehand results, ADRs and docs from repositories at a commit) changes no file in `src/Switchknife.Knowledge/` | `git diff --stat` in CI on that PR | A core change is needed: review the abstraction before merging, and record why in this ADR |
+| K2b | Recipes, captured from zero | recall@5 on a kitchen gold set (20 questions, gold technique or recipe each), built once 50 recipes are in | ≥ B0 + 0.15, where B0 is `rg` over the same recipe text. Reason: the same margin as K0; a smaller one is inside the interval at 20 questions | `bench recall --gold <kitchen path>` | Under B0 + 0.10: recipes are kept and linked, but kitchen search falls back to text |
+| K3 | Ideas chain | capture and promotion | capture accepts any text with a source; 100% of ideas in `testing` or later have value kind, hypothesis, cheapest test with cost cap and pass line | `knowledge doctor` | Not a threshold: the validator rejects a promotion, never a capture |
+| K3 | Late yield | share of confirmed links and promotions whose oldest end is a late yield (older than 90 days, never read) | Reported, not gated, until 100 confirmed links exist; then at least 10% late yields. Reason: if fewer than one in ten links reach old unread facts, free capture of low-value facts adds storage and search noise without the payoff it is kept for; starting value | `knowledge_board` | Under 10% at 100 links: keep free capture, but rank never-read facts older than a year below fresh ones in search (they stay stored and linkable) |
 | K3 | Ideas chain | use | at least one idea reaches `validated` or `killed` through a recorded test after the first 10 ideas enter `testing`. Reason: a chain that records no outcome is a to-do list | `knowledge_board` | No outcome after 10 tests: the chain is not used; fold ideas back into issues only |
 | K4 | Map | proposal precision | ≥ 40% confirmed of the first 50 (reason above) | approvals decisions on `knowledge:link:*` | Under 30%, or no confirmed link inspires an idea within 100 confirmed links: stop proposing |
 | K5 | Practices for code | recall@5 on a code gold set: 20 merged PRs in `Egoushka/*` whose description or ADR names a practice from an outside source, asked from the PR's task text with the practice name masked | ≥ 0.50 and ≥ B0 + 0.15. Reason: 0.50 means the right practice is in the top five for half the tasks, enough to be worth a call per plan; the margin as in K0 | `bench recall --gold <code path> --tool practices` | Under B0 + 0.10: stop the planning-time push; keep the pull tool |
@@ -232,7 +236,8 @@ Every benchmark runs from `bench/Switchknife.Knowledge.Bench` against PostgreSQL
 | K0 | Retrieval repair on `prior-art`: entity-level ranking, per-namespace fan-out and fusion, the bench harness | Facts 0.1.0 |
 | K3 | Ideas chain, `IdeaValidator`, GitHub issue adapter, `knowledge_idea`, `knowledge_board`, approvals idea and result items | Facts 0.1.0; independent of K0 |
 | K1 | Kit packages, `Switchknife.SafeFetch`, feed-eater moved onto them | K0 passed or stopped |
-| K2 | Recipe adapter and `kitchen` namespace | K1 |
+| K2 | Practice adapters and the `practice` namespace (the second consumer) | K1 |
+| K2b | `kitchen` namespace; recipes captured by URL through `knowledge_ingest` from any chat ("save this recipe"), schema.org `Recipe` JSON-LD read through `Switchknife.SafeFetch` | K1 |
 | K4 | Map links and proposals | K2 and K3 |
 | K5 | Practices for code, planning-time push, then `ast-grep` matchers | K0 passed |
 
@@ -257,15 +262,17 @@ K0 and K3 start together; at most three implementation pull requests open at onc
 - ADR 0001's "facts in each consumer's own database" holds for Nytka; for the kit, one database holds several namespaces, because links need it.
 - Facts F4 (entity resolution) becomes a dependency of K0: tool and practice names must resolve across sources (`gh:owner/name`, a package id, a plain name) for entity-level ranking to work.
 
-## Open questions
+## Decisions on the questions of the first draft
 
-1. **Host.** feed-eater hosts the kit first (recommended: no new process). The trigger to move to A′, a Native AOT `knowledge-host` on the same database: a second domain's ingest needs a release cadence feed-eater's deploys block, or the kit's jobs push feed-eater past its memory budget. Is that trigger acceptable, or should A′ start at K1?
-2. **D-39.** Do approvals items from the kit, and a read-only board screen later, count as "a front end" under D-39? This ADR assumes no, since the shell already exists and renders any source.
-3. **Recipes.** Where do recipes live today, and in what format? UNKNOWN: no recipe repository is in the workspace manifest. The kitchen gold set (K2) cannot be built until this is answered.
-4. **Money's system of record.** Which system records income, so `earned` facts are ingested, not typed twice? UNKNOWN.
-5. **Gate reset.** K0 drops the prior-art spec's 0.60 threshold for B0 + 0.15, because 0.60 sits at the corpus ceiling. Does Yehor accept the reset?
-6. **Name.** `Switchknife.Knowledge`, or `Switchknife.Facts.Kit` to make the dependency visible?
-7. **Embedding model.** One model across every kit namespace; feed-eater's is fixed at 1536 dimensions. Keep it, or move every namespace to a shorter one when K0 measures memory?
+Answered on 2026-10-31; each choice keeps its reason so it can be reopened.
+
+1. **Host: feed-eater first.** No new process; the `prior-art` namespace and its tools already live there. Move to A′, a Native AOT `knowledge-host` on the same database, when either trigger fires: a domain's ingest needs releases that feed-eater's deploys block, or the kit's jobs push feed-eater past its memory budget. Moving is a packaging step because the kit is a library.
+2. **D-39 is not crossed.** D-39 is the workspace rule of 2026-10-10: a new tool adds no new store, no new front end and no new digest. The approvals app already exists and renders items from any source, so kit items are a new source, not a new front end. A board screen inside that app is its owner's call.
+3. **Recipes: none exist yet.** They become the third consumer, captured from zero by URL; practices take the second place (above).
+4. **Income: no system records it yet.** `earned` facts are entered once through the approvals result item until one exists.
+5. **The search gate is reset from 0.60 to the baseline plus 0.15 (0.32).** The old gate asked the prior-art search to find 60% of the expected tool names in its top ten. Only 64% of those names appear anywhere in everything written so far, so 0.60 asked for near-perfect search over that material: no search could pass it. The new gate asks for something reachable and still meaningful: beat plain text search (`rg`, 0.169) by 15 points.
+6. **Name: `Switchknife.Knowledge`.** The kit holds adapters, the map, ideas, analytics and tools, not only facts; the dependency on Facts is visible in the package graph.
+7. **Embedding size by measurement in K0.** Run the K0 gold set at 1536 dimensions and at 768 (feed-eater's default model, OpenAI's `text-embedding-3-small`, accepts a shorter `dimensions`; verify for the model in use). Keep the shortest size whose recall@10 is within 0.02 of 1536: half the size halves vector storage (about 1 KB instead of 2.1 KB per fact), and a 0.02 drop is inside the confidence interval at 175 gold names. One model and one size for every kit namespace.
 
 ## Reopen if
 
