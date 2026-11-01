@@ -34,4 +34,17 @@ Each status change needs an episode with a new content hash. Leaving `killed` re
 
 The `value_hypothesis` and `cheapest_test` fact values are JSON written by `IdeaJson` with a source-generated context.
 
+### GitHub issues as sources
+
+Issues filed by the idea workflows stay the source of truth; the kit ingests them as sources. `GitHubIssueAdapter` reads an `issues` webhook payload or a REST issue (pull requests are skipped) and makes the episode: kind `github-issue`, ref `owner/repo#n`, hash of the normalized title and body. It never calls GitHub; the host fetches.
+
+```csharp
+if (GitHubIssueAdapter.FromPayload(json) is { } seed)
+{
+    var capture = await ideas.CaptureAsync(seed);   // capture.Ingest.Duplicate when nothing changed
+}
+```
+
+The same issue twice is a duplicate. An edited issue is a new version of the source: its new title is written, and facts only the old text supported are retired with `source_changed`. Capture writes `status = seed` only while the idea is still a seed, so editing the issue never undoes a promotion made through the approvals item.
+
 The estimate in a hypothesis is never income: only `earned` facts count as UAH earned, and the board keeps the two apart.
