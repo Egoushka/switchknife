@@ -6,10 +6,13 @@
 
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Switchknife.Knowledge\Switchknife.Knowledge.csproj" />
+    <ProjectReference Include="..\..\src\Switchknife.Testing.Postgres\Switchknife.Testing.Postgres.csproj" />
   </ItemGroup>
 
   <ItemGroup>
