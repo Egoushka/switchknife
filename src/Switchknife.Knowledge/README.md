@@ -47,4 +47,19 @@ if (GitHubIssueAdapter.FromPayload(json) is { } seed)
 
 The same issue twice is a duplicate. An edited issue is a new version of the source: its new title is written, and facts only the old text supported are retired with `source_changed`. Capture writes `status = seed` only while the idea is still a seed, so editing the issue never undoes a promotion made through the approvals item.
 
+### Chain and board
+
+The chain links are facts in `ideas`: `inspired` (anything → idea), `tested_by` (idea → experiment), `produced` (experiment → result, with `outcome`, `metric_value`, `note`) and `earned` (result → UAH, an event dated when the money came).
+
+```csharp
+var experiment = await ideas.StartExperimentAsync(id, episode);
+var result = await ideas.RecordResultAsync(experiment, ResultOutcome.Passed, episode2, metricValue: 14m);
+await ideas.RecordEarnedAsync(result, 3000m, on: paidAt, episode3);
+
+IdeaChain chain = await ideas.ChainAsync(id);              // links reached, days in each, UAH earned: one query
+IdeaBoard board = await ideas.BoardAsync(targetUahPerMonth: 60000m);   // one round trip
+```
+
+The board holds live counts per status, the funnel (ideas that ever reached each status, and conversions), median days per status over stays that ended, tests older than their `time_box_days` and tests with no time box, and money. Days come from the status history, not from the live row: a status change closes the old row, and those closed rows are the stays. Late yield and question coverage are `null` and listed in `Absent` with a reason until their data exists. `IdeaBoardJsonContext` serializes both payloads with nulls written.
+
 The estimate in a hypothesis is never income: only `earned` facts count as UAH earned, and the board keeps the two apart.

@@ -47,6 +47,15 @@ public static class IdeaPredicates
     /// <summary>Result → money (UAH amount, date, source). Written by the owner only.</summary>
     public const string Earned = "earned";
 
+    /// <summary>A result's <see cref="ResultOutcome"/> in lower case.</summary>
+    public const string Outcome = "outcome";
+
+    /// <summary>A result's measured metric, an invariant decimal.</summary>
+    public const string MetricValue = "metric_value";
+
+    /// <summary>The owner's note on a result.</summary>
+    public const string Note = "note";
+
     /// <summary>Every predicate with its cardinality, for <see cref="FactsStore.DefinePredicateAsync"/>.</summary>
     public static IReadOnlyList<(string Name, Cardinality Cardinality)> All { get; } =
     [
@@ -60,5 +69,8 @@ public static class IdeaPredicates
         (TestedBy, Cardinality.Many),
         (Produced, Cardinality.Event),
         (Earned, Cardinality.Event),
+        (Outcome, Cardinality.One),
+        (MetricValue, Cardinality.One),
+        (Note, Cardinality.One),
     ];
 }

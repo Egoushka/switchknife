@@ -85,6 +85,11 @@ public static class IdeaValidator
             {
                 found.Add(new(IdeaRejectReason.Negative, "cheapest_test.cap_uah"));
             }
+
+            if (t.TimeBoxDays <= 0)
+            {
+                found.Add(new(IdeaRejectReason.NotPositive, "cheapest_test.time_box_days"));
+            }
         }
 
         return found;
