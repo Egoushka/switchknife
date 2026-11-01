@@ -61,6 +61,7 @@ Two properties of `step_events` matter. The global identity `seq` is allocated b
 - A room is append-only by construction and auditable by `VerifyAsync`; the cost is one advisory lock and one indexed read per appended batch.
 - Bodies are stored after masking, so the log cannot answer what a masked secret was. That is intended.
 - Hindsight's rebuild is UNKNOWN until its API is checked (slice 6). If its session retain job cannot read rooms, rooms are not the raw layer, and this ADR is amended rather than the claim kept.
+- The owner's own streams use the same log: `me/` rooms per stream, each with its own sharing mode, and four self pages plus a session card rebuilt from them as one more projection (spec slice SM). A stream no page cites for 30 days is paused. The Me check (corrections per 10 sessions) judges that slice on its own.
 - The chargehand claim in the design note ("joins without code") was wrong: its journal is a local SQLite file whose batch flows are forgotten. The adapter is slice 3.
 
 ## Check and stop
