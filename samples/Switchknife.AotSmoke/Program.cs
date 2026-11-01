@@ -207,9 +207,10 @@ static string? Knowledge()
     var refused = IdeaValidator.Validate(IdeaStatus.Seed, new IdeaDraft(IdeaStatus.Testing));
     var back = IdeaJson.ReadTest(IdeaJson.Write(test));
     var back2 = IdeaJson.ReadHypothesis(IdeaJson.Write(hypothesis));
-    return gaps.Count == 0 && refused.Count == 3 && back == test && back2 == hypothesis
+    var issue = GitHubIssueAdapter.FromPayload("""{"action":"edited","issue":{"number":7,"title":"Grade ideas","body":"b"},"repository":{"full_name":"o/r"}}""");
+    return gaps.Count == 0 && refused.Count == 3 && back == test && back2 == hypothesis && issue is { Episode.SourceRef: "o/r#7", Title: "Grade ideas" }
         ? null
-        : $"gaps {gaps.Count}, refused {refused.Count}, test {back}, hypothesis {back2}";
+        : $"gaps {gaps.Count}, refused {refused.Count}, test {back}, hypothesis {back2}, issue {issue}";
 }
 
 static async Task<string?> JournalAsync()
