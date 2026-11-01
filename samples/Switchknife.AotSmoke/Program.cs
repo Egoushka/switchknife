@@ -13,17 +13,18 @@ using Switchknife.Facts.Testing;
 using Switchknife.Hosting;
 using Switchknife.Journal;
 using Switchknife.Journal.Postgres;
+using Switchknife.Knowledge;
 using Switchknife.McpGuard;
 using Switchknife.Migrations;
 using Switchknife.Pace;
 using Switchknife.Testing.Http;
 
 // Exercises each package the way a host would, under Native AOT. Exit 0 and one "ok" line per package.
-// Switchknife.Migrations, Switchknife.Journal.Postgres and Switchknife.Facts need a PostgreSQL server: SWITCHKNIFE_SMOKE_POSTGRES
+// Switchknife.Migrations, Switchknife.Journal.Postgres, Switchknife.Facts and Switchknife.Knowledge need a PostgreSQL server: SWITCHKNIFE_SMOKE_POSTGRES
 // is its connection string (any database on it; each case creates and drops its own; Switchknife.Facts needs the btree_gist
 // extension available). Unset, those cases are skipped, except in CI where they fail.
 var exit = 0;
-var postgresCases = new HashSet<string> { "Switchknife.Facts", "Switchknife.Migrations", "Switchknife.Journal.Postgres" };
+var postgresCases = new HashSet<string> { "Switchknife.Facts", "Switchknife.Knowledge", "Switchknife.Migrations", "Switchknife.Journal.Postgres" };
 var smokes = new (string, Func<Task<string?>>)[]
 {
     ("Switchknife.Facts", FactsAsync),
@@ -31,6 +32,7 @@ var smokes = new (string, Func<Task<string?>>)[]
     ("Switchknife.Hosting", HostingAsync),
     ("Switchknife.Journal", JournalAsync),
     ("Switchknife.Journal.Postgres", JournalPostgresAsync),
+    ("Switchknife.Knowledge", KnowledgeAsync),
     ("Switchknife.McpGuard", McpGuardAsync),
     ("Switchknife.Migrations", MigrationsAsync),
     ("Switchknife.Pace", () => Task.FromResult(Pace())),
@@ -56,6 +58,55 @@ foreach (var (package, smoke) in smokes)
     }
 }
 return exit;
+
+static async Task<string?> KnowledgeAsync()
+{
+    var server = Environment.GetEnvironmentVariable("SWITCHKNIFE_SMOKE_POSTGRES");
+    if (string.IsNullOrEmpty(server))
+        return "SWITCHKNIFE_SMOKE_POSTGRES is not set";
+
+    var name = $"smoke_{Guid.NewGuid():N}";
+    var admin = new NpgsqlConnectionStringBuilder(server) { Database = "postgres", Pooling = false }.ConnectionString;
+    var database = new NpgsqlConnectionStringBuilder(server) { Database = name, Pooling = false }.ConnectionString;
+    await using (var create = new NpgsqlConnection(admin))
+    {
+        await create.OpenAsync();
+        await using var createDb = new NpgsqlCommand($"create database {name}", create);
+        await createDb.ExecuteNonQueryAsync();
+    }
+    try
+    {
+        await using (var migrate = new NpgsqlConnection(database))
+        {
+            await migrate.OpenAsync();
+            await using var ddl = new NpgsqlCommand(FactsSchema.Sql, migrate);
+            await ddl.ExecuteNonQueryAsync();
+        }
+
+        // A sentence that shares no full set of words with any fact still finds the entity whose facts it describes.
+        await using var dataSource = NpgsqlDataSource.Create(database);
+        var store = new FactsStore(dataSource, "smoke");
+        await store.DefinePredicateAsync("note", Cardinality.Many);
+        var jitter = await store.EnsureEntityAsync("tool", "Jitter");
+        var bulkhead = await store.EnsureEntityAsync("tool", "Bulkhead");
+        var day = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        await store.IngestAsync(new NewEpisode("note", "1", "h1"), [
+            new NewFact(jitter, "note", "jitter 0", day, Text: "Adds random delay to retries so many clients do not retry together."),
+            new NewFact(bulkhead, "note", "bulkhead 0", day, Text: "Isolates pools so one slow dependency cannot drain every thread.")]);
+        var hits = await new KnowledgeSearch(dataSource, ["smoke"]).SearchAsync("How do we stop many clients from retrying a failing service at the same moment?");
+
+        return hits.Count > 0 && hits[0].Name == "Jitter" && hits[0].Facts.Count == 1
+            ? null
+            : $"{hits.Count} hit(s), first {(hits.Count > 0 ? hits[0].Name : null)}";
+    }
+    finally
+    {
+        await using var admin2 = new NpgsqlConnection(admin);
+        await admin2.OpenAsync();
+        await using var drop = new NpgsqlCommand($"drop database if exists {name} with (force)", admin2);
+        await drop.ExecuteNonQueryAsync();
+    }
+}
 
 static async Task<string?> FactsAsync()
 {

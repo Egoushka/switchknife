@@ -24,3 +24,21 @@ The gate is not moved to fit a result. If the kit lands between 0.27 and 0.32 th
 - `b0`: plain text. Each fact's text and its source file name scored by overlap with the question's words (idf-weighted), top 10 facts. A stand-in for `rg` plus `feed_search`; the 0.169 of the 2026-10-29 run stays the reference figure.
 - `facts`: `FactsStore.SearchAsync` as feed-eater calls it, top 10 facts (the 0.145 and 0.183 runs).
 - `kit`: `Switchknife.Knowledge`: per-namespace fan-out, idf-weighted OR full text, entity-level grouping, reciprocal-rank fusion across namespaces.
+
+## Results, 2026-11-01 (words only, no vectors)
+
+Corpus: 711 live facts (prod 826), 20 decisions, 175 gold names. The corpus alone contains 47.6% of the gold names (the ceiling for any system on it; prod's is 64.1%).
+
+| System | recall@10 macro | Note |
+|---|---|---|
+| `b0` plain text | 0.140 | the 0.169 of 2026-10-29 is the reference |
+| `facts` | 0.000 | `plainto_tsquery` is an AND of every word: a sentence matches no fact; in prod only the vector list answers |
+| `kit` | 0.128 | micro 23 of 175 (0.131), Wilson 95% 0.089 to 0.189; `name only` 0.046 |
+
+Latency, `bench latency --namespaces 5 --facts 50000` (250,000 facts, tiled copies of the 711, 200 queries, words only, PostgreSQL in a local container): **p50 605 ms, p95 844 ms**, gate 150 ms.
+
+## Verdict
+
+- **Recall: below the stop line (0.27) on words alone, and not decided.** Without vectors this is a lower bound for the kit, and the corpus is smaller than prod's. The vector path is UNMEASURED: no embedding credentials were available to the harness. The kit does not beat B0 on words, so entity grouping and OR search alone do not clear the gate. The gate is not moved.
+- **Latency: over the gate.** The OR query matches many facts per term, so the ranking step dominates. Tiling repeats each text 70 times per namespace, which raises how many facts each term matches; a real 50,000-fact namespace may be faster. Per the ADR, the next step is the per-namespace prefilter by entity, then a lower `oversample`.
+- **Needed to decide:** `bench recall --vectors <file>` with question and fact vectors from the production embedder (the harness reads them; producing them needs the embedding credentials), run on the prod corpus.

@@ -22,6 +22,7 @@
     <Project Path="tests/Switchknife.Facts.Tests/Switchknife.Facts.Tests.csproj" />
     <Project Path="tests/Switchknife.Hosting.Tests/Switchknife.Hosting.Tests.csproj" />
     <Project Path="tests/Switchknife.Journal.Tests/Switchknife.Journal.Tests.csproj" />
+    <Project Path="tests/Switchknife.Knowledge.Tests/Switchknife.Knowledge.Tests.csproj" />
     <Project Path="tests/Switchknife.Journal.Postgres.Tests/Switchknife.Journal.Postgres.Tests.csproj" />
     <Project Path="tests/Switchknife.McpGuard.Tests/Switchknife.McpGuard.Tests.csproj" />
     <Project Path="tests/Switchknife.Migrations.Tests/Switchknife.Migrations.Tests.csproj" />

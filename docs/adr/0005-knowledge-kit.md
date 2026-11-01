@@ -274,6 +274,10 @@ Answered on 2026-10-31; each choice keeps its reason so it can be reopened.
 6. **Name: `Switchknife.Knowledge`.** The kit holds adapters, the map, ideas, analytics and tools, not only facts; the dependency on Facts is visible in the package graph.
 7. **Embedding size by measurement in K0.** Run the K0 gold set at 1536 dimensions and at 768 (feed-eater's default model, OpenAI's `text-embedding-3-small`, accepts a shorter `dimensions`; verify for the model in use). Keep the shortest size whose recall@10 is within 0.02 of 1536: half the size halves vector storage (about 1 KB instead of 2.1 KB per fact), and a 0.02 drop is inside the confidence interval at 175 gold names. One model and one size for every kit namespace.
 
+## K0 status, 2026-11-01
+
+Not decided. Words only, on a rebuilt 711-fact corpus, the kit scores 0.128 recall@10 (B0 0.140; stop line 0.27) and its latency is p95 844 ms (gate 150 ms). The vector path is unmeasured, so the stop condition is neither confirmed nor cleared. Numbers, method and what is needed to decide: [`docs/benchmarks/knowledge-k0.md`](../benchmarks/knowledge-k0.md).
+
 ## Reopen if
 
 - K0's stop condition fires: the kit continues without agent-facing retrieval, and this ADR is amended.
