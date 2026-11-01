@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Switchknife.Knowledge</PackageId>
+    <MinVerTagPrefix>knowledge/v</MinVerTagPrefix>
+    <IsAotCompatible>true</IsAotCompatible>
+    <Description>Retrieval over Switchknife.Facts namespaces: idf-weighted full text that survives a question written as a sentence, entity-level ranking (tools, practices, techniques above single facts) and reciprocal-rank fusion across namespaces. Never calls a model or the network. Native AOT compatible.</Description>
+    <PackageTags>knowledge;retrieval;search;facts;entity-ranking;rank-fusion;postgresql;npgsql;aot</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Switchknife.Facts\Switchknife.Facts.csproj" />
+  </ItemGroup>
+
+</Project>

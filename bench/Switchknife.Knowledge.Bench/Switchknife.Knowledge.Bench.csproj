@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Not a package: measures Switchknife.Knowledge retrieval against PostgreSQL (docs/benchmarks/knowledge-k0.md). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+    <InternalsVisibleTo Include="Switchknife.Knowledge.Bench.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Switchknife.Knowledge\Switchknife.Knowledge.csproj" />
+  </ItemGroup>
+
+</Project>
