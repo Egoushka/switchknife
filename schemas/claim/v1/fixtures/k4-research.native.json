@@ -1,0 +1,16 @@
+{
+  "id": "FA-SHZ-001",
+  "subject": "Shizuku",
+  "predicate": "starts_via",
+  "value": "root_or_adb",
+  "text": "Shizuku runs a server process that the user starts with root or ADB first; apps then receive a binder to that server and call system APIs through it.",
+  "status": "CONFIRMED",
+  "valid_from": null,
+  "sources": [
+    {
+      "url": "https://github.com/RikkaApps/Shizuku/blob/master/README.md",
+      "quote": "Shizuku guides users to run a process, Shizuku server, with root or ADB first.",
+      "accessed": "2026-11-01"
+    }
+  ]
+}

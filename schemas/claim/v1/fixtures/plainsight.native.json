@@ -1,0 +1,8 @@
+{
+  "generated": "2026-11-01T15:14:43Z",
+  "uptimeDays": 2,
+  "containers": 132,
+  "unhealthy": 0,
+  "coding": {"hours": 117, "language": "Markdown", "languagePercent": 39, "editor": "Claude", "editorPercent": 85, "languages": [{"name": "Markdown", "percent": 39, "hours": 45.6}, {"name": "C#", "percent": 18, "hours": 21.0}, {"name": "Unknown", "percent": 16, "hours": 18.3}, {"name": "Python", "percent": 9, "hours": 10.0}, {"name": "YAML", "percent": 3, "hours": 3.7}, {"name": "Bash", "percent": 2, "hours": 2.7}, {"name": "Text", "percent": 2, "hours": 2.7}, {"name": "Typescript", "percent": 2, "hours": 2.6}, {"name": "Kotlin", "percent": 2, "hours": 2.0}, {"name": "Json", "percent": 2, "hours": 2.0}, {"name": "Javascript", "percent": 1, "hours": 1.5}, {"name": "TSX", "percent": 1, "hours": 1.2}]},
+  "package": {"id": "Attest", "version": "1.2.1", "downloads": 634}
+}
