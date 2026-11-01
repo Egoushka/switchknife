@@ -13,6 +13,7 @@ using Switchknife.Facts.Testing;
 using Switchknife.Hosting;
 using Switchknife.Journal;
 using Switchknife.Journal.Postgres;
+using Switchknife.Knowledge.Ideas;
 using Switchknife.McpGuard;
 using Switchknife.Migrations;
 using Switchknife.Pace;
@@ -31,6 +32,7 @@ var smokes = new (string, Func<Task<string?>>)[]
     ("Switchknife.Hosting", HostingAsync),
     ("Switchknife.Journal", JournalAsync),
     ("Switchknife.Journal.Postgres", JournalPostgresAsync),
+    ("Switchknife.Knowledge", () => Task.FromResult(Knowledge())),
     ("Switchknife.McpGuard", McpGuardAsync),
     ("Switchknife.Migrations", MigrationsAsync),
     ("Switchknife.Pace", () => Task.FromResult(Pace())),
@@ -195,6 +197,19 @@ static string? Pace()
     return held.Decision == Decision.Hold && held.RetryAfter > TimeSpan.Zero && Math.Abs(restored.Used - 0.08) < 1e-9
         ? null
         : $"over its share: {held.Decision}, used {restored.Used}";
+}
+
+static string? Knowledge()
+{
+    var test = new CheapestTest("landing page", 6m, 0m, "signups", "10 in 14 days");
+    var hypothesis = new ValueHypothesis("freelancers", "save 2 h a week", "3 interviews", 5000m);
+    var gaps = IdeaValidator.Validate(IdeaStatus.Seed, new IdeaDraft(IdeaStatus.Testing, ValueKind.Money, hypothesis, test));
+    var refused = IdeaValidator.Validate(IdeaStatus.Seed, new IdeaDraft(IdeaStatus.Testing));
+    var back = IdeaJson.ReadTest(IdeaJson.Write(test));
+    var back2 = IdeaJson.ReadHypothesis(IdeaJson.Write(hypothesis));
+    return gaps.Count == 0 && refused.Count == 3 && back == test && back2 == hypothesis
+        ? null
+        : $"gaps {gaps.Count}, refused {refused.Count}, test {back}, hypothesis {back2}";
 }
 
 static async Task<string?> JournalAsync()
