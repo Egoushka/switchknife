@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Switchknife.SafeFetch</PackageId>
+    <MinVerTagPrefix>safe-fetch/v</MinVerTagPrefix>
+    <Description>SSRF-guarded HTTP fetch of pages and feeds named by untrusted input: one DNS lookup with every answer checked and the connection pinned to it, global unicast only, ports 80 and 443, capped redirects and bodies, one request a second per host, and readable text from HTML. Native AOT compatible.</Description>
+    <PackageTags>ssrf;http;fetch;security;readability;html;aot</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+</Project>
