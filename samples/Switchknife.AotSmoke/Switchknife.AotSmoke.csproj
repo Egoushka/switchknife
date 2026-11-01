@@ -13,6 +13,7 @@
     <ProjectReference Include="..\..\src\Switchknife.Hosting\Switchknife.Hosting.csproj" />
     <ProjectReference Include="..\..\src\Switchknife.Journal\Switchknife.Journal.csproj" />
     <ProjectReference Include="..\..\src\Switchknife.Journal.Postgres\Switchknife.Journal.Postgres.csproj" />
+    <ProjectReference Include="..\..\src\Switchknife.Knowledge\Switchknife.Knowledge.csproj" />
     <ProjectReference Include="..\..\src\Switchknife.McpGuard\Switchknife.McpGuard.csproj" />
     <ProjectReference Include="..\..\src\Switchknife.Migrations\Switchknife.Migrations.csproj" />
     <ProjectReference Include="..\..\src\Switchknife.Pace\Switchknife.Pace.csproj" />
