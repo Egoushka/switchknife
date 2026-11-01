@@ -18,6 +18,7 @@ using Switchknife.Knowledge.Tools;
 using Switchknife.McpGuard;
 using Switchknife.Migrations;
 using Switchknife.Pace;
+using Switchknife.SafeFetch;
 using Switchknife.Testing.Http;
 
 // Exercises each package the way a host would, under Native AOT. Exit 0 and one "ok" line per package.
@@ -38,6 +39,7 @@ var smokes = new (string, Func<Task<string?>>)[]
     ("Switchknife.McpGuard", McpGuardAsync),
     ("Switchknife.Migrations", MigrationsAsync),
     ("Switchknife.Pace", () => Task.FromResult(Pace())),
+    ("Switchknife.SafeFetch", SafeFetchAsync),
     ("Switchknife.Testing.Http", TestingHttpAsync),
 };
 foreach (var (package, smoke) in smokes)
@@ -384,6 +386,23 @@ static async Task<string?> TestingHttpAsync()
         == (HttpStatusCode.ServiceUnavailable, """{"path":"/items/1"}""", HttpMethod.Post, "/items", "payload", "Bearer smoke", 2)
         ? null
         : $"first {first.StatusCode}, second {json}, recorded {method} {uri} {body} {headers.GetValueOrDefault("authorization")}, {stub.Requests.Count} request(s)";
+}
+
+static async Task<string?> SafeFetchAsync()
+{
+    var stub = new StubHttpHandler((request, _) => request.RequestUri!.AbsolutePath == "/go"
+        ? new HttpResponseMessage(HttpStatusCode.Found) { Headers = { Location = new Uri("http://10.0.0.1/admin") } }
+        : new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("<title>T</title><article><p>Body</p></article>", System.Text.Encoding.UTF8, "text/html") });
+    using var http = stub.Client();
+    using var handler = GuardedFetcher.CreateHandler(["feeds.internal"]);   // the connect callback must build under AOT too
+    var fetcher = new GuardedFetcher(http, new SafeFetchOptions { HostGap = TimeSpan.Zero });
+    var page = await fetcher.FetchAsync(new Uri("https://example.test/post"), default);
+    var redirect = await fetcher.FetchAsync(new Uri("https://example.test/go"), default);
+    var text = page.Ok ? ReadableText.Extract(page.Body!, 1000) : "";
+    return (IpGuard.IsPublic(IPAddress.Parse("8.8.8.8")), IpGuard.IsPublic(IPAddress.Parse("::ffff:127.0.0.1")), text.StartsWith("T\n\n", StringComparison.Ordinal) && text.EndsWith("Body", StringComparison.Ordinal), redirect.Outcome, stub.Requests.Count)
+        == (true, false, true, FetchOutcome.Refused, 2)
+        ? null
+        : $"page {page.Outcome} '{text}', redirect {redirect.Outcome}, {stub.Requests.Count} request(s)";
 }
 
 internal sealed record Made(string Name);

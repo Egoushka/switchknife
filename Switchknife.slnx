@@ -9,6 +9,7 @@
     <Project Path="src/Switchknife.Knowledge/Switchknife.Knowledge.csproj" />
     <Project Path="src/Switchknife.Migrations/Switchknife.Migrations.csproj" />
     <Project Path="src/Switchknife.Pace/Switchknife.Pace.csproj" />
+    <Project Path="src/Switchknife.SafeFetch/Switchknife.SafeFetch.csproj" />
     <Project Path="src/Switchknife.Testing.Http/Switchknife.Testing.Http.csproj" />
     <Project Path="src/Switchknife.Testing.Postgres/Switchknife.Testing.Postgres.csproj" />
   </Folder>
@@ -26,6 +27,7 @@
     <Project Path="tests/Switchknife.McpGuard.Tests/Switchknife.McpGuard.Tests.csproj" />
     <Project Path="tests/Switchknife.Migrations.Tests/Switchknife.Migrations.Tests.csproj" />
     <Project Path="tests/Switchknife.Pace.Tests/Switchknife.Pace.Tests.csproj" />
+    <Project Path="tests/Switchknife.SafeFetch.Tests/Switchknife.SafeFetch.Tests.csproj" />
     <Project Path="tests/Switchknife.Testing.Http.Tests/Switchknife.Testing.Http.Tests.csproj" />
     <Project Path="tests/Switchknife.Testing.Postgres.Tests/Switchknife.Testing.Postgres.Tests.csproj" />
   </Folder>
