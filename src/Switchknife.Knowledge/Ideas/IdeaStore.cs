@@ -10,6 +10,9 @@ public sealed record IdeaMoveResult(IReadOnlyList<IdeaRejection> Rejections, Ing
     public bool Accepted => Ingest is not null;
 }
 
+/// <summary>A capture: the idea and what the ingest did (<see cref="IngestResult.Duplicate"/> when the same source text was seen before).</summary>
+public sealed record IdeaCapture(Guid Idea, IngestResult Ingest);
+
 /// <summary>
 /// The ideas chain over a <see cref="FactsStore"/> in namespace <c>ideas</c>. Capture has no gate; every later status
 /// change passes <see cref="IdeaValidator"/> and is written as one episode, or not at all.
@@ -38,25 +41,42 @@ public sealed class IdeaStore
         }
     }
 
-    /// <summary>Writes a seed: the title and <c>status = seed</c>, no gate. The same <paramref name="externalRef"/> returns the same idea.</summary>
+    /// <summary>
+    /// Writes a seed: the title and <c>status = seed</c>, no gate. The same <paramref name="externalRef"/> returns the same idea; capturing it
+    /// again writes the title and repeats <c>status = seed</c> only while the idea is still a seed, so a later status set by the owner stays.
+    /// </summary>
     /// <param name="title">The idea's text.</param>
     /// <param name="source">The episode the text came from.</param>
     /// <param name="externalRef">The consumer's id for the idea (an issue number); null makes a new idea each time.</param>
     /// <param name="cancellationToken">Cancels the write.</param>
-    public async Task<Guid> CaptureAsync(string title, NewEpisode source, string? externalRef = null, CancellationToken cancellationToken = default)
+    public async Task<Guid> CaptureAsync(string title, NewEpisode source, string? externalRef = null, CancellationToken cancellationToken = default) =>
+        (await CaptureCoreAsync(title, source, externalRef, cancellationToken).ConfigureAwait(false)).Idea;
+
+    /// <summary>
+    /// Writes the seed of a GitHub issue (<see cref="GitHubIssueAdapter"/>). The same text again is a <see cref="IngestResult.Duplicate"/>; an edited
+    /// title or body retires the facts only the old text supported and writes the new title. Status, hypothesis and test written from other sources stay live.
+    /// </summary>
+    public Task<IdeaCapture> CaptureAsync(IssueSeed seed, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(seed);
+        return CaptureCoreAsync(seed.Title, seed.Episode, seed.ExternalRef, cancellationToken);
+    }
+
+    private async Task<IdeaCapture> CaptureCoreAsync(string title, NewEpisode source, string? externalRef, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
         ArgumentNullException.ThrowIfNull(source);
         var idea = await _facts.EnsureEntityAsync(IdeaPredicates.IdeaKind, title, externalRef, cancellationToken).ConfigureAwait(false);
         var now = _time.GetUtcNow();
-        await _facts.IngestAsync(
-            source,
-            [
-                new NewFact(idea, IdeaPredicates.Title, title, now),
-                Status(idea, IdeaStatus.Seed, now),
-            ],
-            cancellationToken).ConfigureAwait(false);
-        return idea;
+        var facts = new List<NewFact> { new(idea, IdeaPredicates.Title, title, now) };
+        var status = await _facts.AsOfAsync(idea, IdeaPredicates.Status, now, cancellationToken: cancellationToken).ConfigureAwait(false) is [var live, ..] ? live.Value : null;
+        if (status is null or "seed")
+        {
+            facts.Add(Status(idea, IdeaStatus.Seed, now));
+        }
+
+        var ingest = await _facts.IngestAsync(source, facts, cancellationToken).ConfigureAwait(false);
+        return new IdeaCapture(idea, ingest);
     }
 
     /// <summary>
