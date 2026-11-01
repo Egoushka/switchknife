@@ -1,0 +1,43 @@
+{
+  "fact": {
+    "id": "01a187fe-de65-79a3-b6c6-da739c71913e",
+    "predicate": "statement",
+    "text": "architecture-decision-record: Keep ADRs for decisions that shape structure or quality attributes or are hard to reverse, record rejected alternatives, keep the log append-only and store it with the workload's documentation (an October 2025 Azure blog adds: in the repository next to the code).",
+    "tool": "architecture-decision-record",
+    "tool_ref": "url:learn.microsoft.com/en-us/azure/well-architected/architect-role/architecture-decision-record",
+    "object": null,
+    "valid_from": "2026-10-13T00:00:00+00:00",
+    "valid_to": null,
+    "recorded_at": "2026-10-29T14:09:49.669367+00:00",
+    "retired_at": null,
+    "retired_reason": null,
+    "superseded_by": null
+  },
+  "trust": "ThirdParty",
+  "sources": [
+    {
+      "episode": "01a187fe-de65-78c3-af0e-d271c1e6d1b8",
+      "kind": "web-note",
+      "ref": "notes/platform/notes/crosscutting.md",
+      "content_hash": "a4090ea4e6c2245c91b91c9bab0212fb7e206503eb977d57ad20c7a7882f1e30",
+      "trust": "ThirdParty",
+      "locator": {
+        "url": "https://learn.microsoft.com/en-us/azure/well-architected/architect-role/architecture-decision-record",
+        "file": "notes/platform/notes/crosscutting.md",
+        "line": 165,
+        "retrieved": "2026-10-13",
+        "confidence": 0.6,
+        "source_date": "UNKNOWN",
+        "start_defaulted": true
+      },
+      "quote": "The ADR serves as an append-only log.",
+      "occurred_at": "2026-10-29T14:09:49.669367+00:00",
+      "recorded_at": "2026-10-29T14:09:49.669367+00:00",
+      "extractor": null,
+      "model": null
+    }
+  ],
+  "retraction": null,
+  "successors": [],
+  "predecessors": []
+}

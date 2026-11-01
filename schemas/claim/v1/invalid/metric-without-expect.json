@@ -1,0 +1,1 @@
+{"claim_version":"claim/v1","statement":"x","evidence":[{"kind":"observation","locator":"/s.json#/n","pin":{"observed_at":"2026-11-01"}}],"recheck":{"method":"metric"}}

@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:switchknife:schema:claim:v1",
+  "title": "claim, v1",
+  "description": "A statement plus the evidence it rests on, each piece pinned to the version of the source that was read. Three fields are required; everything that lets a claim be re-checked is optional and the adapter for each shape supplies it. See docs/claims.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "patternProperties": {
+    "^x-[a-z][a-z0-9-]*$": { "description": "Adapter-carried data that does not fit the core. Never read by a generic consumer." }
+  },
+  "required": ["claim_version", "statement", "evidence"],
+  "allOf": [
+    {
+      "if": { "required": ["recheck"], "properties": { "recheck": { "properties": { "method": { "enum": ["resolve", "hash", "quote", "support", "metric"] } } } } },
+      "then": { "properties": { "evidence": { "items": { "required": ["locator"] } } } }
+    },
+    {
+      "if": { "required": ["recheck"], "properties": { "recheck": { "properties": { "method": { "const": "hash" } } } } },
+      "then": { "properties": { "evidence": { "contains": { "properties": { "pin": { "required": ["sha256"] } }, "required": ["pin"] } } } }
+    },
+    {
+      "if": { "required": ["recheck"], "properties": { "recheck": { "properties": { "method": { "const": "quote" } } } } },
+      "then": { "properties": { "evidence": { "contains": { "required": ["quote"] } } } }
+    }
+  ],
+  "properties": {
+    "claim_version": { "const": "claim/v1" },
+    "id": { "type": "string", "minLength": 1, "description": "The producer's id for the claim; unique only within that producer." },
+    "statement": { "type": "string", "minLength": 1, "maxLength": 600, "description": "One plain sentence. 600 is the largest limit of the four shapes (the phone-shell fact text)." },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/evidence" }
+    },
+    "recheck": { "$ref": "#/$defs/recheck" },
+    "checked_at": { "$ref": "#/$defs/timestamp", "description": "When the claim last held against its evidence, by the method in recheck. For a claim never re-checked, when the evidence was read." },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "The producer's belief in the statement. Not comparable across producers." },
+    "valid_from": { "$ref": "#/$defs/timestamp", "description": "Earliest time the statement is known to hold in the world." },
+    "valid_to": { "$ref": "#/$defs/timestamp", "description": "When it stopped holding; absent means unknown, not forever." }
+  },
+  "$defs": {
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2}))?$",
+      "description": "RFC 3339 date or date-time."
+    },
+    "pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "anyOf": [{ "required": ["sha256"] }, { "required": ["commit"] }, { "required": ["observed_at"] }],
+      "properties": {
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "SHA-256 of the cited bytes. What it covers is given by scope." },
+        "scope": { "enum": ["slice", "source"], "description": "slice: the cited line range or fragment, lines joined by LF with no trailing LF. source: the whole document. Absent means slice." },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{7,40}$", "description": "The git commit the locator is read at." },
+        "observed_at": { "$ref": "#/$defs/timestamp", "description": "When the source was read. The weakest pin: it says when, not what." }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "pin"],
+      "properties": {
+        "kind": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$", "description": "What sort of source this is. An open vocabulary: the producer names it, the resolver for that kind reads it. Common: file, url, commit, observation." },
+        "locator": { "type": "string", "minLength": 1, "description": "Where in the source: path:line, path:start-end, a URL, or a URL#json-pointer. Without it the evidence cannot be re-read." },
+        "pin": { "$ref": "#/$defs/pin" },
+        "quote": { "type": "string", "minLength": 1, "maxLength": 300, "description": "A short passage of the source that supports the statement. 300 is the phone-shell limit." }
+      }
+    },
+    "recheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method"],
+      "properties": {
+        "method": {
+          "enum": ["resolve", "hash", "quote", "support", "metric", "manual"],
+          "description": "resolve: every locator still resolves at its pin. hash: and every sha256 pin still matches the cited bytes (at least one evidence item carries one). quote: and the quote is still found in them. support: and a judge still finds the statement supported. metric: re-run the locator, compare the value with expect. manual: a person looks."
+        },
+        "max_age": { "type": "string", "pattern": "^P(T[0-9]+H|[0-9]+D)$", "description": "How old checked_at may be before a consumer must treat the claim as unchecked. A duration in hours or days (ISO 8601)." },
+        "expect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["value"],
+          "properties": {
+            "value": { "type": ["number", "string", "boolean"] },
+            "tolerance": { "type": "number", "minimum": 0, "description": "Relative, for a numeric value: 0.1 accepts a change of 10%. Absent means exact." }
+          }
+        }
+      },
+      "allOf": [
+        { "if": { "properties": { "method": { "const": "metric" } }, "required": ["method"] }, "then": { "required": ["expect"] } },
+        { "if": { "properties": { "method": { "enum": ["resolve", "hash", "quote", "support"] } }, "required": ["method"] }, "then": { "not": { "required": ["expect"] } } }
+      ]
+    }
+  }
+}
