@@ -45,3 +45,7 @@ Latency, `bench latency --namespaces 5 --facts 50000` (250,000 facts, tiled copi
 - **Latency: over the gate** (844 ms against 150 ms). Tiling repeats each text 70 times per namespace, which raises how many facts each term matches; a real 50,000-fact namespace may be faster. The latency run has no vectors.
 - **Embedding size (ADR decision 7):** 768 scored higher than 1536 for the kit (0.234 against 0.196) and lower for `facts` (0.177 against 0.188). Both differences are inside the interval at 175 gold names, so this run does not pick a size; it does not show 768 losing more than 0.02.
 - **Limits:** one corpus of 711 facts, one embedding model, and a kit that groups by subject entity only (no entity resolution across sources, Facts F4, which the ADR names as a K0 dependency). A design with entity resolution is a new experiment, not a lowered gate.
+
+## Production corpus, 2026-11-01
+
+One run on the 826 production facts: kit recall@10 0.199, p95 227.4 ms; `b0` 0.123 and 194.2 ms. STOP on the fixed line (0.32 and 150 ms). Record: [ADR 0006](../adr/0006-k0-stop-on-production-corpus.md).

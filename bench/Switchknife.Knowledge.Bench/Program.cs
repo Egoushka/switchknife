@@ -75,6 +75,22 @@ async Task<int> RecallAsync()
     var vectorLabel = embedder is null ? "none" : $"{embedder.Model}{(embedder.Dimensions > 0 ? "@" + embedder.Dimensions : string.Empty)}";
     ReadOnlyMemory<float> VectorOf(string question) => questionVectors.TryGetValue(question, out var v) ? v : default;
 
+    async Task<(IReadOnlyList<string> Shown, IReadOnlyList<string> Names)> SearchOnceAsync(string system, Decision d)
+    {
+        switch (system)
+        {
+            case "b0":
+                return (b0.Search(d.Question, limit), []);
+            case "facts":
+                return ((await store.SearchAsync(d.Question, VectorOf(d.Question), embedder?.Model, limit).ConfigureAwait(false)).Select(h => h.Fact.Text).ToList(), []);
+            case "kit":
+                var hits = await kit.SearchAsync(d.Question, VectorOf(d.Question), embedder?.Model, limit).ConfigureAwait(false);
+                return (hits.Select(h => h.Name + "\n" + string.Join('\n', h.Facts.Select(f => f.Text))).ToList(), hits.Select(h => h.Name).ToList());
+            default:
+                throw new InvalidOperationException($"unknown system {system}.");
+        }
+    }
+
     var ceiling = decisions.Average(d => (double)d.Found(corpus.Select(f => f.Text + " " + f.SubjectName)).Count / d.Gold.Count);
     var report = new Dictionary<string, object>();
     var macro = new Dictionary<string, double>();
@@ -85,25 +101,7 @@ async Task<int> RecallAsync()
         double sum = 0;
         foreach (var d in decisions)
         {
-            IReadOnlyList<string> shown;
-            IReadOnlyList<string> names = [];
-            switch (system)
-            {
-                case "b0":
-                    shown = b0.Search(d.Question, limit);
-                    break;
-                case "facts":
-                    shown = (await store.SearchAsync(d.Question, VectorOf(d.Question), embedder?.Model, limit).ConfigureAwait(false)).Select(h => h.Fact.Text).ToList();
-                    break;
-                case "kit":
-                    var hits = await kit.SearchAsync(d.Question, VectorOf(d.Question), embedder?.Model, limit).ConfigureAwait(false);
-                    shown = hits.Select(h => h.Name + "\n" + string.Join('\n', h.Facts.Select(f => f.Text))).ToList();
-                    names = hits.Select(h => h.Name).ToList();
-                    break;
-                default:
-                    throw new InvalidOperationException($"unknown system {system}.");
-            }
-
+            var (shown, names) = await SearchOnceAsync(system, d).ConfigureAwait(false);
             var hit = d.Found(shown);
             found += hit.Count;
             total += d.Gold.Count;
@@ -112,10 +110,29 @@ async Task<int> RecallAsync()
             rows.Add(new { d.Id, d.Title, results = shown.Count, found = hit, missed = d.Gold.Except(hit).ToList() });
         }
 
+        // p95 of one search call (query vectors already computed): one warm-up pass, then 10 timed passes of the gold questions = 200 timings.
+        foreach (var d in decisions)
+        {
+            await SearchOnceAsync(system, d).ConfigureAwait(false);
+        }
+
+        var times = new List<double>();
+        for (var pass = 0; pass < 10; pass++)
+        {
+            foreach (var d in decisions)
+            {
+                var t = Stopwatch.GetTimestamp();
+                await SearchOnceAsync(system, d).ConfigureAwait(false);
+                times.Add(Stopwatch.GetElapsedTime(t).TotalMilliseconds);
+            }
+        }
+
+        times.Sort();
+        var p95 = Stats.P95(times);
         var (lo, hi) = Stats.Wilson(found, total);
         macro[system] = sum / decisions.Count;
-        report[system] = new { recall_at_10 = Math.Round(macro[system], 4), micro = Math.Round((double)found / total, 4), wilson95 = new[] { Math.Round(lo, 4), Math.Round(hi, 4) }, found, total, name_only = Math.Round((double)nameOnly / total, 4), per_decision = rows };
-        Console.WriteLine($"{system,-6} recall@{limit} = {macro[system]:0.000} (micro {found}/{total} = {(double)found / total:0.000}, Wilson 95% {lo:0.000} to {hi:0.000}), name only {(double)nameOnly / total:0.000}");
+        report[system] = new { recall_at_10 = Math.Round(macro[system], 4), p95_ms = Math.Round(p95, 1), micro = Math.Round((double)found / total, 4), wilson95 = new[] { Math.Round(lo, 4), Math.Round(hi, 4) }, found, total, name_only = Math.Round((double)nameOnly / total, 4), per_decision = rows };
+        Console.WriteLine($"{system,-6} recall@{limit} = {macro[system]:0.000} (micro {found}/{total} = {(double)found / total:0.000}, Wilson 95% {lo:0.000} to {hi:0.000}), name only {(double)nameOnly / total:0.000}, p95 {p95:0.0} ms (p50 {times[times.Count / 2]:0.0} ms, {times.Count} timings)");
     }
 
     Console.WriteLine($"corpus: {corpus.Count} live facts, vectors: {vectorLabel}; ceiling (gold names anywhere in the corpus, macro) {ceiling:0.000}");
