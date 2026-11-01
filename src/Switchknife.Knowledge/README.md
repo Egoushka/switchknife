@@ -1,6 +1,10 @@
 # Switchknife.Knowledge
 
-Retrieval over [Switchknife.Facts](https://github.com/Egoushka/switchknife/blob/main/src/Switchknife.Facts/README.md) namespaces. It answers a question written as a sentence with **entities** (a tool, a practice, a technique) and the two facts that put each there, not with a list of single facts. Design and stages: [`docs/adr/0005-knowledge-kit.md`](https://github.com/Egoushka/switchknife/blob/main/docs/adr/0005-knowledge-kit.md).
+A knowledge kit over [`Switchknife.Facts`](../Switchknife.Facts/README.md). Design and reasons: `docs/adr/0005-knowledge-kit.md`. Never calls a model or the network; Native AOT compatible.
+
+Today it holds retrieval (stage K0) and the **ideas chain** (stage K3). More arrives by stage.
+
+## Retrieval (stage K0)
 
 ```bash
 dotnet add package Switchknife.Knowledge
@@ -25,3 +29,23 @@ var withMeaning = await search.SearchAsync(question, vector, model: "my-embeddin
 - **Per-namespace fan-out.** Each namespace is searched in parallel, on its own idf, and the lists are fused by reciprocal rank, so a small namespace is not drowned by a large one.
 - **Bi-temporal.** `knownAt` asks what the database believed at that instant.
 - No model, no network, Native AOT compatible. Needs PostgreSQL with the Facts schema.
+
+## Ideas
+
+Capture has no gate: an idea enters as a `seed` with only its text and source. Promotion to `testing` has one: a value kind, a value hypothesis (who, gain, evidence, and for money an expected UAH per month) and a cheapest test (action, hour and UAH caps, metric, pass line).
+
+```csharp
+var draft = new IdeaDraft(
+    IdeaStatus.Testing,
+    ValueKind.Money,
+    new ValueHypothesis("freelancers", "save 2 h a week", "3 interviews", ExpectedUahPerMonth: 5000m),
+    new CheapestTest("landing page", CapHours: 6m, CapUah: 0m, "signups", "10 in 14 days"));
+
+IReadOnlyList<IdeaRejection> gaps = IdeaValidator.Validate(IdeaStatus.Seed, draft); // empty: may be written
+```
+
+A rejection holds a code and a field name, never text from the draft, so it is safe to log. Statuses move `seed → testing → validated → earning`; `killed` can be reached from any status and returns to `seed` or `testing` (through the full gate).
+
+The `value_hypothesis` and `cheapest_test` fact values are JSON written by `IdeaJson` with a source-generated context.
+
+The estimate in a hypothesis is never income: only `earned` facts count as UAH earned, and the board keeps the two apart.

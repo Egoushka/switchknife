@@ -4,8 +4,8 @@
     <PackageId>Switchknife.Knowledge</PackageId>
     <MinVerTagPrefix>knowledge/v</MinVerTagPrefix>
     <IsAotCompatible>true</IsAotCompatible>
-    <Description>Retrieval over Switchknife.Facts namespaces: idf-weighted full text that survives a question written as a sentence, entity-level ranking (tools, practices, techniques above single facts) and reciprocal-rank fusion across namespaces. Never calls a model or the network. Native AOT compatible.</Description>
-    <PackageTags>knowledge;retrieval;search;facts;entity-ranking;rank-fusion;postgresql;npgsql;aot</PackageTags>
+    <Description>A knowledge kit over Switchknife.Facts. Retrieval: idf-weighted full text that survives a question written as a sentence, entity-level ranking and reciprocal-rank fusion across namespaces. Ideas chain: free capture of a seed, a promotion gate (value hypothesis and cheapest test with a pass line) enforced by IdeaValidator, and a chain from idea to experiment to result to earned UAH. Never calls a model or the network. Native AOT compatible.</Description>
+    <PackageTags>knowledge;facts;retrieval;search;entity-ranking;rank-fusion;ideas;validation;agents;postgresql;npgsql;aot</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
