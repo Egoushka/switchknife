@@ -47,6 +47,7 @@ public sealed partial class IdeaStore
     }
 
     /// <summary>Records what <paramref name="experiment"/> showed: a new result entity, the <c>produced</c> event, its outcome and, when given, the metric and a note.</summary>
+    /// <remarks>The same <c>externalRef</c> (an approvals item id) returns the same result, so a retry adds no entity; null makes a new one.</remarks>
     /// <returns>The result.</returns>
     public async Task<Guid> RecordResultAsync(
         Guid experiment,
@@ -54,10 +55,11 @@ public sealed partial class IdeaStore
         NewEpisode source,
         decimal? metricValue = null,
         string? note = null,
+        string? externalRef = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(source);
-        var result = await _facts.EnsureEntityAsync(IdeaPredicates.ResultKind, $"result of {experiment:N}", cancellationToken: cancellationToken).ConfigureAwait(false);
+        var result = await _facts.EnsureEntityAsync(IdeaPredicates.ResultKind, $"result of {experiment:N}", externalRef, cancellationToken).ConfigureAwait(false);
         var now = _time.GetUtcNow();
         var facts = new List<NewFact>
         {

@@ -126,6 +126,10 @@ public sealed partial class IdeaStore
         return new IdeaMoveResult([], ingest);
     }
 
+    // True when this episode was written before, so a retried decision needs no second write.
+    internal async Task<bool> SeenAsync(NewEpisode source, CancellationToken cancellationToken) =>
+        await _facts.EpisodeStatusAsync(source.SourceKind, source.SourceRef, source.ContentHash, cancellationToken).ConfigureAwait(false) is EpisodeStatus.Done;
+
     private static NewFact Status(Guid idea, IdeaStatus status, DateTimeOffset now) =>
         new(idea, IdeaPredicates.Status, StatusText(status), now);
 

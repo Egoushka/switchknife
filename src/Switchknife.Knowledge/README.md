@@ -76,4 +76,23 @@ foreach (var tool in KnowledgeTools.All(ideas))
 
 `knowledge_idea` with `action = capture` checks only that text and a source are present. With `action = promote` it runs `IdeaValidator` and returns its codes (`missing`, `not_positive`, `negative`, `transition_not_allowed`) with the field. Bad arguments come back as `invalid` codes, not exceptions. What a call writes carries `EpisodeTrust.Agent` unless the host passes another trust.
 
+### Approvals items
+
+Two items for the approvals shell, built to its contract (source `knowledge`, string body, editable body paths, actions, a callback the host gives):
+
+- `knowledge:idea:<idea>` shows the seed and the drafted value kind, hypothesis and test as editable fields; actions Start test, Keep as seed, Kill (with a confirm).
+- `knowledge:result:<experiment>` shows the test and its pass line; metric value, UAH earned and note are editable; actions Passed, Failed, Inconclusive.
+
+```csharp
+var item = KnowledgeApprovals.IdeaItem(new IdeaProposal(id, seed, ValueKind.Money, hypothesis, test), new ItemDelivery(callback));
+// host: PUT the item; later, on the callback:
+var decision = KnowledgeApprovals.ReadDecision(body);
+if (decision is null || !ApprovalSignature.Verify(key, decision)) return Forbidden();   // the host also refuses stale `at` and seen decisions
+ApprovalReply reply = await KnowledgeApprovals.ApplyAsync(ideas, item, decision);    // { ok, message } for the shell
+```
+
+Nothing in a decision is trusted. An unknown action, a missing item id or decision id, a time that does not parse, an edit to a path the item does not mark editable, a number that does not parse or a negative UAH amount is refused with a code and the field (`invalid action`, `negative body.uah`). Start test merges the edits into the body and passes the draft through `IdeaValidator`, whose codes come back with body paths (`missing body.pass_line`). `ParseIdea` and `ParseResult` do the same without writing.
+
+Each decision is its own source (`approvals`, `<item>/<decision>`, trust `Owner`), so the shell's retry of a decision writes nothing twice and never retires what another decision wrote. Passed (or any outcome) with UAH above zero writes an `earned` event dated with the decision's `at`. `ApprovalSignature` computes the contract's HMAC over `decision|id|action|at|h` with the edited fields hashed as `JSON.stringify` writes them, so Cyrillic text verifies the same as on the shell; the key stays with the host.
+
 The estimate in a hypothesis is never income: only `earned` facts count as UAH earned, and the board keeps the two apart.

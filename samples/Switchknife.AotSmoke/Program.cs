@@ -13,6 +13,7 @@ using Switchknife.Facts.Testing;
 using Switchknife.Hosting;
 using Switchknife.Journal;
 using Switchknife.Journal.Postgres;
+using Switchknife.Knowledge.Approvals;
 using Switchknife.Knowledge.Ideas;
 using Switchknife.Knowledge.Tools;
 using Switchknife.McpGuard;
@@ -35,6 +36,7 @@ var smokes = new (string, Func<Task<string?>>)[]
     ("Switchknife.Journal.Postgres", JournalPostgresAsync),
     ("Switchknife.Knowledge", () => Task.FromResult(Knowledge())),
     ("Switchknife.Knowledge.Tools", KnowledgeToolsAsync),
+    ("Switchknife.Knowledge.Approvals", () => Task.FromResult(KnowledgeApprovalsCheck())),
     ("Switchknife.McpGuard", McpGuardAsync),
     ("Switchknife.Migrations", MigrationsAsync),
     ("Switchknife.Pace", () => Task.FromResult(Pace())),
@@ -227,6 +229,19 @@ static async Task<string?> KnowledgeToolsAsync()
     return tools.Count == 2 && tools.All(t => t.Private) && properties == 9 && refused.Contains("\"invalid\"", StringComparison.Ordinal)
         ? null
         : $"tools {tools.Count}, properties {properties}, refused {refused}";
+}
+
+static string? KnowledgeApprovalsCheck()
+{
+    var test = new CheapestTest("landing page", 6m, 0m, "signups", "10 in 14 days");
+    var item = KnowledgeApprovals.ResultItem(new ResultProposal(Guid.NewGuid(), test), new ItemDelivery("https://hooks.example/k"));
+    var json = System.Text.Json.JsonSerializer.Serialize(item, ApprovalJsonContext.Default.ApprovalItem);
+    var decision = KnowledgeApprovals.ReadDecision($$"""{"decision":"d1","id":"{{item.Id}}","action":"passed","edited":{"body.uah":"3000"},"at":"2026-11-01T10:00:00Z"}""")!;
+    var signed = decision with { Sig = ApprovalSignature.Sign("k", decision) };
+    var parsed = KnowledgeApprovals.ParseResult(item, signed);
+    return json.Contains("\"pass_line\":\"10 in 14 days\"", StringComparison.Ordinal) && ApprovalSignature.Verify("k", signed) && parsed is { Accepted: true, Uah: 3000m }
+        ? null
+        : $"item {json}, parsed {parsed}";
 }
 
 static async Task<string?> JournalAsync()
