@@ -7,7 +7,8 @@ using Switchknife.Facts;
 using Switchknife.Knowledge;
 using Switchknife.Knowledge.Bench;
 
-// recall  --connection C --gold F --corpus F [--systems b0,facts,kit] [--limit 10] [--out F]
+// recall  --connection C --gold F --corpus F [--systems b0,facts,kit] [--limit 10] [--out F] [--model M] [--dimensions N]
+//         with KNOWLEDGE_EMBED_URL and KNOWLEDGE_EMBED_KEY in the environment, runs with vectors
 // latency --connection C --corpus F --gold F [--namespaces 5] [--facts 50000] [--queries 200]
 // The database name must contain "bench": the run replaces its facts schema.
 var options = ParseOptions(args.Skip(1).ToArray());
@@ -47,6 +48,33 @@ async Task<int> RecallAsync()
     var kit = new KnowledgeSearch(data, ["prior-art"]);
     var b0 = new PlainText(corpus);
 
+    // Vectors: when KNOWLEDGE_EMBED_URL and KNOWLEDGE_EMBED_KEY are set, facts and questions are embedded and both searches use them.
+    using var embedder = Embedder.FromEnvironment(Option("model", "text-embedding-3-small"), int.Parse(Option("dimensions", "0"), CultureInfo.InvariantCulture));
+    var questionVectors = new Dictionary<string, float[]>();
+    if (embedder is not null)
+    {
+        var rowsOut = new List<(Guid Id, string Text)>();
+        await using (var read = data.CreateCommand("select id, text from facts.facts where namespace = 'prior-art' and retired_at is null order by id"))
+        await using (var reader = await read.ExecuteReaderAsync().ConfigureAwait(false))
+        {
+            while (await reader.ReadAsync().ConfigureAwait(false))
+            {
+                rowsOut.Add((reader.GetGuid(0), reader.GetString(1)));
+            }
+        }
+
+        var factVectors = await embedder.EmbedAsync(rowsOut.Select(r => r.Text).ToList()).ConfigureAwait(false);
+        await store.SetEmbeddingsAsync(embedder.Model, rowsOut.Select((r, i) => new FactEmbedding(r.Id, factVectors[i])).ToList()).ConfigureAwait(false);
+        var qv = await embedder.EmbedAsync(decisions.Select(d => d.Question).ToList()).ConfigureAwait(false);
+        for (var i = 0; i < decisions.Count; i++)
+        {
+            questionVectors[decisions[i].Question] = qv[i];
+        }
+    }
+
+    var vectorLabel = embedder is null ? "none" : $"{embedder.Model}{(embedder.Dimensions > 0 ? "@" + embedder.Dimensions : string.Empty)}";
+    ReadOnlyMemory<float> VectorOf(string question) => questionVectors.TryGetValue(question, out var v) ? v : default;
+
     var ceiling = decisions.Average(d => (double)d.Found(corpus.Select(f => f.Text + " " + f.SubjectName)).Count / d.Gold.Count);
     var report = new Dictionary<string, object>();
     var macro = new Dictionary<string, double>();
@@ -65,10 +93,10 @@ async Task<int> RecallAsync()
                     shown = b0.Search(d.Question, limit);
                     break;
                 case "facts":
-                    shown = (await store.SearchAsync(d.Question, default, null, limit).ConfigureAwait(false)).Select(h => h.Fact.Text).ToList();
+                    shown = (await store.SearchAsync(d.Question, VectorOf(d.Question), embedder?.Model, limit).ConfigureAwait(false)).Select(h => h.Fact.Text).ToList();
                     break;
                 case "kit":
-                    var hits = await kit.SearchAsync(d.Question, limit: limit).ConfigureAwait(false);
+                    var hits = await kit.SearchAsync(d.Question, VectorOf(d.Question), embedder?.Model, limit).ConfigureAwait(false);
                     shown = hits.Select(h => h.Name + "\n" + string.Join('\n', h.Facts.Select(f => f.Text))).ToList();
                     names = hits.Select(h => h.Name).ToList();
                     break;
@@ -90,7 +118,7 @@ async Task<int> RecallAsync()
         Console.WriteLine($"{system,-6} recall@{limit} = {macro[system]:0.000} (micro {found}/{total} = {(double)found / total:0.000}, Wilson 95% {lo:0.000} to {hi:0.000}), name only {(double)nameOnly / total:0.000}");
     }
 
-    Console.WriteLine($"corpus: {corpus.Count} live facts, vectors: none; ceiling (gold names anywhere in the corpus, macro) {ceiling:0.000}");
+    Console.WriteLine($"corpus: {corpus.Count} live facts, vectors: {vectorLabel}; ceiling (gold names anywhere in the corpus, macro) {ceiling:0.000}");
     var verdict = "not measured";
     if (macro.TryGetValue("kit", out var score))
     {
@@ -101,7 +129,7 @@ async Task<int> RecallAsync()
     if (options.TryGetValue("out", out var outPath))
     {
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(outPath))!);
-        File.WriteAllText(outPath, JsonSerializer.Serialize(new { date = DateTime.UtcNow.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), facts = corpus.Count, vectors = "none", ceiling = Math.Round(ceiling, 4), verdict, limit, systems = report }, new JsonSerializerOptions { WriteIndented = true }));
+        File.WriteAllText(outPath, JsonSerializer.Serialize(new { date = DateTime.UtcNow.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), facts = corpus.Count, vectors = vectorLabel, ceiling = Math.Round(ceiling, 4), verdict, limit, systems = report }, new JsonSerializerOptions { WriteIndented = true }));
     }
 
     return verdict == "STOP" ? 3 : verdict == "PASS" ? 0 : 1;

@@ -4,7 +4,7 @@ Each package is versioned on its own by a tag `<package>/v<version>`. Entries ar
 
 ## Unreleased: Switchknife.Knowledge
 
-`KnowledgeSearch`: per-namespace fan-out, idf-weighted OR full text, entity-level grouping and reciprocal-rank fusion across namespaces over Switchknife.Facts, plus the `Switchknife.Knowledge.Bench` harness (`recall`, `latency`). Stage K0 of [ADR 0005](docs/adr/0005-knowledge-kit.md); the pass and stop line is not met yet, see [`docs/benchmarks/knowledge-k0.md`](docs/benchmarks/knowledge-k0.md).
+`KnowledgeSearch`: per-namespace fan-out, idf-weighted OR full text, entity-level grouping and reciprocal-rank fusion across namespaces over Switchknife.Facts, plus the `Switchknife.Knowledge.Bench` harness (`recall`, `latency`). Stage K0 of [ADR 0005](docs/adr/0005-knowledge-kit.md); the stop line fires (0.234 recall@10 against 0.27), see [`docs/benchmarks/knowledge-k0.md`](docs/benchmarks/knowledge-k0.md).
 
 ## Switchknife.Pace 0.1.0 (2026-10-29)
 
