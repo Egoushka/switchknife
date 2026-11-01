@@ -14,6 +14,7 @@ using Switchknife.Hosting;
 using Switchknife.Journal;
 using Switchknife.Journal.Postgres;
 using Switchknife.Knowledge.Ideas;
+using Switchknife.Knowledge.Tools;
 using Switchknife.McpGuard;
 using Switchknife.Migrations;
 using Switchknife.Pace;
@@ -33,6 +34,7 @@ var smokes = new (string, Func<Task<string?>>)[]
     ("Switchknife.Journal", JournalAsync),
     ("Switchknife.Journal.Postgres", JournalPostgresAsync),
     ("Switchknife.Knowledge", () => Task.FromResult(Knowledge())),
+    ("Switchknife.Knowledge.Tools", KnowledgeToolsAsync),
     ("Switchknife.McpGuard", McpGuardAsync),
     ("Switchknife.Migrations", MigrationsAsync),
     ("Switchknife.Pace", () => Task.FromResult(Pace())),
@@ -214,6 +216,17 @@ static string? Knowledge()
     return gaps.Count == 0 && refused.Count == 3 && back == test && back2 == hypothesis && board.Contains("\"late_yield\":null", StringComparison.Ordinal) && issue is { Episode.SourceRef: "o/r#7", Title: "Grade ideas" }
         ? null
         : $"gaps {gaps.Count}, refused {refused.Count}, test {back}, hypothesis {back2}, issue {issue}, board {board}";
+}
+
+static async Task<string?> KnowledgeToolsAsync()
+{
+    await using var data = NpgsqlDataSource.Create("Host=unused");
+    var tools = KnowledgeTools.All(new IdeaStore(data));
+    var properties = tools[0].InputSchema["properties"]?.AsObject().Count ?? 0;
+    var refused = await tools[0].Handler("not json", CancellationToken.None);
+    return tools.Count == 2 && tools.All(t => t.Private) && properties == 9 && refused.Contains("\"invalid\"", StringComparison.Ordinal)
+        ? null
+        : $"tools {tools.Count}, properties {properties}, refused {refused}";
 }
 
 static async Task<string?> JournalAsync()

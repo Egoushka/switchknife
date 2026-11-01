@@ -62,4 +62,18 @@ IdeaBoard board = await ideas.BoardAsync(targetUahPerMonth: 60000m);   // one ro
 
 The board holds live counts per status, the funnel (ideas that ever reached each status, and conversions), median days per status over stays that ended, tests older than their `time_box_days` and tests with no time box, and money. Days come from the status history, not from the live row: a status change closes the old row, and those closed rows are the stays. Late yield and question coverage are `null` and listed in `Absent` with a reason until their data exists. `IdeaBoardJsonContext` serializes both payloads with nulls written.
 
+### Tools
+
+`KnowledgeTools.All(ideas)` returns the definitions of `knowledge_idea` and `knowledge_board`. Each has a name, a description, an input schema exported from the source-generated `JsonTypeInfo` (`JsonSchemaExporter`) and a handler that takes and returns JSON text. The host registers them behind `RequireMcpGuard`; the kit does no transport.
+
+```csharp
+foreach (var tool in KnowledgeTools.All(ideas))
+{
+    if (tool.Private && session.IsEmployerWorkspace) continue;   // the employer fence: both tools are private
+    host.Register(tool.Name, tool.Description, tool.InputSchema, tool.Handler);
+}
+```
+
+`knowledge_idea` with `action = capture` checks only that text and a source are present. With `action = promote` it runs `IdeaValidator` and returns its codes (`missing`, `not_positive`, `negative`, `transition_not_allowed`) with the field. Bad arguments come back as `invalid` codes, not exceptions. What a call writes carries `EpisodeTrust.Agent` unless the host passes another trust.
+
 The estimate in a hypothesis is never income: only `earned` facts count as UAH earned, and the board keeps the two apart.
