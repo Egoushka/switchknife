@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Not a package: measures the append path the rooms spec (docs/specs/2026-11-01-rooms.md) proposes, against its 100 ms p95 line. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Switchknife.Journal\Switchknife.Journal.csproj" />
+    <ProjectReference Include="..\..\src\Switchknife.Journal.Postgres\Switchknife.Journal.Postgres.csproj" />
+  </ItemGroup>
+
+</Project>
