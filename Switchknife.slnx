@@ -15,6 +15,7 @@
   </Folder>
   <Folder Name="/bench/">
     <Project Path="bench/Switchknife.Facts.Bench/Switchknife.Facts.Bench.csproj" />
+    <Project Path="bench/Switchknife.Journal.Bench/Switchknife.Journal.Bench.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Switchknife.Facts.Bench.Tests/Switchknife.Facts.Bench.Tests.csproj" />
