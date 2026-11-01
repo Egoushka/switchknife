@@ -9,6 +9,12 @@ namespace Switchknife.Knowledge.Ideas;
 [JsonSerializable(typeof(CheapestTest))]
 public sealed partial class IdeaJsonContext : JsonSerializerContext;
 
+/// <summary>Source-generated serialization of the board and the chain. Nulls are written, so an absent measure reads as <c>null</c>, not as missing.</summary>
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower)]
+[JsonSerializable(typeof(IdeaBoard))]
+[JsonSerializable(typeof(IdeaChain))]
+public sealed partial class IdeaBoardJsonContext : JsonSerializerContext;
+
 /// <summary>Reads and writes the values of <c>value_hypothesis</c> and <c>cheapest_test</c>.</summary>
 public static class IdeaJson
 {

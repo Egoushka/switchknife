@@ -207,10 +207,13 @@ static string? Knowledge()
     var refused = IdeaValidator.Validate(IdeaStatus.Seed, new IdeaDraft(IdeaStatus.Testing));
     var back = IdeaJson.ReadTest(IdeaJson.Write(test));
     var back2 = IdeaJson.ReadHypothesis(IdeaJson.Write(hypothesis));
+    var board = System.Text.Json.JsonSerializer.Serialize(
+        new IdeaBoard(new StatusCounts(1, 0, 0, 0, 0), new IdeaFunnel(1, 0, 0, 0, 0, null, null), new StageDays(null, null, null), [], [], new IdeaMoney(0, 0, 0, null), null, null, []),
+        IdeaBoardJsonContext.Default.IdeaBoard);
     var issue = GitHubIssueAdapter.FromPayload("""{"action":"edited","issue":{"number":7,"title":"Grade ideas","body":"b"},"repository":{"full_name":"o/r"}}""");
-    return gaps.Count == 0 && refused.Count == 3 && back == test && back2 == hypothesis && issue is { Episode.SourceRef: "o/r#7", Title: "Grade ideas" }
+    return gaps.Count == 0 && refused.Count == 3 && back == test && back2 == hypothesis && board.Contains("\"late_yield\":null", StringComparison.Ordinal) && issue is { Episode.SourceRef: "o/r#7", Title: "Grade ideas" }
         ? null
-        : $"gaps {gaps.Count}, refused {refused.Count}, test {back}, hypothesis {back2}, issue {issue}";
+        : $"gaps {gaps.Count}, refused {refused.Count}, test {back}, hypothesis {back2}, issue {issue}, board {board}";
 }
 
 static async Task<string?> JournalAsync()

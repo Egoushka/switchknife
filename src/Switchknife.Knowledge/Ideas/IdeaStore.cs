@@ -17,8 +17,9 @@ public sealed record IdeaCapture(Guid Idea, IngestResult Ingest);
 /// The ideas chain over a <see cref="FactsStore"/> in namespace <c>ideas</c>. Capture has no gate; every later status
 /// change passes <see cref="IdeaValidator"/> and is written as one episode, or not at all.
 /// </summary>
-public sealed class IdeaStore
+public sealed partial class IdeaStore
 {
+    private readonly NpgsqlDataSource _data;
     private readonly FactsStore _facts;
     private readonly TimeProvider _time;
 
@@ -28,6 +29,7 @@ public sealed class IdeaStore
     public IdeaStore(NpgsqlDataSource data, TimeProvider? time = null)
     {
         ArgumentNullException.ThrowIfNull(data);
+        _data = data;
         _time = time ?? TimeProvider.System;
         _facts = new FactsStore(data, IdeaPredicates.Namespace, _time);
     }
@@ -137,7 +139,7 @@ public sealed class IdeaStore
         _ => throw new ArgumentOutOfRangeException(nameof(status)),
     };
 
-    private static IdeaStatus? ParseStatus(string text) => text switch
+    internal static IdeaStatus? ParseStatus(string text) => text switch
     {
         "seed" => IdeaStatus.Seed,
         "testing" => IdeaStatus.Testing,

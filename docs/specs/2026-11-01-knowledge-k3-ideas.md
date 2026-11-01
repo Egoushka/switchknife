@@ -22,6 +22,8 @@ An idea enters the `ideas` namespace with no gate. It moves to `testing` only wi
 | `cheapest_test` is "the action, cost cap, metric, pass line" | A JSON object `{action, cap_hours, cap_uah, metric, pass_line}` as the fact value, source-generated serializer | Fields must be checked one by one; free text cannot be validated |
 | `value_hypothesis` is text | JSON `{who, gain, evidence, expected_uah_per_month}` | The board sums the estimate; it cannot parse a sentence |
 | Statuses `seed, testing, validated, killed, earning` | Transitions are checked too: `seed→testing\|killed`, `testing→validated\|killed`, `validated→earning\|killed`, `earning→killed`, `killed→seed\|testing` | A seed cannot become `validated` without a recorded test (the K3 "use" check counts outcomes). `killed→seed\|testing` is the ADR's "can come back through a new link" |
+| The board lists "tests older than their own time box" | `cheapest_test` gains an optional `time_box_days` (positive when present); a test without one is listed as unboxed, not stuck | The ADR names the time box but no field held it; optional keeps tests written before S4 valid |
+| Chain query is "one recursive query" | One query of fixed joins (`inspired` → `tested_by` → `produced` → `earned`) | The chain has a fixed depth of four links, so recursion buys nothing; K4 can recurse when `inspired` chains between ideas |
 
 ## Slices
 
