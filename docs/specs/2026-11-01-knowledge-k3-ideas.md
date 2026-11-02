@@ -22,6 +22,11 @@ An idea enters the `ideas` namespace with no gate. It moves to `testing` only wi
 | `cheapest_test` is "the action, cost cap, metric, pass line" | A JSON object `{action, cap_hours, cap_uah, metric, pass_line}` as the fact value, source-generated serializer | Fields must be checked one by one; free text cannot be validated |
 | `value_hypothesis` is text | JSON `{who, gain, evidence, expected_uah_per_month}` | The board sums the estimate; it cannot parse a sentence |
 | Statuses `seed, testing, validated, killed, earning` | Transitions are checked too: `seed→testing\|killed`, `testing→validated\|killed`, `validated→earning\|killed`, `earning→killed`, `killed→seed\|testing` | A seed cannot become `validated` without a recorded test (the K3 "use" check counts outcomes). `killed→seed\|testing` is the ADR's "can come back through a new link" |
+| The board lists "tests older than their own time box" | `cheapest_test` gains an optional `time_box_days` (positive when present); a test without one is listed as unboxed, not stuck | The ADR names the time box but no field held it; optional keeps tests written before S4 valid |
+| Chain query is "one recursive query" | One query of fixed joins (`inspired` → `tested_by` → `produced` → `earned`) | The chain has a fixed depth of four links, so recursion buys nothing; K4 can recurse when `inspired` chains between ideas |
+| The idea item shows "a seed that a new link just connected, with the link and both ends" | Shows the seed and the draft; the host passes evidence and links through `ItemDelivery` | Links arrive with the map (K4); the item must work on a bare seed now |
+| Result item: "Failed (kills or keeps the idea)" | Failed records the outcome only; killing stays on the idea item, with a reason. UAH above zero is recorded on any outcome | A kill needs a reason, which the result item has no field for; money received is recorded even when the pass line was missed |
+| The host receives decisions on its callback | Each decision is its own source (`approvals`, `<item>/<decision>`), and `ApprovalSignature` checks the contract's HMAC without network access (`JSON.stringify` escaping) | Under one source per item, a second decision would retire the first one's facts as `source_changed`. A shared checker keeps each host from writing its own |
 
 ## Slices
 
@@ -73,6 +78,18 @@ Both are from the ADR and are measured by use, not by tests:
 
 - **Use**: at least one idea reaches `validated` or `killed` through a recorded test after the first 10 ideas enter `testing`. Read from `knowledge_board`. Stop condition: none after 10 tests, then the chain is folded back into issues.
 - **Gate coverage** (`knowledge doctor`, K1): 100% of ideas in `testing` or later have the four predicates. The store makes a violation impossible to write; the doctor catches rows written around it.
+
+Numbers when S6 merged (2026-11-01):
+
+| Measure | Value | Evidence |
+|---|---|---|
+| Acceptance checks green | 24 of 24 (I1-I24) | `tests/Switchknife.Knowledge.Tests`: 72 tests, 16 of them on PostgreSQL 18; CI green on PRs #44, #45, #48 and S6 |
+| AOT smoke cases | 3 (`Switchknife.Knowledge`, `.Tools`, `.Approvals`) | `samples/Switchknife.AotSmoke` |
+| Use: ideas in `testing` through the kit | 0 of 10; the clock has not started | No host references `Switchknife.Knowledge` yet: no process registers the tools, posts the items or ingests the idea issues |
+| Use: outcomes recorded | 0 | Same |
+| Gate coverage | 100% by construction (refused promotions write nothing, I8-I11); rows written around the store: UNKNOWN until the K1 doctor exists | No production rows in `ideas` yet |
+
+The use check starts when a host is live: MCP registration of both tools, the idea issues ingested through `GitHubIssueAdapter`, and the two items posted to the approvals shell with a callback that runs `KnowledgeApprovals.ApplyAsync`.
 
 ## Stop condition for K3 as a whole
 

@@ -13,7 +13,8 @@ public sealed record ValueHypothesis(string Who, string Gain, string Evidence, d
 /// <param name="CapUah">The most UAH it may cost.</param>
 /// <param name="Metric">What is measured.</param>
 /// <param name="PassLine">The value of the metric that keeps the idea alive.</param>
-public sealed record CheapestTest(string Action, decimal CapHours, decimal CapUah, string Metric, string PassLine);
+/// <param name="TimeBoxDays">Days the test may run before the board lists it as stuck; null lists it as unboxed.</param>
+public sealed record CheapestTest(string Action, decimal CapHours, decimal CapUah, string Metric, string PassLine, int? TimeBoxDays = null);
 
 /// <summary>What an idea would look like after a change, for <see cref="IdeaValidator"/> to check.</summary>
 /// <param name="Status">The status asked for.</param>

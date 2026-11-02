@@ -1,0 +1,20 @@
+{
+  "claim_version": "claim/v1",
+  "id": "run-20261101-164032-74a6ee#0",
+  "statement": "NewFact.Text is limited to at most 300 characters. The limit is declared in the Text parameter's doc comment, and the store enforces it by throwing ArgumentException when RenderText(fact).Length exceeds 300, where RenderText uses Text or a default built from predicate and value.",
+  "evidence": [
+    {
+      "kind": "file",
+      "locator": "src/Switchknife.Facts/Models.cs:31-44",
+      "pin": { "sha256": "7b8d8ff037945648b63b98876dab5223a95fa607999b117b5351edfd24c687d2", "commit": "5dc7a151db741a715b67d53f99c084ba63469642" }
+    },
+    {
+      "kind": "file",
+      "locator": "src/Switchknife.Facts/FactsStore.cs:343-346",
+      "pin": { "sha256": "ba4303860d6d7fb8a52b514b0a88d29ed33f3699eb7d377f82e2837cff854a5f", "commit": "5dc7a151db741a715b67d53f99c084ba63469642" }
+    }
+  ],
+  "recheck": { "method": "hash" },
+  "confidence": 0.475,
+  "x-chargehand": { "support": "partial", "evidence_ids": ["e1", "e2"], "task_id": "run-20261101-164032-74a6ee", "node_confidence": 0.95 }
+}

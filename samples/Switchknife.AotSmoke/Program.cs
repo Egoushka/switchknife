@@ -14,10 +14,13 @@ using Switchknife.Hosting;
 using Switchknife.Journal;
 using Switchknife.Journal.Postgres;
 using Switchknife.Knowledge;
+using Switchknife.Knowledge.Approvals;
 using Switchknife.Knowledge.Ideas;
+using Switchknife.Knowledge.Tools;
 using Switchknife.McpGuard;
 using Switchknife.Migrations;
 using Switchknife.Pace;
+using Switchknife.SafeFetch;
 using Switchknife.Testing.Http;
 
 // Exercises each package the way a host would, under Native AOT. Exit 0 and one "ok" line per package.
@@ -34,9 +37,12 @@ var smokes = new (string, Func<Task<string?>>)[]
     ("Switchknife.Journal", JournalAsync),
     ("Switchknife.Journal.Postgres", JournalPostgresAsync),
     ("Switchknife.Knowledge", async () => Knowledge() ?? await KnowledgeSearchAsync()),
+    ("Switchknife.Knowledge.Tools", KnowledgeToolsAsync),
+    ("Switchknife.Knowledge.Approvals", () => Task.FromResult(KnowledgeApprovalsCheck())),
     ("Switchknife.McpGuard", McpGuardAsync),
     ("Switchknife.Migrations", MigrationsAsync),
     ("Switchknife.Pace", () => Task.FromResult(Pace())),
+    ("Switchknife.SafeFetch", SafeFetchAsync),
     ("Switchknife.Testing.Http", TestingHttpAsync),
 };
 foreach (var (package, smoke) in smokes)
@@ -257,9 +263,37 @@ static string? Knowledge()
     var refused = IdeaValidator.Validate(IdeaStatus.Seed, new IdeaDraft(IdeaStatus.Testing));
     var back = IdeaJson.ReadTest(IdeaJson.Write(test));
     var back2 = IdeaJson.ReadHypothesis(IdeaJson.Write(hypothesis));
-    return gaps.Count == 0 && refused.Count == 3 && back == test && back2 == hypothesis
+    var board = System.Text.Json.JsonSerializer.Serialize(
+        new IdeaBoard(new StatusCounts(1, 0, 0, 0, 0), new IdeaFunnel(1, 0, 0, 0, 0, null, null), new StageDays(null, null, null), [], [], new IdeaMoney(0, 0, 0, null), null, null, []),
+        IdeaBoardJsonContext.Default.IdeaBoard);
+    var issue = GitHubIssueAdapter.FromPayload("""{"action":"edited","issue":{"number":7,"title":"Grade ideas","body":"b"},"repository":{"full_name":"o/r"}}""");
+    return gaps.Count == 0 && refused.Count == 3 && back == test && back2 == hypothesis && board.Contains("\"late_yield\":null", StringComparison.Ordinal) && issue is { Episode.SourceRef: "o/r#7", Title: "Grade ideas" }
         ? null
-        : $"gaps {gaps.Count}, refused {refused.Count}, test {back}, hypothesis {back2}";
+        : $"gaps {gaps.Count}, refused {refused.Count}, test {back}, hypothesis {back2}, issue {issue}, board {board}";
+}
+
+static async Task<string?> KnowledgeToolsAsync()
+{
+    await using var data = NpgsqlDataSource.Create("Host=unused");
+    var tools = KnowledgeTools.All(new IdeaStore(data));
+    var properties = tools[0].InputSchema["properties"]?.AsObject().Count ?? 0;
+    var refused = await tools[0].Handler("not json", CancellationToken.None);
+    return tools.Count == 2 && tools.All(t => t.Private) && properties == 9 && refused.Contains("\"invalid\"", StringComparison.Ordinal)
+        ? null
+        : $"tools {tools.Count}, properties {properties}, refused {refused}";
+}
+
+static string? KnowledgeApprovalsCheck()
+{
+    var test = new CheapestTest("landing page", 6m, 0m, "signups", "10 in 14 days");
+    var item = KnowledgeApprovals.ResultItem(new ResultProposal(Guid.NewGuid(), test), new ItemDelivery("https://hooks.example/k"));
+    var json = System.Text.Json.JsonSerializer.Serialize(item, ApprovalJsonContext.Default.ApprovalItem);
+    var decision = KnowledgeApprovals.ReadDecision($$"""{"decision":"d1","id":"{{item.Id}}","action":"passed","edited":{"body.uah":"3000"},"at":"2026-11-01T10:00:00Z"}""")!;
+    var signed = decision with { Sig = ApprovalSignature.Sign("k", decision) };
+    var parsed = KnowledgeApprovals.ParseResult(item, signed);
+    return json.Contains("\"pass_line\":\"10 in 14 days\"", StringComparison.Ordinal) && ApprovalSignature.Verify("k", signed) && parsed is { Accepted: true, Uah: 3000m }
+        ? null
+        : $"item {json}, parsed {parsed}";
 }
 
 static async Task<string?> JournalAsync()
@@ -417,6 +451,23 @@ static async Task<string?> TestingHttpAsync()
         == (HttpStatusCode.ServiceUnavailable, """{"path":"/items/1"}""", HttpMethod.Post, "/items", "payload", "Bearer smoke", 2)
         ? null
         : $"first {first.StatusCode}, second {json}, recorded {method} {uri} {body} {headers.GetValueOrDefault("authorization")}, {stub.Requests.Count} request(s)";
+}
+
+static async Task<string?> SafeFetchAsync()
+{
+    var stub = new StubHttpHandler((request, _) => request.RequestUri!.AbsolutePath == "/go"
+        ? new HttpResponseMessage(HttpStatusCode.Found) { Headers = { Location = new Uri("http://10.0.0.1/admin") } }
+        : new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("<title>T</title><article><p>Body</p></article>", System.Text.Encoding.UTF8, "text/html") });
+    using var http = stub.Client();
+    using var handler = GuardedFetcher.CreateHandler(["feeds.internal"]);   // the connect callback must build under AOT too
+    var fetcher = new GuardedFetcher(http, new SafeFetchOptions { HostGap = TimeSpan.Zero });
+    var page = await fetcher.FetchAsync(new Uri("https://example.test/post"), default);
+    var redirect = await fetcher.FetchAsync(new Uri("https://example.test/go"), default);
+    var text = page.Ok ? ReadableText.Extract(page.Body!, 1000) : "";
+    return (IpGuard.IsPublic(IPAddress.Parse("8.8.8.8")), IpGuard.IsPublic(IPAddress.Parse("::ffff:127.0.0.1")), text.StartsWith("T\n\n", StringComparison.Ordinal) && text.EndsWith("Body", StringComparison.Ordinal), redirect.Outcome, stub.Requests.Count)
+        == (true, false, true, FetchOutcome.Refused, 2)
+        ? null
+        : $"page {page.Outcome} '{text}', redirect {redirect.Outcome}, {stub.Requests.Count} request(s)";
 }
 
 internal sealed record Made(string Name);

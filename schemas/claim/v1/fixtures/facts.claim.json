@@ -1,0 +1,23 @@
+{
+  "claim_version": "claim/v1",
+  "id": "01a187fe-de65-79a3-b6c6-da739c71913e",
+  "statement": "architecture-decision-record: Keep ADRs for decisions that shape structure or quality attributes or are hard to reverse, record rejected alternatives, keep the log append-only and store it with the workload's documentation (an October 2025 Azure blog adds: in the repository next to the code).",
+  "evidence": [
+    {
+      "kind": "web-note",
+      "locator": "notes/platform/notes/crosscutting.md:165",
+      "pin": { "sha256": "a4090ea4e6c2245c91b91c9bab0212fb7e206503eb977d57ad20c7a7882f1e30", "scope": "source" }
+    },
+    {
+      "kind": "url",
+      "locator": "https://learn.microsoft.com/en-us/azure/well-architected/architect-role/architecture-decision-record",
+      "pin": { "observed_at": "2026-10-13" },
+      "quote": "The ADR serves as an append-only log."
+    }
+  ],
+  "recheck": { "method": "quote" },
+  "checked_at": "2026-10-13",
+  "confidence": 0.6,
+  "valid_from": "2026-10-13T00:00:00+00:00",
+  "x-facts": { "predicate": "statement", "trust": "ThirdParty", "recorded_at": "2026-10-29T14:09:49.669367+00:00", "episode": "01a187fe-de65-78c3-af0e-d271c1e6d1b8" }
+}

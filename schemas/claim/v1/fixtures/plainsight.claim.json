@@ -1,0 +1,14 @@
+{
+  "claim_version": "claim/v1",
+  "statement": "containers = 132",
+  "evidence": [
+    {
+      "kind": "observation",
+      "locator": "/status.json#/containers",
+      "pin": { "observed_at": "2026-11-01T15:14:43Z" }
+    }
+  ],
+  "recheck": { "method": "metric", "max_age": "PT48H", "expect": { "value": 132 } },
+  "checked_at": "2026-11-01T15:14:43Z",
+  "x-status-json": { "key": "containers", "unhealthy": 0, "uptimeDays": 2 }
+}

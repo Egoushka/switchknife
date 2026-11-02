@@ -278,6 +278,25 @@ Answered on 2026-10-31; each choice keeps its reason so it can be reopened.
 
 **The stop condition fires.** With `text-embedding-3-small` vectors the kit scores 0.196 recall@10 at 1536 dimensions and 0.234 at 768 (B0 0.140, `facts` 0.188 and 0.177; stop line 0.27, pass line 0.32), and its latency is p95 844 ms (gate 150 ms; measured without vectors). The owner accepted the stop on 2026-11-01. Agent-facing retrieval stops: agents keep `rg` and `feed_search`, and the kit continues for ideas and analytics. Numbers, method and limits: [`docs/benchmarks/knowledge-k0.md`](../benchmarks/knowledge-k0.md).
 
+## Amendment 2026-11-01: K4 research rounds
+
+A stage the first draft did not have: research done in rounds on a topic, each round starting from a brief of what earlier rounds stored and reporting saturation (new facts ÷ submitted facts). Spec: `docs/specs/2026-11-01-knowledge-k4-rounds.md`.
+
+- **Why it enters.** It has two consumers now (the phone-shell research dataset and feed-eater's weekly ideas and peer gaps) and a third to validate the contract (chargehand `result/v1` claims). Most of it reuses what exists: Facts fingerprints and corroboration, slot supersession, K1's `UrlCanonicalizer`, K3's `IdeaStore`.
+- **No retrieval.** The brief filters by topic and entity name only. ADR 0006 stopped agent-facing retrieval, and a brief built on that search would miss most of what is stored.
+- **Contradictions on `many` predicates are linked, not superseded.** A `contradicts` fact pairs the two; the owner retracts the loser. Superseding on the new fact's word would let a `third_party` source retire an `agent` fact (Layer 1 trust rule).
+- **Namespace `research`** (private): findings of research topics whose predicates are open-ended (the phone-shell dataset defines its own), so they do not mix into `prior-art`'s fixed predicate set. Round metadata (`round_of`, `asked`, `read`, `saturation`, `contradicts`, `open_question`) lives there too. Topics about how tools solve problems (peer gaps) keep writing to `prior-art`.
+- **Stage numbers.** Research rounds take K4. The map (links and proposals) becomes **K6**, with its rows and dependencies unchanged; it has not started. Two places still say "K4" for the map and change with K4's first code slice: the K3 spec ("Out of scope", "Where this differs") and the `late_yield` reason in `IdeaStore.Board.cs`.
+
+| Stage | Content | Depends on |
+|---|---|---|
+| K4 | Research rounds: round episode, fact key, saturation, `killed_because`, feature → seed mapping, `ResearchBrief`; host `round` field and `research_brief` tool | K1 S2, K3 S2 |
+| K6 | Map links and proposals (was K4) | K2 and K3 |
+
+| # | Stage | Check | Threshold and reason | How | Stop condition |
+|---|---|---|---|---|---|
+| K4 | Research rounds | compounding | phone-shell round 2 starts from `research_brief`, reports saturation, and corroborates or contradicts at least one round-1 fact | the round's `saturation` and `contradicts` facts, `ExplainAsync` | Saturation 0.7 or higher on rounds 2 and 3 of both of 2 topics (starting value: at most 3 in 10 findings already known despite the brief): rounds stop, research returns to Markdown notes, the round code leaves the kit |
+
 ## Reopen if
 
 - K0's stop condition fires: the kit continues without agent-facing retrieval, and this ADR is amended.

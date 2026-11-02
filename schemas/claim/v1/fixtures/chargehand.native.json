@@ -1,0 +1,49 @@
+{
+  "contract_version": "result/v1",
+  "task_id": "run-20261101-164032-74a6ee",
+  "node_id": "worker",
+  "trace_id": "6ed13fc8d9907bb0fd96a7cfe009af2e",
+  "prompt_chain": {
+    "blocks": [
+      { "name": "core/worker", "version": "0.3.0", "sha256": "4c1c191df0ad102ea0ca85c1820f433a156b49eda4dfba19b56ce909fa3e954e", "source": "registry" },
+      { "name": "preset/cheap", "version": "0.4.0", "sha256": "f7dd75b114251ed4f5ed008ebdff4898d17ce134f0768fafae9779bb12ca061f", "source": "registry" }
+    ],
+    "as_sent": {
+      "opencode_version": "claude-code/2.1.283",
+      "agent": "build",
+      "model": "anthropic/claude-haiku-5-5",
+      "date": "2026-11-01",
+      "base_prompt_variant": "build",
+      "instruction_files_sha256": "058861bf892690f030e1a7dfefbe2ffd7c0fd46f00de7baf60b2a31d0586ac09",
+      "tools_sha256": "f06d5cca15cb5265966e30bf02c46b117ecd553b10cb1c4abe3f941893b870c0"
+    }
+  },
+  "status": "completed",
+  "summary": "NewFact.Text is capped at 300 characters: the doc comment declares the limit and FactsStore enforces it on the rendered text. The Fact record stores the learned time in RecordedAt.",
+  "claims": [
+    {
+      "text": "NewFact.Text is limited to at most 300 characters. The limit is declared in the Text parameter's doc comment, and the store enforces it by throwing ArgumentException when RenderText(fact).Length exceeds 300, where RenderText uses Text or a default built from predicate and value.",
+      "evidence": ["e1", "e2"],
+      "confidence": 0.475,
+      "support": "partial"
+    },
+    {
+      "text": "The Fact record field that holds the time the store learned the fact is RecordedAt, a DateTimeOffset declared in the Fact record's primary constructor and documented as 'When the store learned it.'",
+      "evidence": ["e3"],
+      "confidence": 0.97,
+      "support": "supported"
+    }
+  ],
+  "evidence": [
+    { "id": "e1", "kind": "file", "locator": "src/Switchknife.Facts/Models.cs:31-44", "sha256": "7b8d8ff037945648b63b98876dab5223a95fa607999b117b5351edfd24c687d2" },
+    { "id": "e2", "kind": "file", "locator": "src/Switchknife.Facts/FactsStore.cs:343-346", "sha256": "ba4303860d6d7fb8a52b514b0a88d29ed33f3699eb7d377f82e2837cff854a5f" },
+    { "id": "e3", "kind": "file", "locator": "src/Switchknife.Facts/Models.cs:62-65", "sha256": "c7ef78bf7e7829e9e72696556945dd93f0f787356c67a5eec86295e7a3a571bd" }
+  ],
+  "artifacts": [],
+  "open_questions": [
+    "Partly supported by its citation: NewFact.Text is limited to at most 300 characters. The limit is declared in the Text parameter's doc comment, and the store enforces it by throwing ArgumentException when RenderText(fact).Length exceeds 300, where RenderText uses Text or a default built from predicate and value. (The 300-character doc comment and the ArgumentException check on RenderText(fact).Length are shown, but the RenderText body that uses Text or the predicate-and-value default is not in the cited text.)"
+  ],
+  "confidence": 0.95,
+  "usage": { "input": 8, "output": 1873, "cache_read": 59399, "cache_write": 26819, "usd": 0.006895 },
+  "actor": "owner"
+}

@@ -1,0 +1,731 @@
+{
+  "date": "2026-11-01",
+  "facts": 826,
+  "vectors": "text-embedding-3-small",
+  "ceiling": 0.49,
+  "verdict": "STOP",
+  "limit": 10,
+  "systems": {
+    "b0": {
+      "recall_at_10": 0.1235,
+      "p95_ms": 194.2,
+      "micro": 0.1257,
+      "wilson95": [
+        0.0845,
+        0.183
+      ],
+      "found": 22,
+      "total": 175,
+      "name_only": 0,
+      "per_decision": [
+        {
+          "Id": 1,
+          "Title": "Facts library: bi-temporal facts in the consumer\u0027s PostgreSQL",
+          "results": 10,
+          "found": [
+            "Graphiti",
+            "SQLite"
+          ],
+          "missed": [
+            "pgvector",
+            "PostgreSQL",
+            "sqlite-vec",
+            "DuckDB",
+            "Mem0",
+            "Letta",
+            "Cognee",
+            "Supermemory",
+            "HNSW",
+            "Rust"
+          ]
+        },
+        {
+          "Id": 2,
+          "Title": "Facts vectors: sign-bit scan and int8 rerank, no pgvector",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "pgvector",
+            "PostgreSQL",
+            "HNSW",
+            "IVF",
+            "Rust",
+            "btree_gist",
+            "auto_explain"
+          ]
+        },
+        {
+          "Id": 3,
+          "Title": "A Postgres step store for Switchknife.Journal",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "SQLite",
+            "PostgreSQL",
+            "Npgsql",
+            "SELECT FOR UPDATE SKIP LOCKED"
+          ]
+        },
+        {
+          "Id": 4,
+          "Title": "One PostgreSQL, not Postgres \u002B Qdrant",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "Qdrant",
+            "pgvector",
+            "PostgreSQL",
+            "HNSW",
+            "ChronoQA",
+            "khoj",
+            "jina-colbert-v2",
+            "BGE-M3",
+            "text-embedding-3-small",
+            "Reciprocal Rank Fusion",
+            "MIRACL"
+          ]
+        },
+        {
+          "Id": 5,
+          "Title": "Two-tier cross-script entity resolution",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "Graphiti",
+            "BM25",
+            "ISO 9",
+            "A-MEM",
+            "LoCoMo"
+          ]
+        },
+        {
+          "Id": 6,
+          "Title": "chronicle-api encodes queries with BAAI\u0027s fp32 ONNX export",
+          "results": 10,
+          "found": [
+            "LiteLLM"
+          ],
+          "missed": [
+            "BGE-M3",
+            "ONNX",
+            "PyTorch",
+            "FlagEmbedding",
+            "cAdvisor",
+            "uvicorn",
+            "pymorphy3",
+            "int8 quantization",
+            "malloc_trim",
+            "Docker Compose"
+          ]
+        },
+        {
+          "Id": 7,
+          "Title": "Orchestrator language and framework: .NET 10, no agent framework",
+          "results": 10,
+          "found": [
+            ".NET",
+            "Kiota",
+            "OpenTelemetry",
+            "Langfuse"
+          ],
+          "missed": [
+            "TypeScript",
+            "Python",
+            "OpenCode",
+            "ModelContextProtocol C# SDK",
+            "JsonSchema.Net",
+            "Microsoft Agent Framework",
+            "Temporal"
+          ]
+        },
+        {
+          "Id": 8,
+          "Title": "Usage on call spans when no gateway records the calls",
+          "results": 10,
+          "found": [
+            "LiteLLM",
+            "Langfuse",
+            "OpenTelemetry"
+          ],
+          "missed": [
+            "Claude Code"
+          ]
+        },
+        {
+          "Id": 9,
+          "Title": "A dnx package and an MCP Registry listing",
+          "results": 10,
+          "found": [
+            "Streamable HTTP",
+            "stdio"
+          ],
+          "missed": [
+            "dnx",
+            "NuGet",
+            "MCP Registry",
+            "mcp-publisher",
+            "MCP C# SDK",
+            "GitHub Actions",
+            "GitHub OIDC",
+            "NuGet trusted publishing",
+            "Sigstore",
+            "Claude Code"
+          ]
+        },
+        {
+          "Id": 10,
+          "Title": "Managed Agents as a worker runtime",
+          "results": 10,
+          "found": [
+            "ACP",
+            "GitHub"
+          ],
+          "missed": [
+            "Claude Managed Agents",
+            "Messages API",
+            "Claude Code",
+            "Files API",
+            "Anthropic C# SDK",
+            "Server-Sent Events",
+            "ant CLI"
+          ]
+        },
+        {
+          "Id": 11,
+          "Title": "Governed sessions: a governor replaces the turn limit",
+          "results": 10,
+          "found": [
+            "OpenRouter"
+          ],
+          "missed": [
+            "SWE-agent",
+            "mini-SWE-agent",
+            "OpenHands",
+            "FailFast",
+            "Cognition",
+            "Claude Code",
+            "Docker",
+            "Linux PSI"
+          ]
+        },
+        {
+          "Id": 12,
+          "Title": "Several runners: a second machine runs driven sessions",
+          "results": 10,
+          "found": [
+            ".NET",
+            "Node.js"
+          ],
+          "missed": [
+            "OrbStack",
+            "Docker",
+            "git bundle",
+            "launchd",
+            "caffeinate",
+            "QEMU",
+            "Rosetta",
+            "JDK",
+            "Gradle",
+            "Claude Code"
+          ]
+        },
+        {
+          "Id": 13,
+          "Title": "Replay benchmark, calibrated judges, batch lane only if measured",
+          "results": 10,
+          "found": [
+            "Cohen\u0027s kappa",
+            "OpenCode"
+          ],
+          "missed": [
+            "Harbor",
+            "Terminal-Bench",
+            "Anthropic Batch API",
+            "Wilson interval",
+            "GEPA",
+            "gVisor",
+            "Langfuse",
+            "Claude Code",
+            "Codex"
+          ]
+        },
+        {
+          "Id": 14,
+          "Title": "Bifrost replaces LiteLLM, prompts live in Langfuse",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "Bifrost",
+            "LiteLLM",
+            "Langfuse",
+            "PasteGuard",
+            "OpenTelemetry",
+            "Redis",
+            "Cerebras",
+            "Groq",
+            "AWS Bedrock",
+            "OpenRouter",
+            "Gemini",
+            "Mistral"
+          ]
+        },
+        {
+          "Id": 15,
+          "Title": "gptr-mcp, paperless-gpt in; Crawl4AI, docling-serve out",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "GPT Researcher",
+            "paperless-gpt",
+            "Crawl4AI",
+            "Docling",
+            "SearXNG",
+            "Playwright MCP",
+            "Tesseract",
+            "EasyOCR",
+            "Paperless",
+            "gVisor",
+            "Bifrost"
+          ]
+        },
+        {
+          "Id": 16,
+          "Title": "audit tool replaces SonarQube; local mode for work code",
+          "results": 10,
+          "found": [
+            "Docker"
+          ],
+          "missed": [
+            "SonarQube",
+            "osv-scanner",
+            "gVisor",
+            "Promptfoo",
+            "nftables",
+            "BuildKit",
+            "Zerobyte",
+            "Langfuse",
+            "Bifrost",
+            "semantic cache",
+            "Anthropic prompt caching"
+          ]
+        },
+        {
+          "Id": 17,
+          "Title": "Employer text is fenced; own Hindsight server and a private LLM",
+          "results": 10,
+          "found": [
+            "OpenAI",
+            "Gemini"
+          ],
+          "missed": [
+            "Groq",
+            "AWS Bedrock",
+            "Cerebras",
+            "OpenRouter",
+            "Anthropic",
+            "Bifrost",
+            "gpt-oss-120b",
+            "Qwen3-30B-A3B",
+            "bge-small-en-v1.5",
+            "Claude Code"
+          ]
+        },
+        {
+          "Id": 18,
+          "Title": "Handoffs follow I-PASS with an append-only decision log",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "I-PASS",
+            "Cockroach Labs"
+          ]
+        },
+        {
+          "Id": 19,
+          "Title": "Dependent work ships as a stacked PR through ws ship",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "gh stack",
+            "Graphite",
+            "ghstack"
+          ]
+        },
+        {
+          "Id": 20,
+          "Title": "Skills get used through a prompt hint and a ship skill",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "SkillsBench",
+            "UserPromptSubmit hook",
+            "PreToolUse hook",
+            "Stop hook",
+            "finishing-a-development-branch"
+          ]
+        }
+      ]
+    },
+    "kit": {
+      "recall_at_10": 0.1993,
+      "p95_ms": 227.4,
+      "micro": 0.1943,
+      "wilson95": [
+        0.1425,
+        0.2592
+      ],
+      "found": 34,
+      "total": 175,
+      "name_only": 0.0457,
+      "per_decision": [
+        {
+          "Id": 1,
+          "Title": "Facts library: bi-temporal facts in the consumer\u0027s PostgreSQL",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "Graphiti",
+            "pgvector",
+            "PostgreSQL",
+            "SQLite",
+            "sqlite-vec",
+            "DuckDB",
+            "Mem0",
+            "Letta",
+            "Cognee",
+            "Supermemory",
+            "HNSW",
+            "Rust"
+          ]
+        },
+        {
+          "Id": 2,
+          "Title": "Facts vectors: sign-bit scan and int8 rerank, no pgvector",
+          "results": 10,
+          "found": [
+            "PostgreSQL",
+            "Rust"
+          ],
+          "missed": [
+            "pgvector",
+            "HNSW",
+            "IVF",
+            "btree_gist",
+            "auto_explain"
+          ]
+        },
+        {
+          "Id": 3,
+          "Title": "A Postgres step store for Switchknife.Journal",
+          "results": 10,
+          "found": [
+            "SQLite"
+          ],
+          "missed": [
+            "PostgreSQL",
+            "Npgsql",
+            "SELECT FOR UPDATE SKIP LOCKED"
+          ]
+        },
+        {
+          "Id": 4,
+          "Title": "One PostgreSQL, not Postgres \u002B Qdrant",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "Qdrant",
+            "pgvector",
+            "PostgreSQL",
+            "HNSW",
+            "ChronoQA",
+            "khoj",
+            "jina-colbert-v2",
+            "BGE-M3",
+            "text-embedding-3-small",
+            "Reciprocal Rank Fusion",
+            "MIRACL"
+          ]
+        },
+        {
+          "Id": 5,
+          "Title": "Two-tier cross-script entity resolution",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "Graphiti",
+            "BM25",
+            "ISO 9",
+            "A-MEM",
+            "LoCoMo"
+          ]
+        },
+        {
+          "Id": 6,
+          "Title": "chronicle-api encodes queries with BAAI\u0027s fp32 ONNX export",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "BGE-M3",
+            "ONNX",
+            "PyTorch",
+            "FlagEmbedding",
+            "LiteLLM",
+            "cAdvisor",
+            "uvicorn",
+            "pymorphy3",
+            "int8 quantization",
+            "malloc_trim",
+            "Docker Compose"
+          ]
+        },
+        {
+          "Id": 7,
+          "Title": "Orchestrator language and framework: .NET 10, no agent framework",
+          "results": 10,
+          "found": [
+            ".NET",
+            "Python",
+            "OpenCode",
+            "OpenTelemetry",
+            "Langfuse"
+          ],
+          "missed": [
+            "TypeScript",
+            "Kiota",
+            "ModelContextProtocol C# SDK",
+            "JsonSchema.Net",
+            "Microsoft Agent Framework",
+            "Temporal"
+          ]
+        },
+        {
+          "Id": 8,
+          "Title": "Usage on call spans when no gateway records the calls",
+          "results": 10,
+          "found": [
+            "Claude Code",
+            "LiteLLM",
+            "Langfuse"
+          ],
+          "missed": [
+            "OpenTelemetry"
+          ]
+        },
+        {
+          "Id": 9,
+          "Title": "A dnx package and an MCP Registry listing",
+          "results": 10,
+          "found": [
+            "NuGet",
+            "MCP C# SDK",
+            "Streamable HTTP",
+            "stdio",
+            "Claude Code"
+          ],
+          "missed": [
+            "dnx",
+            "MCP Registry",
+            "mcp-publisher",
+            "GitHub Actions",
+            "GitHub OIDC",
+            "NuGet trusted publishing",
+            "Sigstore"
+          ]
+        },
+        {
+          "Id": 10,
+          "Title": "Managed Agents as a worker runtime",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "Claude Managed Agents",
+            "Messages API",
+            "Claude Code",
+            "Files API",
+            "Anthropic C# SDK",
+            "Server-Sent Events",
+            "ACP",
+            "ant CLI",
+            "GitHub"
+          ]
+        },
+        {
+          "Id": 11,
+          "Title": "Governed sessions: a governor replaces the turn limit",
+          "results": 10,
+          "found": [
+            "OpenRouter",
+            "Claude Code"
+          ],
+          "missed": [
+            "SWE-agent",
+            "mini-SWE-agent",
+            "OpenHands",
+            "FailFast",
+            "Cognition",
+            "Docker",
+            "Linux PSI"
+          ]
+        },
+        {
+          "Id": 12,
+          "Title": "Several runners: a second machine runs driven sessions",
+          "results": 10,
+          "found": [
+            "Docker",
+            "Node.js"
+          ],
+          "missed": [
+            "OrbStack",
+            "git bundle",
+            "launchd",
+            "caffeinate",
+            "QEMU",
+            "Rosetta",
+            ".NET",
+            "JDK",
+            "Gradle",
+            "Claude Code"
+          ]
+        },
+        {
+          "Id": 13,
+          "Title": "Replay benchmark, calibrated judges, batch lane only if measured",
+          "results": 10,
+          "found": [
+            "Cohen\u0027s kappa",
+            "Claude Code",
+            "Codex"
+          ],
+          "missed": [
+            "Harbor",
+            "Terminal-Bench",
+            "Anthropic Batch API",
+            "Wilson interval",
+            "GEPA",
+            "gVisor",
+            "Langfuse",
+            "OpenCode"
+          ]
+        },
+        {
+          "Id": 14,
+          "Title": "Bifrost replaces LiteLLM, prompts live in Langfuse",
+          "results": 10,
+          "found": [
+            "LiteLLM",
+            "AWS Bedrock",
+            "Gemini"
+          ],
+          "missed": [
+            "Bifrost",
+            "Langfuse",
+            "PasteGuard",
+            "OpenTelemetry",
+            "Redis",
+            "Cerebras",
+            "Groq",
+            "OpenRouter",
+            "Mistral"
+          ]
+        },
+        {
+          "Id": 15,
+          "Title": "gptr-mcp, paperless-gpt in; Crawl4AI, docling-serve out",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "GPT Researcher",
+            "paperless-gpt",
+            "Crawl4AI",
+            "Docling",
+            "SearXNG",
+            "Playwright MCP",
+            "Tesseract",
+            "EasyOCR",
+            "Paperless",
+            "gVisor",
+            "Bifrost"
+          ]
+        },
+        {
+          "Id": 16,
+          "Title": "audit tool replaces SonarQube; local mode for work code",
+          "results": 10,
+          "found": [
+            "osv-scanner",
+            "Docker"
+          ],
+          "missed": [
+            "SonarQube",
+            "gVisor",
+            "Promptfoo",
+            "nftables",
+            "BuildKit",
+            "Zerobyte",
+            "Langfuse",
+            "Bifrost",
+            "semantic cache",
+            "Anthropic prompt caching"
+          ]
+        },
+        {
+          "Id": 17,
+          "Title": "Employer text is fenced; own Hindsight server and a private LLM",
+          "results": 10,
+          "found": [
+            "AWS Bedrock",
+            "OpenRouter",
+            "OpenAI",
+            "Anthropic",
+            "Gemini"
+          ],
+          "missed": [
+            "Groq",
+            "Cerebras",
+            "Bifrost",
+            "gpt-oss-120b",
+            "Qwen3-30B-A3B",
+            "bge-small-en-v1.5",
+            "Claude Code"
+          ]
+        },
+        {
+          "Id": 18,
+          "Title": "Handoffs follow I-PASS with an append-only decision log",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "I-PASS",
+            "Cockroach Labs"
+          ]
+        },
+        {
+          "Id": 19,
+          "Title": "Dependent work ships as a stacked PR through ws ship",
+          "results": 10,
+          "found": [
+            "gh stack"
+          ],
+          "missed": [
+            "Graphite",
+            "ghstack"
+          ]
+        },
+        {
+          "Id": 20,
+          "Title": "Skills get used through a prompt hint and a ship skill",
+          "results": 10,
+          "found": [],
+          "missed": [
+            "SkillsBench",
+            "UserPromptSubmit hook",
+            "PreToolUse hook",
+            "Stop hook",
+            "finishing-a-development-branch"
+          ]
+        }
+      ]
+    }
+  }
+}
