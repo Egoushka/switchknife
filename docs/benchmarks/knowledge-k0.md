@@ -37,11 +37,23 @@ Corpus: 711 live facts (prod 826), 20 decisions, 175 gold names. The corpus alon
 
 `facts` with vectors (0.188) matches prod's own 0.183 of 2026-10-29, so this corpus and these vectors behave like prod's. Without vectors `facts` finds nothing: its text list is an AND of every word (`plainto_tsquery`), so a sentence matches no fact.
 
+### Production corpus, 2026-11-02
+
+The same bench on the full `prior-art` namespace as it stands in production: 907 live facts (the first run had a 711-fact rebuild), exported read-only and loaded into a local database. Ceiling 0.495.
+
+| System | vectors, 1536 dimensions | vectors, 768 dimensions |
+|---|---|---|
+| `b0` plain text | 0.119 | 0.119 |
+| `facts` | 0.176 | 0.159 |
+| `kit` | **0.215** (micro 38/175, Wilson 95% 0.162 to 0.284) | **0.232** (micro 40/175, Wilson 0.173 to 0.296) |
+
+The production corpus does not lift the kit: 0.232 at best, the same as on the rebuild (0.234). The ceiling is 0.495, not the 0.641 recorded on 2026-10-29 for 826 facts; the cause of that difference is UNKNOWN (the namespace changed in between).
+
 Latency, `bench latency --namespaces 5 --facts 50000` (250,000 facts, tiled copies of the 711, 200 queries, words only, PostgreSQL in a local container): **p50 605 ms, p95 844 ms**, gate 150 ms.
 
 ## Verdict
 
-- **Recall: STOP.** The kit's best figure, 0.234, is under the stop line (0.27) and 0.09 under the pass line (0.32); the harness prints STOP at both sizes. Its Wilson interval (0.162 to 0.284) is mostly under the stop line. Against `facts` the kit adds 0.01 (1536) to 0.06 (768); against `b0` 0.06 to 0.09, where the gate asked for 0.15. Entity grouping and OR search help, but nowhere near the margin. The gate is not moved.
+- **Recall: STOP, on the rebuild and on the production corpus.** The kit's best figure, 0.234 (0.232 on production), is under the stop line (0.27) and 0.09 under the pass line (0.32); the harness prints STOP at both sizes. Its Wilson interval (0.162 to 0.284) is mostly under the stop line. Against `facts` the kit adds 0.01 (1536) to 0.06 (768); against `b0` 0.06 to 0.09, where the gate asked for 0.15. Entity grouping and OR search help, but nowhere near the margin. The gate is not moved.
 - **Latency: over the gate** (844 ms against 150 ms). Tiling repeats each text 70 times per namespace, which raises how many facts each term matches; a real 50,000-fact namespace may be faster. The latency run has no vectors.
 - **Embedding size (ADR decision 7):** 768 scored higher than 1536 for the kit (0.234 against 0.196) and lower for `facts` (0.177 against 0.188). Both differences are inside the interval at 175 gold names, so this run does not pick a size; it does not show 768 losing more than 0.02.
-- **Limits:** one corpus of 711 facts, one embedding model, and a kit that groups by subject entity only (no entity resolution across sources, Facts F4, which the ADR names as a K0 dependency). A design with entity resolution is a new experiment, not a lowered gate.
+- **Limits:** one embedding model, and a kit that groups by subject entity only (no entity resolution across sources, Facts F4, which the ADR names as a K0 dependency). A design with entity resolution is a new experiment, not a lowered gate.

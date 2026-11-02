@@ -276,7 +276,7 @@ Answered on 2026-10-31; each choice keeps its reason so it can be reopened.
 
 ## K0 status, 2026-11-01
 
-**The stop condition fires.** With `text-embedding-3-small` vectors the kit scores 0.196 recall@10 at 1536 dimensions and 0.234 at 768 (B0 0.140, `facts` 0.188 and 0.177; stop line 0.27, pass line 0.32), and its latency is p95 844 ms (gate 150 ms; measured without vectors). The owner accepted the stop on 2026-11-01. Agent-facing retrieval stops: agents keep `rg` and `feed_search`, and the kit continues for ideas and analytics. Numbers, method and limits: [`docs/benchmarks/knowledge-k0.md`](../benchmarks/knowledge-k0.md).
+**The stop condition fires.** With `text-embedding-3-small` vectors the kit scores 0.196 recall@10 at 1536 dimensions and 0.234 at 768 (B0 0.140, `facts` 0.188 and 0.177; stop line 0.27, pass line 0.32), and its latency is p95 844 ms (gate 150 ms; measured without vectors). The production corpus (907 facts) gives the same result on 2026-11-02: kit 0.232 at 768 dimensions and 0.215 at 1536. The owner accepted the stop. Agent-facing retrieval stops: agents keep `rg` and `feed_search`, and the kit continues for ideas and analytics. Numbers, method and limits: [`docs/benchmarks/knowledge-k0.md`](../benchmarks/knowledge-k0.md).
 
 ## Amendment 2026-11-01: K4 research rounds
 
