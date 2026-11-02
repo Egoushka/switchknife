@@ -274,6 +274,10 @@ Answered on 2026-10-31; each choice keeps its reason so it can be reopened.
 6. **Name: `Switchknife.Knowledge`.** The kit holds adapters, the map, ideas, analytics and tools, not only facts; the dependency on Facts is visible in the package graph.
 7. **Embedding size by measurement in K0.** Run the K0 gold set at 1536 dimensions and at 768 (feed-eater's default model, OpenAI's `text-embedding-3-small`, accepts a shorter `dimensions`; verify for the model in use). Keep the shortest size whose recall@10 is within 0.02 of 1536: half the size halves vector storage (about 1 KB instead of 2.1 KB per fact), and a 0.02 drop is inside the confidence interval at 175 gold names. One model and one size for every kit namespace.
 
+## K0 status, 2026-11-01
+
+**The stop condition fires.** With `text-embedding-3-small` vectors the kit scores 0.196 recall@10 at 1536 dimensions and 0.234 at 768 (B0 0.140, `facts` 0.188 and 0.177; stop line 0.27, pass line 0.32), and its latency is p95 844 ms (gate 150 ms; measured without vectors). The production corpus (907 facts) gives the same result on 2026-11-02: kit 0.232 at 768 dimensions and 0.215 at 1536. The owner accepted the stop. K5 needs K0 passed (stage table), so it stays blocked. Agent-facing retrieval stops: agents keep `rg` and `feed_search`, and the kit continues for ideas and analytics. Numbers, method and limits: [`docs/benchmarks/knowledge-k0.md`](../benchmarks/knowledge-k0.md).
+
 ## Amendment 2026-11-01: K4 research rounds
 
 A stage the first draft did not have: research done in rounds on a topic, each round starting from a brief of what earlier rounds stored and reporting saturation (new facts ÷ submitted facts). Spec: `docs/specs/2026-11-01-knowledge-k4-rounds.md`.
