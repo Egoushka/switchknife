@@ -12,4 +12,4 @@ jobs:
         with:
           fetch-depth: 2
           persist-credentials: false
-      - uses: Egoushka/agent-checks@v0.1.1
+      - uses: Egoushka/agent-checks@v0.1.3
