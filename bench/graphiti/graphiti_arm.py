@@ -86,17 +86,17 @@ def graphiti() -> Graphiti:
 
 def episodes(corpus: str) -> list[RawEpisode]:
     rows = [json.loads(line) for line in open(corpus, encoding="utf-8") if line.strip()]
-    rows.sort(key=lambda r: (r["sources"][0]["occurred_at"], r["id"]))
+    # The export has no fact id: order by source time, then text, and name episodes by that position.
+    rows.sort(key=lambda r: (r["sources"][0]["occurred_at"], r["text"]))
     return [
         RawEpisode(
-            name=f"fact {r['id']}",
-            uuid=r["id"],
+            name=f"fact {n}",
             content=f"{r['subject']['name']} ({r['subject']['kind']}): {r['text']}",
             source_description=f"{r['sources'][0]['kind']}: {r['sources'][0]['ref']}",
             source=EpisodeType.text,
             reference_time=datetime.fromisoformat(r["sources"][0]["occurred_at"]),
         )
-        for r in rows
+        for n, r in enumerate(rows)
     ]
 
 
