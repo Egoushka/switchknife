@@ -31,34 +31,60 @@ from graphiti_core.nodes import EntityNode, EpisodeType
 from graphiti_core.utils.bulk_utils import RawEpisode
 
 CHUNK = 50
+# The gateway key allows 120 requests a minute and other services share it; Graphiti's bulk add fires more than that.
+REQUESTS_PER_MINUTE = int(os.environ.get("REQUESTS_PER_MINUTE", "80"))
+
+
+class Pacer:
+    """Spaces model calls evenly so the whole process stays under REQUESTS_PER_MINUTE."""
+
+    def __init__(self, per_minute: int) -> None:
+        self.gap = 60.0 / per_minute
+        self.next = 0.0
+        self.lock = asyncio.Lock()
+
+    async def wait(self) -> None:
+        async with self.lock:
+            now = time.monotonic()
+            slot = max(now, self.next)
+            self.next = slot + self.gap
+        await asyncio.sleep(slot - now)
 
 
 class Meter:
     """Counts the tokens of every model call the openai clients make, from the responses' own usage."""
 
-    def __init__(self) -> None:
+    def __init__(self, price: dict | None = None) -> None:
         self.calls = {"llm": 0, "embed": 0}
         self.tokens = {"llm_in": 0, "llm_cached": 0, "llm_out": 0, "embed": 0}
+        self.pacer = Pacer(REQUESTS_PER_MINUTE)
+        self.price = price
 
     def wrap(self, graphiti: Graphiti) -> None:
         llm = graphiti.llm_client.client
+        # The embedder has no retry of its own; the SDK's backoff honours the gateway's retry-after.
+        llm.max_retries = graphiti.embedder.client.max_retries = 8
         parse, create = llm.responses.parse, llm.chat.completions.create
         embed = graphiti.embedder.client.embeddings.create
 
         async def counted_parse(*a, **k):
+            await self.pacer.wait()
             r = await parse(*a, **k)
             self._llm(r.usage.input_tokens, r.usage.output_tokens, getattr(getattr(r.usage, "input_tokens_details", None), "cached_tokens", 0) or 0)
             return r
 
         async def counted_create(*a, **k):
+            await self.pacer.wait()
             r = await create(*a, **k)
             self._llm(r.usage.prompt_tokens, r.usage.completion_tokens, 0)
             return r
 
         async def counted_embed(*a, **k):
+            await self.pacer.wait()
             r = await embed(*a, **k)
             self.calls["embed"] += 1
             self.tokens["embed"] += r.usage.total_tokens
+            self._progress()
             return r
 
         llm.responses.parse, llm.chat.completions.create = counted_parse, counted_create
@@ -69,6 +95,12 @@ class Meter:
         self.tokens["llm_in"] += tokens_in
         self.tokens["llm_out"] += tokens_out
         self.tokens["llm_cached"] += cached
+        self._progress()
+
+    def _progress(self) -> None:
+        # A chunk can take longer than a session lives; this line keeps the spend known if the process is killed.
+        if sum(self.calls.values()) % 50 == 0:
+            print(f"meter: {self.calls} {self.tokens} {f"${self.usd(self.price):.4f}" if self.price else ""}", flush=True)
 
     def usd(self, price: dict) -> float:
         # Cached input is priced as full input: the projection errs high.
@@ -105,7 +137,7 @@ async def ingest(args: argparse.Namespace) -> int:
     state = json.load(open(args.state)) if os.path.exists(args.state) else {"done": [], "chunks": []}
     all_episodes = episodes(args.corpus)
     g = graphiti()
-    meter = Meter()
+    meter = Meter(price)
     meter.wrap(g)
     try:
         if not state["done"]:
@@ -113,8 +145,12 @@ async def ingest(args: argparse.Namespace) -> int:
         for start in range(0, len(all_episodes), CHUNK):
             if start in state["done"]:
                 continue
+            chunk = all_episodes[start:start + CHUNK]
+            # A killed run leaves this chunk's episodes saved and its entities not yet (the bulk add saves those last): drop them so a
+            # rerun adds each fact once.
+            await g.driver.execute_query("MATCH (e:Episodic) WHERE e.name IN $names DETACH DELETE e", names=[e.name for e in chunk])
             began = time.monotonic()
-            await g.add_episode_bulk(all_episodes[start:start + CHUNK])
+            await g.add_episode_bulk(chunk)
             state["done"].append(start)
             state["chunks"].append({"start": start, "seconds": round(time.monotonic() - began, 1), **meter.snapshot(price)})
             json.dump(state, open(args.state, "w"), indent=2)
