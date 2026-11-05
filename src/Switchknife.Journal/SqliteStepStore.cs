@@ -7,13 +7,19 @@ namespace Switchknife.Journal;
 /// <see cref="IStepStore"/> on one SQLite file. One process owns the file; calls are serialized inside this store so
 /// that <see cref="ClaimAsync"/> is atomic even though SQLite itself does not arbitrate between processes.
 /// </summary>
-public sealed class SqliteStepStore : IStepStore
+public sealed class SqliteStepStore : IStepStore, IEventFeed
 {
     private const int MaxErrorLength = 2000;
 
     private readonly SqliteConnection _connection;
     private readonly TimeProvider _clock;
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly EventSignal _signal = new();
+
+    /// <summary>The tag read, one statement per case: a null-tolerant filter would stop SQLite using <c>events_by_tag</c>.</summary>
+    internal const string ReadByTagSql = "SELECT seq, flow, kind, at, payload, tag FROM events WHERE tag = $tag AND seq > $after ORDER BY seq LIMIT $limit";
+
+    private const string ReadAllSql = "SELECT seq, flow, kind, at, payload, tag FROM events WHERE seq > $after ORDER BY seq LIMIT $limit";
 
     private SqliteStepStore(SqliteConnection connection, TimeProvider clock)
     {
@@ -118,18 +124,68 @@ public sealed class SqliteStepStore : IStepStore
             [("$flow", flow)], ct), ct);
 
     /// <inheritdoc />
-    public Task<long> AppendEventAsync(string flow, string kind, string payload, CancellationToken ct)
+    public async Task<long> AppendEventAsync(string flow, string kind, string payload, CancellationToken ct) =>
+        (await AppendEventsAsync(flow, [new NewEvent(kind, payload)], ct).ConfigureAwait(false))[0];
+
+    /// <inheritdoc />
+    public IEventSignal Signal => _signal;
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<long>> AppendEventsAsync(string flow, IReadOnlyList<NewEvent> events, CancellationToken ct)
     {
         ArgumentException.ThrowIfNullOrEmpty(flow);
-        ArgumentException.ThrowIfNullOrEmpty(kind);
-        ArgumentNullException.ThrowIfNull(payload);
-        return Locked(async () =>
+        ArgumentNullException.ThrowIfNull(events);
+        foreach (var item in events)
+            Validate(item);
+        if (events.Count == 0)
+            return [];
+
+        var (sequences, stored) = await Locked(async () =>
         {
-            var command = Command("INSERT INTO events (flow, kind, at, payload) VALUES ($flow, $kind, $at, $payload) RETURNING seq",
-                [("$flow", flow), ("$kind", kind), ("$at", Format(_clock.GetUtcNow())), ("$payload", payload)]);
-            await using var commandScope = command.ConfigureAwait(false);
-            return (long)(await command.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
-        }, ct);
+            var transaction = (SqliteTransaction)await _connection.BeginTransactionAsync(ct).ConfigureAwait(false);
+            await using var transactionScope = transaction.ConfigureAwait(false);
+            var numbers = new long[events.Count];
+            var stored = 0L;
+            for (var i = 0; i < events.Count; i++)
+            {
+                var item = events[i];
+                var insert = Command(
+                    """
+                    INSERT INTO events (flow, kind, at, payload, tag, key) VALUES ($flow, $kind, $at, $payload, $tag, $key)
+                    ON CONFLICT (flow, key) WHERE key IS NOT NULL DO NOTHING RETURNING seq
+                    """,
+                    [("$flow", flow), ("$kind", item.Kind), ("$at", Format(_clock.GetUtcNow())), ("$payload", item.Payload), ("$tag", item.Tag), ("$key", item.Key)]);
+                insert.Transaction = transaction;
+                await using var insertScope = insert.ConfigureAwait(false);
+                if (await insert.ExecuteScalarAsync(ct).ConfigureAwait(false) is long inserted)
+                {
+                    numbers[i] = inserted;
+                    stored = Math.Max(stored, inserted);
+                    continue;
+                }
+                var existing = Command("SELECT seq FROM events WHERE flow = $flow AND key = $key", [("$flow", flow), ("$key", item.Key)]);
+                existing.Transaction = transaction;
+                await using var existingScope = existing.ConfigureAwait(false);
+                numbers[i] = (long)(await existing.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
+            }
+            await transaction.CommitAsync(ct).ConfigureAwait(false);
+            return (numbers, stored);
+        }, ct).ConfigureAwait(false);
+
+        // After the commit and outside the gate: a woken reader may read at once.
+        if (stored > 0)
+            _signal.Notify(stored);
+        return sequences;
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<JournalEvent>> ReadAllEventsAsync(long after, int limit, string? tag, CancellationToken ct)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(limit);
+        if (tag is { Length: 0 })
+            throw new ArgumentException("A tag is not empty.", nameof(tag));
+        return Locked(() => ReadEventRowsAsync(tag is null ? ReadAllSql : ReadByTagSql,
+            tag is null ? [("$after", after), ("$limit", limit)] : [("$tag", tag), ("$after", after), ("$limit", limit)], ct), ct);
     }
 
     /// <inheritdoc />
@@ -137,18 +193,9 @@ public sealed class SqliteStepStore : IStepStore
     {
         ArgumentException.ThrowIfNullOrEmpty(flow);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(limit);
-        return Locked<IReadOnlyList<JournalEvent>>(async () =>
-        {
-            var command = Command("SELECT seq, flow, kind, at, payload FROM events WHERE flow = $flow AND seq > $after ORDER BY seq LIMIT $limit",
-                [("$flow", flow), ("$after", after), ("$limit", limit)]);
-            await using var commandScope = command.ConfigureAwait(false);
-            var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
-            await using var readerScope = reader.ConfigureAwait(false);
-            var events = new List<JournalEvent>();
-            while (await reader.ReadAsync(ct).ConfigureAwait(false))
-                events.Add(new JournalEvent(reader.GetInt64(0), reader.GetString(1), reader.GetString(2), Parse(reader.GetString(3)), reader.GetString(4)));
-            return events;
-        }, ct);
+        return Locked(() => ReadEventRowsAsync(
+            "SELECT seq, flow, kind, at, payload, tag FROM events WHERE flow = $flow AND seq > $after ORDER BY seq LIMIT $limit",
+            [("$flow", flow), ("$after", after), ("$limit", limit)], ct), ct);
     }
 
     /// <inheritdoc />
@@ -176,6 +223,33 @@ public sealed class SqliteStepStore : IStepStore
         await using var commandScope = command.ConfigureAwait(false);
         return await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }, ct);
+
+    private async Task<IReadOnlyList<JournalEvent>> ReadEventRowsAsync(string sql, (string Name, object? Value)[] parameters, CancellationToken ct)
+    {
+        var command = Command(sql, parameters);
+        await using var commandScope = command.ConfigureAwait(false);
+        var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        await using var readerScope = reader.ConfigureAwait(false);
+        var events = new List<JournalEvent>();
+        while (await reader.ReadAsync(ct).ConfigureAwait(false))
+        {
+            events.Add(new JournalEvent(reader.GetInt64(0), reader.GetString(1), reader.GetString(2), Parse(reader.GetString(3)), reader.GetString(4))
+            {
+                Tag = reader.IsDBNull(5) ? null : reader.GetString(5),
+            });
+        }
+        return events;
+    }
+
+    private static void Validate(NewEvent item)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(item.Kind);
+        ArgumentNullException.ThrowIfNull(item.Payload);
+        if (item.Key is { Length: 0 })
+            throw new ArgumentException("An event key is not empty.", nameof(item));
+        if (item.Tag is { Length: 0 })
+            throw new ArgumentException("An event tag is not empty.", nameof(item));
+    }
 
     private async Task<IReadOnlyList<StepRecord>> ReadStepsAsync(string sql, (string Name, object? Value)[] parameters, CancellationToken ct)
     {
