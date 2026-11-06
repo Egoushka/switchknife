@@ -41,4 +41,27 @@ committed before the first run.
 
 ## Results
 
-Not run yet.
+Two of three arms were scored. Graphiti was ingested only partway and not scored (below). One run each, no retuning (D-76).
+
+| Arm | recall@10 | p95 | Gold names found | Wilson 95% (found/175) |
+|---|---|---|---|---|
+| kit | 0.1993 | 22.7 ms | 34 / 175 | [0.1425, 0.2592] |
+| kit + cross-encoder rerank | 0.1777 | 2465.4 ms | 34 / 175 | n/a (same found count) |
+| Graphiti | not scored | not measured | not measured | n/a |
+
+Ceiling for these 20 questions is 0.49. Words-only baseline (b0) was about 0.123 in the earlier study; it was not re-run here.
+
+### Graphiti: ingested 550 of 826 facts, not scored
+
+Ingest ran with one text episode per fact in chunks of 50 (11 chunks done, 550 facts). It stopped because the gateway began returning 502 `upstream_credentials_exhausted` for the OpenAI provider key. Ingest of the last 5 chunks and every search (which embeds the query through the same gateway) need it. Probes over about 24 hours all failed. Per the owner's instruction to close the work with the arms available, the Graphiti graph was not completed and the containers were removed. Scoring a 550/826 graph would not be comparable anyway, so the Graphiti result is **inconclusive**, not negative.
+
+Spend on the Graphiti arm: about $1.08 in total (starting value from the gateway meter and list prices, not an invoice), under the $5 cap. Kit and rerank embeddings added about $0.001. Projection at 50 facts was $0.52 for the full run; the real rate levelled near $0.10 per chunk, so a full run would have cost roughly $1.5 to $1.8.
+
+### Notes
+
+- The earlier study measured kit p95 at 227 ms; this run gives 22.7 ms. The cause is UNKNOWN (different machine load or warm cache are guesses). Rerank p95 is 2.5 s, 100x kit.
+- Operations: calls were paced at 80 requests/min under the gateway limit; three early starts died on request and token limits of a shared key, so a dedicated key was used; token-limit stalls needed 5-minute waits; the container runtime stopped twice under memory pressure and the ingest resumed from the last finished chunk.
+
+### Outcome by the pre-registered rule
+
+A winner must beat kit by more than 0.10 recall@10, and the line is recall@10 >= 0.32 with p95 <= 150 ms. Among scored arms: kit 0.1993 is below the line, and rerank (0.1777) does not beat kit and is far over the latency limit. No scored arm reaches 0.32, so "stop retrieval work" holds for kit and rerank. Graphiti is the one open arm; it can be re-run later from the same script when a working provider key exists (about $1.5 to $1.8, 826 facts), and only a result of 0.32 or more would change the verdict.
