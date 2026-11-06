@@ -19,13 +19,19 @@ namespace Switchknife.Journal.Postgres;
 /// own <see cref="NpgsqlDataSource"/>: <see cref="DisposeAsync"/> does nothing to it, since it is typically the host
 /// application's own, shared data source.
 /// </remarks>
-public sealed class PgStepStore : IStepStore
+public sealed class PgStepStore : IStepStore, IEventFeed
 {
     private const int MaxErrorLength = 2000;
 
     private readonly NpgsqlDataSource _dataSource;
     private readonly TimeProvider _clock;
     private readonly StepOptions _options;
+    private readonly EventSignal _signal = new();
+
+    /// <summary>The tag read, one statement per case: a null-tolerant filter would stop Postgres using <c>step_events_by_tag</c>.</summary>
+    internal const string ReadByTagSql = "select seq, flow, kind, at, payload, tag from step_events where tag = @tag and seq > @after order by seq limit @limit";
+
+    private const string ReadAllSql = "select seq, flow, kind, at, payload, tag from step_events where seq > @after order by seq limit @limit";
 
     /// <summary>A store on <paramref name="dataSource"/>'s database, whose <c>steps</c> and <c>step_events</c> tables already exist.</summary>
     public PgStepStore(NpgsqlDataSource dataSource, TimeProvider? clock = null, StepOptions? options = null)
@@ -198,34 +204,105 @@ public sealed class PgStepStore : IStepStore
     }
 
     /// <inheritdoc />
-    public async Task<long> AppendEventAsync(string flow, string kind, string payload, CancellationToken ct)
+    public async Task<long> AppendEventAsync(string flow, string kind, string payload, CancellationToken ct) =>
+        (await AppendEventsAsync(flow, [new NewEvent(kind, payload)], ct).ConfigureAwait(false))[0];
+
+    /// <inheritdoc />
+    public IEventSignal Signal => _signal;
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<long>> AppendEventsAsync(string flow, IReadOnlyList<NewEvent> events, CancellationToken ct)
     {
         ArgumentException.ThrowIfNullOrEmpty(flow);
-        ArgumentException.ThrowIfNullOrEmpty(kind);
-        ArgumentNullException.ThrowIfNull(payload);
+        ArgumentNullException.ThrowIfNull(events);
+        foreach (var item in events)
+        {
+            ArgumentException.ThrowIfNullOrEmpty(item.Kind);
+            ArgumentNullException.ThrowIfNull(item.Payload);
+            if (item.Key is { Length: 0 })
+                throw new ArgumentException("An event key is not empty.", nameof(events));
+            if (item.Tag is { Length: 0 })
+                throw new ArgumentException("An event tag is not empty.", nameof(events));
+        }
+        if (events.Count == 0)
+            return [];
+
         var connection = await _dataSource.OpenConnectionAsync(ct).ConfigureAwait(false);
         await using var connectionScope = connection.ConfigureAwait(false);
-        var command = new NpgsqlCommand(
-            "insert into step_events (flow, kind, at, payload) values (@flow, @kind, @at, @payload) returning seq", connection);
-        await using var commandScope = command.ConfigureAwait(false);
-        command.Parameters.AddWithValue("flow", flow);
-        command.Parameters.AddWithValue("kind", kind);
-        command.Parameters.AddWithValue("at", _clock.GetUtcNow());
-        command.Parameters.Add(new NpgsqlParameter("payload", NpgsqlDbType.Json) { Value = payload });
-        return (long)(await command.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
+        var transaction = await connection.BeginTransactionAsync(ct).ConfigureAwait(false);
+        await using var transactionScope = transaction.ConfigureAwait(false);
+        var numbers = new long[events.Count];
+        var stored = 0L;
+        var at = _clock.GetUtcNow();
+        for (var i = 0; i < events.Count; i++)
+        {
+            var item = events[i];
+            // ON CONFLICT DO NOTHING waits for a concurrent insert of the same key to commit or roll back, then affects no row.
+            var insert = new NpgsqlCommand(
+                """
+                insert into step_events (flow, kind, at, payload, tag, key) values (@flow, @kind, @at, @payload, @tag, @key)
+                on conflict (flow, key) where key is not null do nothing returning seq
+                """,
+                connection, transaction);
+            await using (insert.ConfigureAwait(false))
+            {
+                insert.Parameters.AddWithValue("flow", flow);
+                insert.Parameters.AddWithValue("kind", item.Kind);
+                insert.Parameters.AddWithValue("at", at);
+                insert.Parameters.Add(new NpgsqlParameter("payload", NpgsqlDbType.Json) { Value = item.Payload });
+                insert.Parameters.Add(new NpgsqlParameter("tag", NpgsqlDbType.Text) { Value = (object?)item.Tag ?? DBNull.Value });
+                insert.Parameters.Add(new NpgsqlParameter("key", NpgsqlDbType.Text) { Value = (object?)item.Key ?? DBNull.Value });
+                if (await insert.ExecuteScalarAsync(ct).ConfigureAwait(false) is long inserted)
+                {
+                    numbers[i] = inserted;
+                    stored = Math.Max(stored, inserted);
+                    continue;
+                }
+            }
+
+            var existing = new NpgsqlCommand("select seq from step_events where flow = @flow and key = @key", connection, transaction);
+            await using (existing.ConfigureAwait(false))
+            {
+                existing.Parameters.AddWithValue("flow", flow);
+                existing.Parameters.AddWithValue("key", item.Key!);
+                numbers[i] = (long)(await existing.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
+            }
+        }
+        await transaction.CommitAsync(ct).ConfigureAwait(false);
+
+        if (stored > 0)
+            _signal.Notify(stored);
+        return numbers;
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<JournalEvent>> ReadEventsAsync(string flow, long after, int limit, CancellationToken ct)
+    public Task<IReadOnlyList<JournalEvent>> ReadAllEventsAsync(long after, int limit, string? tag, CancellationToken ct)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(limit);
+        if (tag is { Length: 0 })
+            throw new ArgumentException("A tag is not empty.", nameof(tag));
+        return ReadEventRowsAsync(tag is null ? ReadAllSql : ReadByTagSql, null, tag, after, limit, ct);
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<JournalEvent>> ReadEventsAsync(string flow, long after, int limit, CancellationToken ct)
     {
         ArgumentException.ThrowIfNullOrEmpty(flow);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(limit);
+        return ReadEventRowsAsync("select seq, flow, kind, at, payload, tag from step_events where flow = @flow and seq > @after order by seq limit @limit",
+            flow, null, after, limit, ct);
+    }
+
+    private async Task<IReadOnlyList<JournalEvent>> ReadEventRowsAsync(string sql, string? flow, string? tag, long after, int limit, CancellationToken ct)
+    {
         var connection = await _dataSource.OpenConnectionAsync(ct).ConfigureAwait(false);
         await using var connectionScope = connection.ConfigureAwait(false);
-        var command = new NpgsqlCommand(
-            "select seq, flow, kind, at, payload from step_events where flow = @flow and seq > @after order by seq limit @limit", connection);
+        var command = new NpgsqlCommand(sql, connection);
         await using var commandScope = command.ConfigureAwait(false);
-        command.Parameters.AddWithValue("flow", flow);
+        if (flow is not null)
+            command.Parameters.AddWithValue("flow", flow);
+        if (tag is not null)
+            command.Parameters.AddWithValue("tag", tag);
         command.Parameters.AddWithValue("after", after);
         command.Parameters.AddWithValue("limit", limit);
         var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
@@ -233,8 +310,10 @@ public sealed class PgStepStore : IStepStore
         var events = new List<JournalEvent>();
         while (await reader.ReadAsync(ct).ConfigureAwait(false))
         {
-            events.Add(new JournalEvent(reader.GetInt64(0), reader.GetString(1), reader.GetString(2), reader.GetFieldValue<DateTimeOffset>(3),
-                reader.GetString(4)));
+            events.Add(new JournalEvent(reader.GetInt64(0), reader.GetString(1), reader.GetString(2), reader.GetFieldValue<DateTimeOffset>(3), reader.GetString(4))
+            {
+                Tag = reader.IsDBNull(5) ? null : reader.GetString(5),
+            });
         }
         return events;
     }

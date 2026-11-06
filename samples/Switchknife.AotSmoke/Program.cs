@@ -323,12 +323,26 @@ static async Task<string?> JournalAsync()
             if (!reset || rerun.Name != "made-1-False" || await journal.ResetAsync("flow", "missing"))
                 return $"after reset: {reset}, {rerun.Name}";
         }
-        return null;
+        await using (var journal = await StepJournal.OpenAsync(path))
+            return await EventFeedAsync(journal);
     }
     finally
     {
         Directory.Delete(dir, recursive: true);
     }
+}
+
+// Keyed append, tag read and signal: the same checks on SQLite and Postgres.
+static async Task<string?> EventFeedAsync(StepJournal journal)
+{
+    var wake = journal.Signal.WaitAsync(0);
+    var batch = new List<NewEvent> { new("seen", "{}", Key: "a", Tag: "t"), new("seen", "{}", Key: "b"), new("seen", "{}", Key: "a", Tag: "t") };
+    var seqs = await journal.AppendEventsAsync("feed", batch);
+    var woken = await wake.WaitAsync(TimeSpan.FromSeconds(10));
+    var tagged = await journal.ReadAllEventsAsync(tag: "t");
+    return seqs[0] == seqs[2] && seqs[0] != seqs[1] && woken == seqs[1] && tagged.Count == 1 && tagged[0].Tag == "t"
+        ? null
+        : $"event feed: {string.Join(",", seqs)}, woken {woken}, {tagged.Count} tagged";
 }
 
 static async Task<string?> JournalPostgresAsync()
@@ -360,7 +374,7 @@ static async Task<string?> JournalPostgresAsync()
         var made = await journal.RunAsync("flow", "step", (c, _) => Task.FromResult(new Made($"made-{c.Attempt}")), SmokeJson.Default.Made);
         var again = await journal.RunAsync("flow", "step", (_, _) => Task.FromResult(new Made("ran-twice")), SmokeJson.Default.Made);
         return (made.Name, again.Name) == ("made-1", "made-1")
-            ? null
+            ? await EventFeedAsync(journal)
             : $"first run {made.Name}, second run {again.Name}";
     }
     finally
