@@ -41,4 +41,9 @@ public sealed record StepContext(string Flow, string Key, int Attempt, bool Resu
 /// <param name="Kind">The caller's name for what happened.</param>
 /// <param name="At">When it was appended.</param>
 /// <param name="Payload">The caller's JSON, stored as given.</param>
-public sealed record JournalEvent(long Sequence, string Flow, string Kind, DateTimeOffset At, string Payload);
+/// <remarks><see cref="Tag"/> is an init property, not a constructor parameter, so the record's constructor keeps its shape.</remarks>
+public sealed record JournalEvent(long Sequence, string Flow, string Kind, DateTimeOffset At, string Payload)
+{
+    /// <summary>The tag the event was appended with; null when it has none.</summary>
+    public string? Tag { get; init; }
+}

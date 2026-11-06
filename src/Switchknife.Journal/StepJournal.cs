@@ -102,8 +102,39 @@ public sealed class StepJournal : IAsyncDisposable, IDisposable
     public Task<IReadOnlyList<JournalEvent>> ReadEventsAsync(string flow, long after = 0, int limit = 1000, CancellationToken ct = default) =>
         _store.ReadEventsAsync(flow, after, limit, ct);
 
+    /// <summary>
+    /// Appends <paramref name="newEvent"/> to <paramref name="flow"/> and returns its sequence number; when its
+    /// <see cref="NewEvent.Key"/> is already in the flow, stores nothing and returns the first event's number.
+    /// </summary>
+    /// <exception cref="NotSupportedException">The store has no event stream (<see cref="IEventFeed"/>).</exception>
+    public async Task<long> AppendEventAsync(string flow, NewEvent newEvent, CancellationToken ct = default) =>
+        (await Feed.AppendEventsAsync(flow, [newEvent], ct).ConfigureAwait(false))[0];
+
+    /// <summary>
+    /// Appends <paramref name="events"/> to <paramref name="flow"/> in one transaction (all or none) and returns one sequence
+    /// number per event, in order; a key the flow already has returns the first event's number and stores nothing.
+    /// </summary>
+    /// <exception cref="NotSupportedException">The store has no event stream (<see cref="IEventFeed"/>).</exception>
+    public Task<IReadOnlyList<long>> AppendEventsAsync(string flow, IReadOnlyList<NewEvent> events, CancellationToken ct = default) =>
+        Feed.AppendEventsAsync(flow, events, ct);
+
+    /// <summary>
+    /// The events of every flow after sequence <paramref name="after"/> (0: from the start), oldest first; with
+    /// <paramref name="tag"/>, only those appended with it.
+    /// </summary>
+    /// <exception cref="NotSupportedException">The store has no event stream (<see cref="IEventFeed"/>).</exception>
+    public Task<IReadOnlyList<JournalEvent>> ReadAllEventsAsync(long after = 0, int limit = 1000, string? tag = null, CancellationToken ct = default) =>
+        Feed.ReadAllEventsAsync(after, limit, tag, ct);
+
+    /// <summary>Wakes a reader when this journal's store commits events: read, wait with the last sequence seen, read again.</summary>
+    /// <exception cref="NotSupportedException">The store has no event stream (<see cref="IEventFeed"/>).</exception>
+    public IEventSignal Signal => Feed.Signal;
+
     /// <summary>Removes a flow's steps and events, once nothing will resume it. Returns how many rows went.</summary>
     public Task<int> ForgetAsync(string flow, CancellationToken ct = default) => _store.ForgetAsync(flow, ct);
+
+    private IEventFeed Feed => _store as IEventFeed
+        ?? throw new NotSupportedException($"{_store.GetType().Name} has no event stream: it does not implement {nameof(IEventFeed)}.");
 
     /// <inheritdoc />
     public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();

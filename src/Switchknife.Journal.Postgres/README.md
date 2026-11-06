@@ -24,7 +24,11 @@ var container = await journal.RunAsync("batch-7", "prep/task-3", async (step, ct
 
 ## Schema
 
-`PgStepStoreSchema.Sql` (embedded from `Migrations/0001_steps.sql`) creates `steps` (one row per `flow, key`, its `state`, `attempt`, `result json`, `lease_until`) and `step_events`. Run it with your own migrator, or with [Switchknife.Migrations](../Switchknife.Migrations) by embedding the same script in your host's assembly. `PgStepStore` does not create or alter these tables itself.
+`PgStepStoreSchema.Sql` (every script under `Migrations/`, in order: `0001_steps.sql`, then `0002_event_stream.sql`) creates `steps` (one row per `flow, key`, its `state`, `attempt`, `result json`, `lease_until`) and `step_events`, with the `tag` and `key` columns and indexes the event stream uses. Each script is idempotent. Run it with your own migrator, or with [Switchknife.Migrations](../Switchknife.Migrations) by embedding the same scripts in your host's assembly. A host that ran only `0001` must run `0002` before the next package version reads or appends events. `PgStepStore` does not create or alter these tables itself.
+
+## Event stream
+
+`PgStepStore` implements `IEventFeed`: `AppendEventsAsync` (one transaction, keyed appends are `insert ... on conflict (flow, key) do nothing`, so two processes appending one key store one event), `ReadAllEventsAsync` over every flow with an optional indexed `tag`, and an in-process `Signal` raised after the commit. See [Switchknife.Journal](../Switchknife.Journal) for the usage and its limits; across processes the signal does not reach, so poll.
 
 ## Multi-process claims
 
