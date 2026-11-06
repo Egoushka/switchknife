@@ -6,3 +6,5 @@ artifacts/
 .idea/
 TestResults/
 BenchmarkDotNet.Artifacts/
+
+__pycache__/

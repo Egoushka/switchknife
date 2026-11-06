@@ -7,8 +7,11 @@ using Switchknife.Facts;
 using Switchknife.Knowledge;
 using Switchknife.Knowledge.Bench;
 
-// recall  --connection C --gold F --corpus F [--systems b0,facts,kit] [--limit 10] [--out F] [--model M] [--dimensions N]
+// recall  --connection C --gold F --corpus F [--systems b0,facts,kit,rerank] [--limit 10] [--out F] [--model M] [--dimensions N]
+//         [--reranker DIR] [--candidates 50] [--external NAME=FILE]
 //         with KNOWLEDGE_EMBED_URL and KNOWLEDGE_EMBED_KEY in the environment, runs with vectors
+//         rerank: the kit's top --candidates entities reordered by the ONNX cross-encoder in DIR, first --limit kept
+//         --external: scores another system's shown texts and timings from FILE with the same matcher (see External.cs)
 // latency --connection C --corpus F --gold F [--namespaces 5] [--facts 50000] [--queries 200]
 // The database name must contain "bench": the run replaces its facts schema.
 var options = ParseOptions(args.Skip(1).ToArray());
@@ -47,6 +50,10 @@ async Task<int> RecallAsync()
     var store = new FactsStore(data, "prior-art");
     var kit = new KnowledgeSearch(data, ["prior-art"]);
     var b0 = new PlainText(corpus);
+    var candidates = int.Parse(Option("candidates", "50"), CultureInfo.InvariantCulture);
+    using var reranker = options.TryGetValue("reranker", out var rerankerDir) ? new Reranker(rerankerDir) : null;
+    var externals = options.TryGetValue("external", out var externalSpec) ? External.Parse(externalSpec) : new Dictionary<string, External>();
+    systems = [.. systems, .. externals.Keys];
 
     // Vectors: when KNOWLEDGE_EMBED_URL and KNOWLEDGE_EMBED_KEY are set, facts and questions are embedded and both searches use them.
     using var embedder = Embedder.FromEnvironment(Option("model", "text-embedding-3-small"), int.Parse(Option("dimensions", "0"), CultureInfo.InvariantCulture));
@@ -75,6 +82,51 @@ async Task<int> RecallAsync()
     var vectorLabel = embedder is null ? "none" : $"{embedder.Model}{(embedder.Dimensions > 0 ? "@" + embedder.Dimensions : string.Empty)}";
     ReadOnlyMemory<float> VectorOf(string question) => questionVectors.TryGetValue(question, out var v) ? v : default;
 
+    async Task<(IReadOnlyList<string> Shown, IReadOnlyList<string> Names)> SearchOnceAsync(string system, Decision d)
+    {
+        switch (system)
+        {
+            case "b0":
+                return (b0.Search(d.Question, limit), []);
+            case "facts":
+                return ((await store.SearchAsync(d.Question, VectorOf(d.Question), embedder?.Model, limit).ConfigureAwait(false)).Select(h => h.Fact.Text).ToList(), []);
+            case "kit":
+                var hits = await kit.SearchAsync(d.Question, VectorOf(d.Question), embedder?.Model, limit).ConfigureAwait(false);
+                return (hits.Select(Shown).ToList(), hits.Select(h => h.Name).ToList());
+            case "rerank":
+                var pool = await kit.SearchAsync(d.Question, VectorOf(d.Question), embedder?.Model, candidates).ConfigureAwait(false);
+                var texts = pool.Select(Shown).ToList();
+                var scores = (reranker ?? throw new InvalidOperationException("rerank needs --reranker DIR.")).Score(d.Question, texts);
+                var order = Enumerable.Range(0, pool.Count).OrderByDescending(i => scores[i]).ThenBy(i => i).Take(limit).ToList();
+                return (order.Select(i => texts[i]).ToList(), order.Select(i => pool[i].Name).ToList());
+            default:
+                throw new InvalidOperationException($"unknown system {system}.");
+        }
+    }
+
+    async Task<List<double>> TimeAsync(string system)
+    {
+        foreach (var d in decisions)
+        {
+            await SearchOnceAsync(system, d).ConfigureAwait(false);
+        }
+
+        var times = new List<double>();
+        for (var pass = 0; pass < 10; pass++)
+        {
+            foreach (var d in decisions)
+            {
+                var t = Stopwatch.GetTimestamp();
+                await SearchOnceAsync(system, d).ConfigureAwait(false);
+                times.Add(Stopwatch.GetElapsedTime(t).TotalMilliseconds);
+            }
+        }
+
+        return times;
+    }
+
+    static string Shown(EntityHit h) => h.Name + "\n" + string.Join('\n', h.Facts.Select(f => f.Text));
+
     var ceiling = decisions.Average(d => (double)d.Found(corpus.Select(f => f.Text + " " + f.SubjectName)).Count / d.Gold.Count);
     var report = new Dictionary<string, object>();
     var macro = new Dictionary<string, double>();
@@ -83,27 +135,10 @@ async Task<int> RecallAsync()
         var rows = new List<object>();
         int found = 0, total = 0, nameOnly = 0;
         double sum = 0;
+        externals.TryGetValue(system, out var external);
         foreach (var d in decisions)
         {
-            IReadOnlyList<string> shown;
-            IReadOnlyList<string> names = [];
-            switch (system)
-            {
-                case "b0":
-                    shown = b0.Search(d.Question, limit);
-                    break;
-                case "facts":
-                    shown = (await store.SearchAsync(d.Question, VectorOf(d.Question), embedder?.Model, limit).ConfigureAwait(false)).Select(h => h.Fact.Text).ToList();
-                    break;
-                case "kit":
-                    var hits = await kit.SearchAsync(d.Question, VectorOf(d.Question), embedder?.Model, limit).ConfigureAwait(false);
-                    shown = hits.Select(h => h.Name + "\n" + string.Join('\n', h.Facts.Select(f => f.Text))).ToList();
-                    names = hits.Select(h => h.Name).ToList();
-                    break;
-                default:
-                    throw new InvalidOperationException($"unknown system {system}.");
-            }
-
+            var (shown, names) = external is null ? await SearchOnceAsync(system, d).ConfigureAwait(false) : external.Of(d.Id, limit);
             var hit = d.Found(shown);
             found += hit.Count;
             total += d.Gold.Count;
@@ -112,10 +147,16 @@ async Task<int> RecallAsync()
             rows.Add(new { d.Id, d.Title, results = shown.Count, found = hit, missed = d.Gold.Except(hit).ToList() });
         }
 
+        // p95 of one search call (query vectors already computed): one warm-up pass, then 10 timed passes of the gold questions = 200 timings.
+        // An external system brings its own timings, taken the same way.
+        var times = external?.TimingsMs.ToList() ?? await TimeAsync(system).ConfigureAwait(false);
+
+        times.Sort();
+        var p95 = Stats.P95(times);
         var (lo, hi) = Stats.Wilson(found, total);
         macro[system] = sum / decisions.Count;
-        report[system] = new { recall_at_10 = Math.Round(macro[system], 4), micro = Math.Round((double)found / total, 4), wilson95 = new[] { Math.Round(lo, 4), Math.Round(hi, 4) }, found, total, name_only = Math.Round((double)nameOnly / total, 4), per_decision = rows };
-        Console.WriteLine($"{system,-6} recall@{limit} = {macro[system]:0.000} (micro {found}/{total} = {(double)found / total:0.000}, Wilson 95% {lo:0.000} to {hi:0.000}), name only {(double)nameOnly / total:0.000}");
+        report[system] = new { recall_at_10 = Math.Round(macro[system], 4), p95_ms = Math.Round(p95, 1), micro = Math.Round((double)found / total, 4), wilson95 = new[] { Math.Round(lo, 4), Math.Round(hi, 4) }, found, total, name_only = Math.Round((double)nameOnly / total, 4), per_decision = rows };
+        Console.WriteLine($"{system,-6} recall@{limit} = {macro[system]:0.000} (micro {found}/{total} = {(double)found / total:0.000}, Wilson 95% {lo:0.000} to {hi:0.000}), name only {(double)nameOnly / total:0.000}, p95 {p95:0.0} ms (p50 {times[times.Count / 2]:0.0} ms, {times.Count} timings)");
     }
 
     Console.WriteLine($"corpus: {corpus.Count} live facts, vectors: {vectorLabel}; ceiling (gold names anywhere in the corpus, macro) {ceiling:0.000}");

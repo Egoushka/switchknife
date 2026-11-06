@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" />
+    <PackageReference Include="Microsoft.ML.Tokenizers" />
     <PackageReference Include="Npgsql" />
     <InternalsVisibleTo Include="Switchknife.Knowledge.Bench.Tests" />
   </ItemGroup>
