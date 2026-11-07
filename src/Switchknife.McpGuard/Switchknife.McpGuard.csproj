@@ -3,8 +3,8 @@
   <PropertyGroup>
     <PackageId>Switchknife.McpGuard</PackageId>
     <MinVerTagPrefix>mcp-guard/v</MinVerTagPrefix>
-    <Description>Guards an MCP endpoint served over streamable HTTP: any Origin header is refused (the DNS-rebinding guard), and a bearer token is required, compared in fixed time, failing closed when none is configured. Native AOT compatible.</Description>
-    <PackageTags>mcp;model-context-protocol;security;bearer;origin;dns-rebinding;aspnetcore;aot</PackageTags>
+    <Description>Guards an MCP endpoint served over streamable HTTP: any Origin header is refused (the DNS-rebinding guard), and a bearer token is required, compared in fixed time, failing closed when none is configured; an optional Host allow-list closes rebinding requests that carry no Origin. Native AOT compatible.</Description>
+    <PackageTags>mcp;model-context-protocol;security;bearer;origin;host;dns-rebinding;aspnetcore;aot</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
