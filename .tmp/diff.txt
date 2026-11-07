@@ -1,0 +1,225 @@
+diff --git a/README.md b/README.md
+index 35533b5..89f7be5 100644
+--- a/README.md
++++ b/README.md
+@@ -9,7 +9,7 @@ Small .NET libraries for services that run on their own: each package does one j
+ | [Switchknife.Hosting](src/Switchknife.Hosting) | `PollingService`, a `BackgroundService` that polls on start and then every interval and never stops the host: a failed poll is logged and retried with exponential backoff, health hooks are optional and guarded, shutdown is clean. `TimeProvider` throughout. | 0.x |
+ | [Switchknife.Journal](src/Switchknife.Journal) | A durable step journal on SQLite: a side effect records its intent before it runs and its result after, so a restarted process finishes or cleans up what it left. Events per flow, replayable, plus an ordered stream over every flow with tags, keyed idempotent appends and a signal. | 0.x |
+ | [Switchknife.Journal.Postgres](src/Switchknife.Journal.Postgres) | A `Switchknife.Journal` step store on PostgreSQL: a row lease instead of an in-process semaphore, so many processes share one steps table. An optional overload writes a step's result inside the caller's transaction. | 0.x |
+-| [Switchknife.McpGuard](src/Switchknife.McpGuard) | Guards an MCP endpoint on streamable HTTP: any `Origin` header refused (the DNS-rebinding guard), a bearer token compared in fixed time, closed when no token is configured. | 0.x |
++| [Switchknife.McpGuard](src/Switchknife.McpGuard) | Guards an MCP endpoint on streamable HTTP: any `Origin` header refused (the DNS-rebinding guard), a bearer token compared in fixed time, closed when no token is configured; an optional `Host` allow-list for rebinding requests without `Origin`. | 0.x |
+ | [Switchknife.Migrations](src/Switchknife.Migrations) | Applies the SQL scripts embedded in an assembly to PostgreSQL with DbUp, once each, journalled in the database; creates the database when missing, logs through `ILogger`, throws naming the failed script. | 0.x |
+ | [Switchknife.Pace](src/Switchknife.Pace) | The pacing engine for one AI subscription's weekly allowance, with no I/O: the plan's meter and its week, a pace line per consumer, states (ok, over pace, limited, stale), leases that reserve a job's estimate, and attribution of the account-wide meter to consumers. `TimeProvider` throughout. Design: [ADR 0004](docs/adr/0004-pace-engine.md). | 0.x |
+ | [Switchknife.SafeFetch](src/Switchknife.SafeFetch) | Fetches a URL that untrusted input named without reaching the host's own network: URL checks at every redirect, one DNS lookup pinned to a checked global unicast address, page and conditional feed fetch with size caps, per-host politeness, failure memory and an optional quota; readable text from HTML. | 0.x |
+diff --git a/samples/Switchknife.AotSmoke/Program.cs b/samples/Switchknife.AotSmoke/Program.cs
+index 7e39a1e..cd8848c 100644
+--- a/samples/Switchknife.AotSmoke/Program.cs
++++ b/samples/Switchknife.AotSmoke/Program.cs
+@@ -393,13 +393,15 @@ static async Task<string?> McpGuardAsync()
+     builder.Logging.ClearProviders();
+     await using var app = builder.Build();
+     RequestDelegate reached = context => context.Response.WriteAsync("reached");
+-    app.MapPost("/mcp", reached).RequireMcpGuard("smoke-token");
++    app.MapPost("/mcp", reached).RequireMcpGuard("smoke-token").AllowHosts("127.0.0.1");
+     await app.StartAsync();
+ 
+     using var http = new HttpClient { BaseAddress = new Uri(app.Urls.First()) };
+-    async Task<HttpStatusCode> PostAsync(string? token, string? origin)
++    async Task<HttpStatusCode> PostAsync(string? token, string? origin, string? host = null)
+     {
+         using var request = new HttpRequestMessage(HttpMethod.Post, "/mcp");
++        if (host is not null)
++            request.Headers.Host = host;
+         if (token is not null)
+             request.Headers.Add("Authorization", $"Bearer {token}");
+         if (origin is not null)
+@@ -409,10 +411,11 @@ static async Task<string?> McpGuardAsync()
+     }
+ 
+     var (ok, wrong, browser) = (await PostAsync("smoke-token", null), await PostAsync("nope", null), await PostAsync("smoke-token", "https://evil.example"));
++    var rebound = await PostAsync("smoke-token", null, "evil.example");
+     await app.StopAsync();
+-    return (ok, wrong, browser) == (HttpStatusCode.OK, HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden)
++    return (ok, wrong, browser, rebound) == (HttpStatusCode.OK, HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden, HttpStatusCode.Forbidden)
+         ? null
+-        : $"token {ok}, wrong token {wrong}, origin {browser}";
++        : $"token {ok}, wrong token {wrong}, origin {browser}, host {rebound}";
+ }
+ 
+ static async Task<string?> MigrationsAsync()
+diff --git a/src/Switchknife.McpGuard/McpGuardExtensions.cs b/src/Switchknife.McpGuard/McpGuardExtensions.cs
+index f53b263..16ababe 100644
+--- a/src/Switchknife.McpGuard/McpGuardExtensions.cs
++++ b/src/Switchknife.McpGuard/McpGuardExtensions.cs
+@@ -55,6 +55,50 @@ public static class McpGuardExtensions
+         return Wrap(builder, (context, next) => HasOrigin(context) ? Refuse(context, StatusCodes.Status403Forbidden) : next(context));
+     }
+ 
++    /// <summary>
++    /// Refuses a request whose <c>Host</c> header is not in <paramref name="hosts"/> with 403. A page that reaches the
++    /// server through DNS rebinding still sends its own host name, so this closes rebinding requests that carry no
++    /// <c>Origin</c>. An entry without a port (<c>localhost</c>, <c>127.0.0.1</c>, <c>[::1]</c>) admits that host on any
++    /// port; one with a port (<c>localhost:5000</c>) admits that port only. Names compare ignoring case. Fails closed: no
++    /// entries, or a request without a <c>Host</c> header, refuses the request.
++    /// </summary>
++    /// <param name="builder">The endpoint or route group to guard.</param>
++    /// <param name="hosts">The host names, with an optional port, that callers may address the server by.</param>
++    /// <returns>The same builder, for chaining.</returns>
++    public static TBuilder AllowHosts<TBuilder>(this TBuilder builder, params string[] hosts)
++        where TBuilder : IEndpointConventionBuilder
++    {
++        ArgumentNullException.ThrowIfNull(builder);
++        ArgumentNullException.ThrowIfNull(hosts);
++        var allowed = hosts.Where(host => !string.IsNullOrWhiteSpace(host)).Select(ParseHost).ToArray();
++        return Wrap(builder, (context, next) => IsAllowed(context.Request.Host, allowed) ? next(context) : Refuse(context, StatusCodes.Status403Forbidden));
++    }
++
++    private static HostString ParseHost(string entry)
++    {
++        var trimmed = entry.Trim();
++        // A bare IPv6 address has more than one colon and no brackets; HostString needs the brackets to find the port.
++        return new HostString(!trimmed.StartsWith('[') && trimmed.Count(c => c == ':') > 1 ? $"[{trimmed}]" : trimmed);
++    }
++
++    private static bool IsAllowed(HostString host, HostString[] allowed)
++    {
++        if (!host.HasValue || string.IsNullOrEmpty(host.Host))
++        {
++            return false;
++        }
++
++        foreach (var entry in allowed)
++        {
++            if (string.Equals(entry.Host, host.Host, StringComparison.OrdinalIgnoreCase) && (entry.Port is null || entry.Port == host.Port))
++            {
++                return true;
++            }
++        }
++
++        return false;
++    }
++
+     private static TBuilder Wrap<TBuilder>(TBuilder builder, Func<HttpContext, RequestDelegate, Task> guard)
+         where TBuilder : IEndpointConventionBuilder
+     {
+diff --git a/src/Switchknife.McpGuard/README.md b/src/Switchknife.McpGuard/README.md
+index f8bb2ff..77b86d4 100644
+--- a/src/Switchknife.McpGuard/README.md
++++ b/src/Switchknife.McpGuard/README.md
+@@ -1,6 +1,6 @@
+ # Switchknife.McpGuard
+ 
+-Guards an MCP server on the streamable HTTP transport, or any endpoint that only non-browser clients call, with two checks in this order:
++Guards an MCP server on the streamable HTTP transport, or any endpoint that only non-browser clients call, with two checks in this order (and a third, `AllowHosts`, below):
+ 
+ 1. Any `Origin` header is refused with 403. A browser sends one on every cross-origin request and on every POST, so a page that reaches the server through DNS rebinding is turned away before anything else runs. MCP clients (agents, gateways, CLIs) send none.
+ 2. The `Authorization` header must be exactly `Bearer {token}`, compared in fixed time; anything else is 401. A null or empty token refuses every request, so a missing setting closes the endpoint instead of opening it.
+@@ -19,7 +19,15 @@ app.MapMcp("/mcp").RequireAuthorization("read").RejectOrigin();
+ app.MapGroup("/approvals").RejectOrigin();
+ ```
+ 
+-Both methods are endpoint conventions: they apply to an endpoint, a route group (every endpoint in it, including ones mapped later) or whatever `MapMcp` returns, and return the same builder for chaining. Refused requests get the status code and an empty body.
++A page that reaches the server through DNS rebinding can still send a request without `Origin` (a GET, for one), but its `Host` header names the attacker's domain. `AllowHosts` admits only the host names the server is meant to be addressed by and refuses the rest with 403:
++
++```csharp
++app.MapMcp("/mcp").RequireMcpGuard(app.Configuration["Mcp:Token"]).AllowHosts("localhost", "127.0.0.1", "[::1]");
++```
++
++An entry without a port admits that host on any port; `localhost:5000` admits port 5000 only. Names compare ignoring case; a bare IPv6 address (`::1`) is read as `[::1]`. No entries, or a request without a `Host` header, refuses the request. Behind a reverse proxy, the `Host` checked is the one the server sees, after any forwarded-headers middleware.
++
++All three methods are endpoint conventions: they apply to an endpoint, a route group (every endpoint in it, including ones mapped later) or whatever `MapMcp` returns, and return the same builder for chaining. Refused requests get the status code and an empty body.
+ 
+ Limits:
+ 
+diff --git a/src/Switchknife.McpGuard/Switchknife.McpGuard.csproj b/src/Switchknife.McpGuard/Switchknife.McpGuard.csproj
+index 07b89ec..30d9348 100644
+--- a/src/Switchknife.McpGuard/Switchknife.McpGuard.csproj
++++ b/src/Switchknife.McpGuard/Switchknife.McpGuard.csproj
+@@ -3,8 +3,8 @@
+   <PropertyGroup>
+     <PackageId>Switchknife.McpGuard</PackageId>
+     <MinVerTagPrefix>mcp-guard/v</MinVerTagPrefix>
+-    <Description>Guards an MCP endpoint served over streamable HTTP: any Origin header is refused (the DNS-rebinding guard), and a bearer token is required, compared in fixed time, failing closed when none is configured. Native AOT compatible.</Description>
+-    <PackageTags>mcp;model-context-protocol;security;bearer;origin;dns-rebinding;aspnetcore;aot</PackageTags>
++    <Description>Guards an MCP endpoint served over streamable HTTP: any Origin header is refused (the DNS-rebinding guard), and a bearer token is required, compared in fixed time, failing closed when none is configured; an optional Host allow-list closes rebinding requests that carry no Origin. Native AOT compatible.</Description>
++    <PackageTags>mcp;model-context-protocol;security;bearer;origin;host;dns-rebinding;aspnetcore;aot</PackageTags>
+   </PropertyGroup>
+ 
+   <ItemGroup>
+diff --git a/tests/Switchknife.McpGuard.Tests/McpGuardExtensionsTests.cs b/tests/Switchknife.McpGuard.Tests/McpGuardExtensionsTests.cs
+index 8dc07cb..4be8884 100644
+--- a/tests/Switchknife.McpGuard.Tests/McpGuardExtensionsTests.cs
++++ b/tests/Switchknife.McpGuard.Tests/McpGuardExtensionsTests.cs
+@@ -31,6 +31,8 @@ public sealed class McpGuardExtensionsTests : IAsyncLifetime
+         _app.MapPost("/unset", reached).RequireMcpGuard(null);
+         _app.MapPost("/empty", reached).RequireMcpGuard("");
+         _app.MapPost("/origin-only", reached).RejectOrigin();
++        _app.MapGet("/host", reached).AllowHosts("LocalHost", "127.0.0.1:5000", "::1");
++        _app.MapGet("/no-hosts", reached).AllowHosts();
+         // Route handlers get their delegate after conventions run; the guard must still wrap it.
+         var handlers = _app.MapGroup("/handlers").RequireMcpGuard(Token);
+         handlers.MapGet("/{id}", (string id) => $"reached {id}");
+@@ -45,9 +47,14 @@ public sealed class McpGuardExtensionsTests : IAsyncLifetime
+         await _app.DisposeAsync();
+     }
+ 
+-    private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path, string? authorization, string? origin = null)
++    private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path, string? authorization, string? origin = null, string? host = null)
+     {
+         using var request = new HttpRequestMessage(method, path);
++        if (host is not null)
++        {
++            request.Headers.Host = host;
++        }
++
+         if (authorization is not null)
+         {
+             request.Headers.TryAddWithoutValidation("Authorization", authorization);
+@@ -130,6 +137,40 @@ public sealed class McpGuardExtensionsTests : IAsyncLifetime
+         Assert.Equal(HttpStatusCode.Forbidden, browser.StatusCode);
+     }
+ 
++    [Theory]
++    [InlineData("localhost")]
++    [InlineData("localhost:8080")]
++    [InlineData("LOCALHOST")]
++    [InlineData("127.0.0.1:5000")]
++    [InlineData("[::1]:3001")]
++    public async Task An_allowed_host_reaches_the_endpoint(string host)
++    {
++        var response = await SendAsync(HttpMethod.Get, "/host", null, host: host);
++
++        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
++    }
++
++    [Theory]
++    [InlineData("evil.example")]
++    [InlineData("localhost.evil.example")]
++    [InlineData("127.0.0.1")]
++    [InlineData("127.0.0.1:5001")]
++    public async Task Any_other_host_is_403_without_an_origin(string host)
++    {
++        var response = await SendAsync(HttpMethod.Get, "/host", null, host: host);
++
++        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
++        Assert.Equal(0, response.Content.Headers.ContentLength);
++    }
++
++    [Fact]
++    public async Task Allow_hosts_without_entries_refuses_every_request()
++    {
++        var response = await SendAsync(HttpMethod.Get, "/no-hosts", null, host: "localhost");
++
++        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
++    }
++
+     [Fact]
+     public async Task A_route_handler_group_is_guarded_and_still_binds_its_parameters()
+     {
+@@ -145,5 +186,6 @@ public sealed class McpGuardExtensionsTests : IAsyncLifetime
+     {
+         Assert.Throws<ArgumentNullException>(() => McpGuardExtensions.RequireMcpGuard<IEndpointConventionBuilder>(null!, Token));
+         Assert.Throws<ArgumentNullException>(() => McpGuardExtensions.RejectOrigin<IEndpointConventionBuilder>(null!));
++        Assert.Throws<ArgumentNullException>(() => McpGuardExtensions.AllowHosts<IEndpointConventionBuilder>(null!, "localhost"));
+     }
+ }

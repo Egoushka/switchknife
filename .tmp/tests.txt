@@ -1,0 +1,12 @@
+  /work/tests/Switchknife.Migrations.Tests/bin/Release/net10.0/Switchknife.Migrations.Tests.dll (net10.0|x64) passed (627ms)
+  /work/tests/Switchknife.Facts.Testing.Tests/bin/Release/net10.0/Switchknife.Facts.Testing.Tests.dll (net10.0|x64) passed (524ms)
+  /work/tests/Switchknife.Testing.Http.Tests/bin/Release/net10.0/Switchknife.Testing.Http.Tests.dll (net10.0|x64) passed (542ms)
+
+  total: 607
+  failed: 0
+  succeeded: 465
+  skipped: 142
+  duration: 8s 187ms
+agent-checks: 1 warning (not blocking):
+  .tmp/out.txt:494  typo  'anothers' -> 'another'
+agent-checks: ok (348 files, 1228 added lines)

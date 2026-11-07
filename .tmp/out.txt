@@ -1,0 +1,1228 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Switchknife.Journal -> /work/src/Switchknife.Journal/bin/Release/net10.0/Switchknife.Journal.dll
+  Switchknife.Journal.Postgres -> /work/src/Switchknife.Journal.Postgres/bin/Release/net10.0/Switchknife.Journal.Postgres.dll
+  Switchknife.Facts -> /work/src/Switchknife.Facts/bin/Release/net10.0/Switchknife.Facts.dll
+  Switchknife.Journal.Bench -> /work/bench/Switchknife.Journal.Bench/bin/Release/net10.0/Switchknife.Journal.Bench.dll
+  Switchknife.Facts.Bench -> /work/bench/Switchknife.Facts.Bench/bin/Release/net10.0/Switchknife.Facts.Bench.dll
+  Switchknife.Knowledge -> /work/src/Switchknife.Knowledge/bin/Release/net10.0/Switchknife.Knowledge.dll
+  Switchknife.Facts.Testing -> /work/src/Switchknife.Facts.Testing/bin/Release/net10.0/Switchknife.Facts.Testing.dll
+  Switchknife.Knowledge.Bench -> /work/bench/Switchknife.Knowledge.Bench/bin/Release/net10.0/Switchknife.Knowledge.Bench.dll
+  Switchknife.Testing.Postgres -> /work/src/Switchknife.Testing.Postgres/bin/Release/net10.0/Switchknife.Testing.Postgres.dll
+  Switchknife.Hosting -> /work/src/Switchknife.Hosting/bin/Release/net10.0/Switchknife.Hosting.dll
+  Switchknife.Journal.Benchmarks -> /work/benchmarks/Switchknife.Journal.Benchmarks/bin/Release/net10.0/Switchknife.Journal.Benchmarks.dll
+  Switchknife.Claims.Tests -> /work/tests/Switchknife.Claims.Tests/bin/Release/net10.0/Switchknife.Claims.Tests.dll
+  Switchknife.McpGuard -> /work/src/Switchknife.McpGuard/bin/Release/net10.0/Switchknife.McpGuard.dll
+  Switchknife.Journal.Postgres.Tests -> /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll
+  Switchknife.Hosting.Tests -> /work/tests/Switchknife.Hosting.Tests/bin/Release/net10.0/Switchknife.Hosting.Tests.dll
+  Switchknife.Migrations -> /work/src/Switchknife.Migrations/bin/Release/net10.0/Switchknife.Migrations.dll
+  Switchknife.Facts.Testing.Tests -> /work/tests/Switchknife.Facts.Testing.Tests/bin/Release/net10.0/Switchknife.Facts.Testing.Tests.dll
+  Switchknife.Facts.Bench.Tests -> /work/tests/Switchknife.Facts.Bench.Tests/bin/Release/net10.0/Switchknife.Facts.Bench.Tests.dll
+  Switchknife.Journal.Tests -> /work/tests/Switchknife.Journal.Tests/bin/Release/net10.0/Switchknife.Journal.Tests.dll
+  Switchknife.Pace -> /work/src/Switchknife.Pace/bin/Release/net10.0/Switchknife.Pace.dll
+  Switchknife.Knowledge.Tests -> /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll
+  Switchknife.SafeFetch -> /work/src/Switchknife.SafeFetch/bin/Release/net10.0/Switchknife.SafeFetch.dll
+  Switchknife.Testing.Http -> /work/src/Switchknife.Testing.Http/bin/Release/net10.0/Switchknife.Testing.Http.dll
+  Switchknife.Facts.Tests -> /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll
+  Switchknife.McpGuard.Tests -> /work/tests/Switchknife.McpGuard.Tests/bin/Release/net10.0/Switchknife.McpGuard.Tests.dll
+  Switchknife.Migrations.Tests -> /work/tests/Switchknife.Migrations.Tests/bin/Release/net10.0/Switchknife.Migrations.Tests.dll
+  Switchknife.Pace.Tests -> /work/tests/Switchknife.Pace.Tests/bin/Release/net10.0/Switchknife.Pace.Tests.dll
+  Switchknife.SafeFetch.Tests -> /work/tests/Switchknife.SafeFetch.Tests/bin/Release/net10.0/Switchknife.SafeFetch.Tests.dll
+  Switchknife.Testing.Postgres.Tests -> /work/tests/Switchknife.Testing.Postgres.Tests/bin/Release/net10.0/Switchknife.Testing.Postgres.Tests.dll
+  Switchknife.Testing.Http.Tests -> /work/tests/Switchknife.Testing.Http.Tests/bin/Release/net10.0/Switchknife.Testing.Http.Tests.dll
+  Switchknife.AotSmoke -> /work/samples/Switchknife.AotSmoke/bin/Release/net10.0/Switchknife.AotSmoke.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:10.70
+Running tests from /work/tests/Switchknife.Facts.Testing.Tests/bin/Release/net10.0/Switchknife.Facts.Testing.Tests.dll (net10.0|x64)
+Running tests from /work/tests/Switchknife.Facts.Bench.Tests/bin/Release/net10.0/Switchknife.Facts.Bench.Tests.dll (net10.0|x64)
+/work/tests/Switchknife.Facts.Testing.Tests/bin/Release/net10.0/Switchknife.Facts.Testing.Tests.dll (net10.0|x64) passed (524ms)
+skipped Switchknife.Facts.Bench.Tests.PostgresTests.A_run_answers_every_as_of_query_as_the_oracle_does_and_keeps_history
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Bench.Tests/bin/Release/net10.0/Switchknife.Facts.Bench.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Bench.Tests.PostgresTests.The_adr_gates_hold_at_5000_facts(vectorNoise: 1)
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Bench.Tests/bin/Release/net10.0/Switchknife.Facts.Bench.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Bench.Tests.PostgresTests.The_adr_gates_hold_at_5000_facts(vectorNoise: 0.5)
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Bench.Tests/bin/Release/net10.0/Switchknife.Facts.Bench.Tests.dll (net10.0|x64)
+/work/tests/Switchknife.Facts.Bench.Tests/bin/Release/net10.0/Switchknife.Facts.Bench.Tests.dll (net10.0|x64) passed (816ms)
+Running tests from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+Running tests from /work/tests/Switchknife.Hosting.Tests/bin/Release/net10.0/Switchknife.Hosting.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.A_replaces_id_that_is_not_a_live_fact_of_the_subject_is_dropped
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.PurgeTests.Purge_removes_the_retraction_of_an_assertion_that_vanishes
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.Nothing_valid_is_a_done_episode_with_zero_facts_and_the_outcome_counts_the_rejections
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.PurgeTests.Purge_is_atomic_with_concurrent_writers_on_the_slot
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.The_resolver_is_asked_only_about_mentions_without_a_known_id_and_null_skips_the_fact
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.A_replaces_of_another_subjects_fact_is_not_applied_even_if_the_context_says_otherwise
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.PurgeTests.Purge_deletes_what_only_the_source_supports_and_keeps_the_rest
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.Ingesting_the_same_episode_twice_changes_nothing
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.PurgeTests.A_failed_purge_changes_nothing
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.A_failing_extractor_leaves_no_partial_facts
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.PurgeTests.Purging_a_source_rebuilds_the_slot_as_if_it_never_existed
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.PurgeTests.Purge_touches_nothing_outside_the_affected_slots
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.Purging_the_replacing_episode_leaves_a_replaced_fact_retired_when_its_assertion_is_live_again
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.A_failed_new_version_keeps_the_earlier_versions_facts
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.PurgeTests.Purge_keeps_embeddings_of_rebuilt_rows
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.Extractor_model_and_tokens_are_stored_and_explain_reports_them
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.PurgeTests.Replaying_a_random_history_of_many_slots_reproduces_the_stored_rows(seed: 11)
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.PurgeTests.Replaying_a_random_history_of_many_slots_reproduces_the_stored_rows(seed: 7)
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.PurgeTests.Replaying_a_random_history_of_many_slots_reproduces_the_stored_rows(seed: 23)
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.Accepted_facts_are_written_with_locator_quote_and_resolved_entities
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.PurgeTests.Replaying_an_untouched_slot_reproduces_the_stored_rows_exactly
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.A_statement_is_stored_with_its_sentence_and_defines_the_predicate_once
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.Purging_the_episode_that_replaced_a_fact_revives_it
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.Cancellation_propagates_and_records_nothing
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.Extracted_ingest_inside_a_caller_transaction_rolls_back_with_it
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.A_third_party_episode_cannot_replace_an_owner_fact
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.Output_that_does_not_parse_is_a_failed_episode_with_a_code
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.A_replaces_of_a_fact_retired_since_the_context_was_built_is_not_applied
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.An_accepted_replaces_retires_a_many_fact_and_links_the_successor
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.The_exact_name_resolver_reuses_one_entity_creates_when_none_and_refuses_when_two_share_a_name
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.A_replaces_is_not_applied_when_the_new_fact_is_retracted
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.Recording_a_failure_never_overwrites_a_done_episode
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExtractedIngestTests.The_extractor_is_called_outside_any_database_transaction
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.WritePathTests.Entity_valued_objects_supersede_and_corroborate_by_entity
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.WritePathTests.A_retracted_fact_is_not_extracted_again
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.WritePathTests.A_third_party_episode_cannot_retire_an_owner_fact
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.WritePathTests.A_fact_with_another_source_survives_a_changed_source
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.WritePathTests.A_changed_source_retires_facts_it_no_longer_supports
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.WritePathTests.A_third_party_fact_the_owner_confirms_gains_owner_trust
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.WritePathTests.A_changed_source_leaves_a_gap_it_does_not_invent_a_value
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.WritePathTests.An_owner_episode_retires_a_third_party_fact
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.WritePathTests.Restoring_a_retracted_fact_makes_it_live_and_extractable_again
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.WritePathTests.A_closed_range_on_a_one_predicate_keeps_the_tail_of_the_containing_row
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.WritePathTests.Two_live_copies_of_one_piece_cannot_exist_by_raw_sql
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.WritePathTests.The_write_path_adds_no_per_fact_round_trip
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.As_of_valid_time_returns_the_value_the_oracle_expects
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.Recorded_at_comes_from_the_ingest_clock_not_the_episode_time
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.A_new_value_retires_the_old_row_and_keeps_both
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.Ingesting_the_same_episode_twice_changes_nothing
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.As_of_known_time_does_not_see_later_learning
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.The_schema_applies_through_Switchknife_Migrations_beside_a_consumer_schema
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.A_value_beginning_where_another_begins_replaces_it
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.Two_live_values_for_one_slot_cannot_overlap_even_by_raw_sql
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.One_namespace_never_sees_anothers_facts
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.Ingest_inside_a_caller_transaction_rolls_back_with_it
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.An_external_ref_never_gets_a_second_entity
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.Concurrent_writers_on_one_slot_leave_no_overlap_and_the_oracle_agrees
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.Bad_input_is_refused_before_anything_is_written
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.A_fact_learned_late_ends_where_the_next_known_value_begins
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.Omitting_known_at_means_now_and_a_future_known_at_is_refused
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.Instants_finer_than_a_microsecond_do_not_split_one_assertion
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.The_same_value_again_only_adds_a_source
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.A_many_fact_with_an_end_is_a_closed_range
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.FactsStoreTests.Many_and_event_predicates_are_never_superseded_by_rule
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExplainTests.Explain_reports_the_retraction_state
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExplainTests.Explain_names_the_episode_locator_and_quote_of_each_source
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExplainTests.Explain_costs_one_round_trip
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExplainTests.Explain_of_a_fact_retired_by_a_changed_source_still_shows_the_old_version_as_a_source
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.SearchTests.Search_rejects_bad_input
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExplainTests.Explain_of_a_source_less_fact_inserted_by_raw_sql_returns_an_empty_source_list
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.SearchTests.Facts_recorded_after_known_at_never_appear_in_search
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExplainTests.Explain_of_an_outranked_fact_says_so_and_has_no_successor
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.SearchTests.Text_only_and_vector_only_searches_work
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExplainTests.Explain_lists_every_corroborating_source_and_the_highest_trust
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.SearchTests.Equal_scores_go_to_the_fact_with_the_better_rank_before_the_id
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExplainTests.Every_extracted_fact_explains_its_sources
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.SearchTests.Search_never_returns_retired_or_other_namespace_facts
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExplainTests.Explain_returns_null_for_an_unknown_foreign_or_purged_fact
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.SearchTests.Equal_scores_with_equal_best_ranks_order_by_id
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.SearchTests.Facts_not_valid_at_the_instant_never_appear_in_search
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExplainTests.Successor_chains_stop_at_a_cycle_and_at_32_steps
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.SearchTests.Fusion_ranks_a_fact_found_by_both_above_a_fact_found_by_one
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.ExplainTests.Explain_of_a_superseded_fact_names_the_successor_and_the_chain
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.SearchTests.A_fact_ranked_beyond_limit_in_both_lists_rises_into_the_results
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.SearchTests.Score_is_the_sum_of_reciprocal_ranks_and_ties_break_by_better_rank_then_id
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.NearestTests.Embeddings_are_replaced_by_fact_and_model_and_refused_for_unknown_facts_or_other_lengths
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.NearestTests.Nearest_with_oversample_covering_all_rows_equals_brute_force_cosine_order
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.NearestTests.Nearest_widens_the_candidate_set_when_filters_remove_most_of_it
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+skipped Switchknife.Facts.Tests.NearestTests.Nearest_never_returns_a_fact_recorded_after_known_at_and_still_returns_one_retired_after_it
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64)
+/work/tests/Switchknife.Hosting.Tests/bin/Release/net10.0/Switchknife.Hosting.Tests.dll (net10.0|x64) passed (787ms)
+/work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64) passed (1s 090ms)
+Running tests from /work/tests/Switchknife.Migrations.Tests/bin/Release/net10.0/Switchknife.Migrations.Tests.dll (net10.0|x64)
+Running tests from /work/tests/Switchknife.Pace.Tests/bin/Release/net10.0/Switchknife.Pace.Tests.dll (net10.0|x64)
+skipped Switchknife.Migrations.Tests.PostgresTests.A_missing_database_is_created_and_each_script_runs_once_in_name_order
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Migrations.Tests/bin/Release/net10.0/Switchknife.Migrations.Tests.dll (net10.0|x64)
+skipped Switchknife.Migrations.Tests.PostgresTests.A_script_refused_inside_a_transaction_runs_without_one
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Migrations.Tests/bin/Release/net10.0/Switchknife.Migrations.Tests.dll (net10.0|x64)
+skipped Switchknife.Migrations.Tests.PostgresTests.A_failing_script_throws_naming_it_rolls_back_and_runs_again_once_fixed
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Migrations.Tests/bin/Release/net10.0/Switchknife.Migrations.Tests.dll (net10.0|x64)
+/work/tests/Switchknife.Migrations.Tests/bin/Release/net10.0/Switchknife.Migrations.Tests.dll (net10.0|x64) passed (627ms)
+Running tests from /work/tests/Switchknife.SafeFetch.Tests/bin/Release/net10.0/Switchknife.SafeFetch.Tests.dll (net10.0|x64)
+/work/tests/Switchknife.Pace.Tests/bin/Release/net10.0/Switchknife.Pace.Tests.dll (net10.0|x64) passed (1s 564ms)
+Running tests from /work/tests/Switchknife.Testing.Http.Tests/bin/Release/net10.0/Switchknife.Testing.Http.Tests.dll (net10.0|x64)
+/work/tests/Switchknife.SafeFetch.Tests/bin/Release/net10.0/Switchknife.SafeFetch.Tests.dll (net10.0|x64) passed (1s 380ms)
+/work/tests/Switchknife.Testing.Http.Tests/bin/Release/net10.0/Switchknife.Testing.Http.Tests.dll (net10.0|x64) passed (542ms)
+Running tests from /work/tests/Switchknife.Claims.Tests/bin/Release/net10.0/Switchknife.Claims.Tests.dll (net10.0|x64)
+Running tests from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+/work/tests/Switchknife.Claims.Tests/bin/Release/net10.0/Switchknife.Claims.Tests.dll (net10.0|x64) passed (737ms)
+skipped Switchknife.Journal.Postgres.Tests.PgStepStoreTests.A_step_written_in_the_callers_transaction_rolls_back_with_it_and_leaves_no_record
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgEventStreamTests.Two_stores_appending_the_same_key_at_once_store_one_event
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgStepStoreTests.A_step_written_in_the_callers_transaction_commits_once_and_does_not_rerun
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgStepStoreTests.Two_concurrent_runs_of_the_same_key_across_stores_run_the_step_once
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgEventStreamTests.A_tag_filter_returns_only_that_tags_events
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgStepStoreTests.Resetting_a_completed_step_makes_the_next_run_a_first_attempt
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgStepStoreTests.A_failed_step_records_the_error_and_the_next_run_is_a_fresh_attempt
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgEventStreamTests.The_schema_script_runs_twice_without_error_and_carries_the_event_stream_columns
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgStepStoreTests.A_completed_step_returns_its_recorded_result_without_running_again
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgEventStreamTests.A_failing_batch_stores_nothing_and_raises_no_signal
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgStepStoreTests.Events_read_back_in_order_per_flow_from_any_point
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgStepStoreTests.Forgetting_a_flow_removes_its_steps_and_events_and_nothing_else
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgEventStreamTests.ReadAllEventsAsync_returns_the_events_of_every_flow_in_seq_order
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgStepStoreTests.A_lease_left_by_a_crashed_attempt_expires_and_the_next_claim_is_resumed
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgEventStreamTests.A_batch_of_500_is_one_transaction_and_one_signal
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgStepStoreTests.Unfinished_lists_only_steps_left_started
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgEventStreamTests.The_tag_read_uses_the_tag_index
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgEventStreamTests.A_repeated_batch_stores_nothing_and_raises_no_signal
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgEventStreamTests.A_reader_awaiting_the_signal_wakes_after_the_commit_never_before
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Journal.Postgres.Tests.PgEventStreamTests.A_repeat_append_with_the_same_flow_and_key_returns_the_first_seq_and_stores_nothing
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64)
+/work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64) passed (700ms)
+Running tests from /work/tests/Switchknife.Journal.Tests/bin/Release/net10.0/Switchknife.Journal.Tests.dll (net10.0|x64)
+Running tests from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.KnowledgeToolsTests.Board_tool_returns_the_board_payload
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.IdeaStoreTests.I10_one_live_status_and_earlier_ones_superseded
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.IdeaStoreTests.I8_capture_writes_title_and_seed_status
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.KnowledgeToolsTests.I20_promote_returns_validator_codes_and_writes_nothing_on_refusal
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.IdeaStoreTests.I11_revive_goes_through_the_gate_and_retires_the_kill_reason
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.IdeaStoreTests.I9_incomplete_promotion_writes_nothing_and_returns_codes
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.GitHubIssueTests.I13_the_same_issue_twice_writes_once
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.GitHubIssueTests.I14_an_edit_retires_the_old_title_and_keeps_what_the_owner_set
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.GitHubIssueTests.I14_an_edited_seed_stays_a_seed
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.KnowledgeApprovalsTests.I22_start_test_is_written_once_and_a_retry_is_ok
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.KnowledgeApprovalsTests.I23_passed_with_uah_writes_an_earned_event_with_amount_date_and_source
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.KnowledgeToolsTests.I20_capture_checks_only_text_and_source
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.IdeaBoardTests.I19_absent_measures_are_null_with_a_reason
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.IdeaBoardTests.I17_estimated_and_earned_stay_apart
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.IdeaBoardTests.I16_chain_returns_links_days_and_earned
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.IdeaBoardTests.I18_funnel_median_days_and_stuck_tests_match_the_fixture
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.KnowledgeSearchTests.A_question_with_no_searchable_word_and_no_vector_returns_nothing
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.KnowledgeSearchTests.Namespaces_are_searched_apart_and_fused_by_rank
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.KnowledgeSearchTests.Facts_of_one_entity_are_grouped_and_show_at_most_two
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.KnowledgeSearchTests.A_sentence_question_finds_an_entity_where_the_AND_search_finds_nothing
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.KnowledgeSearchTests.The_limit_is_one_to_one_hundred(limit: 0)
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+skipped Switchknife.Knowledge.Tests.KnowledgeSearchTests.The_limit_is_one_to_one_hundred(limit: 101)
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64)
+/work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64) passed (904ms)
+Running tests from /work/tests/Switchknife.McpGuard.Tests/bin/Release/net10.0/Switchknife.McpGuard.Tests.dll (net10.0|x64)
+/work/tests/Switchknife.Journal.Tests/bin/Release/net10.0/Switchknife.Journal.Tests.dll (net10.0|x64) passed (1s 447ms)
+Running tests from /work/tests/Switchknife.Testing.Postgres.Tests/bin/Release/net10.0/Switchknife.Testing.Postgres.Tests.dll (net10.0|x64)
+/work/tests/Switchknife.McpGuard.Tests/bin/Release/net10.0/Switchknife.McpGuard.Tests.dll (net10.0|x64) passed (867ms)
+skipped Switchknife.Testing.Postgres.Tests.PostgresDatabaseTests.A_created_database_is_empty_and_its_own_and_drops_with_connections_open
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Testing.Postgres.Tests/bin/Release/net10.0/Switchknife.Testing.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Testing.Postgres.Tests.PostgresDatabaseTests.Reset_empties_every_table_of_every_schema_restarts_identities_and_keeps_the_journal
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Testing.Postgres.Tests/bin/Release/net10.0/Switchknife.Testing.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Testing.Postgres.Tests.PostgresDatabaseTests.A_named_database_need_not_exist
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Testing.Postgres.Tests/bin/Release/net10.0/Switchknife.Testing.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Testing.Postgres.Tests.PostgresDatabaseTests.The_data_source_reaches_the_server_database
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Testing.Postgres.Tests/bin/Release/net10.0/Switchknife.Testing.Postgres.Tests.dll (net10.0|x64)
+skipped Switchknife.Testing.Postgres.Tests.PostgresDatabaseTests.Migrate_runs_once_with_the_server_connection_string
+  Docker is not available: Docker is either not running or misconfigured. Please ensure that Docker is running and that the endpoint is properly configured.
+You can customize your configuration using either the environment variables or the ~/.testcontainers.properties file.
+For more information, visit: https://dotnet.testcontainers.org/custom_configuration/.
+  Details: 
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+    Failed to connect to Docker endpoint at 'unix:///var/run/docker.sock'.
+  from /work/tests/Switchknife.Testing.Postgres.Tests/bin/Release/net10.0/Switchknife.Testing.Postgres.Tests.dll (net10.0|x64)
+/work/tests/Switchknife.Testing.Postgres.Tests/bin/Release/net10.0/Switchknife.Testing.Postgres.Tests.dll (net10.0|x64) passed (605ms)
+
+Test run summary: Passed!
+  /work/tests/Switchknife.Testing.Postgres.Tests/bin/Release/net10.0/Switchknife.Testing.Postgres.Tests.dll (net10.0|x64) passed (605ms)
+  /work/tests/Switchknife.Claims.Tests/bin/Release/net10.0/Switchknife.Claims.Tests.dll (net10.0|x64) passed (737ms)
+  /work/tests/Switchknife.Facts.Bench.Tests/bin/Release/net10.0/Switchknife.Facts.Bench.Tests.dll (net10.0|x64) passed (816ms)
+  /work/tests/Switchknife.Knowledge.Tests/bin/Release/net10.0/Switchknife.Knowledge.Tests.dll (net10.0|x64) passed (904ms)
+  /work/tests/Switchknife.Journal.Tests/bin/Release/net10.0/Switchknife.Journal.Tests.dll (net10.0|x64) passed (1s 447ms)
+  /work/tests/Switchknife.Journal.Postgres.Tests/bin/Release/net10.0/Switchknife.Journal.Postgres.Tests.dll (net10.0|x64) passed (700ms)
+  /work/tests/Switchknife.Hosting.Tests/bin/Release/net10.0/Switchknife.Hosting.Tests.dll (net10.0|x64) passed (787ms)
+  /work/tests/Switchknife.Facts.Tests/bin/Release/net10.0/Switchknife.Facts.Tests.dll (net10.0|x64) passed (1s 090ms)
+  /work/tests/Switchknife.SafeFetch.Tests/bin/Release/net10.0/Switchknife.SafeFetch.Tests.dll (net10.0|x64) passed (1s 380ms)
+  /work/tests/Switchknife.Pace.Tests/bin/Release/net10.0/Switchknife.Pace.Tests.dll (net10.0|x64) passed (1s 564ms)
+  /work/tests/Switchknife.McpGuard.Tests/bin/Release/net10.0/Switchknife.McpGuard.Tests.dll (net10.0|x64) passed (867ms)
+  /work/tests/Switchknife.Migrations.Tests/bin/Release/net10.0/Switchknife.Migrations.Tests.dll (net10.0|x64) passed (627ms)
+  /work/tests/Switchknife.Facts.Testing.Tests/bin/Release/net10.0/Switchknife.Facts.Testing.Tests.dll (net10.0|x64) passed (524ms)
+  /work/tests/Switchknife.Testing.Http.Tests/bin/Release/net10.0/Switchknife.Testing.Http.Tests.dll (net10.0|x64) passed (542ms)
+
+  total: 607
+  failed: 0
+  succeeded: 465
+  skipped: 142
+  duration: 8s 187ms
+agent-checks: 1 warning (not blocking):
+  .tmp/out.txt:494  typo  'anothers' -> 'another'
+agent-checks: ok (348 files, 1228 added lines)
