@@ -55,6 +55,50 @@ public static class McpGuardExtensions
         return Wrap(builder, (context, next) => HasOrigin(context) ? Refuse(context, StatusCodes.Status403Forbidden) : next(context));
     }
 
+    /// <summary>
+    /// Refuses a request whose <c>Host</c> header is not in <paramref name="hosts"/> with 403. A page that reaches the
+    /// server through DNS rebinding still sends its own host name, so this closes rebinding requests that carry no
+    /// <c>Origin</c>. An entry without a port (<c>localhost</c>, <c>127.0.0.1</c>, <c>[::1]</c>) admits that host on any
+    /// port; one with a port (<c>localhost:5000</c>) admits that port only. Names compare ignoring case. Fails closed: no
+    /// entries, or a request without a <c>Host</c> header, refuses the request.
+    /// </summary>
+    /// <param name="builder">The endpoint or route group to guard.</param>
+    /// <param name="hosts">The host names, with an optional port, that callers may address the server by.</param>
+    /// <returns>The same builder, for chaining.</returns>
+    public static TBuilder AllowHosts<TBuilder>(this TBuilder builder, params string[] hosts)
+        where TBuilder : IEndpointConventionBuilder
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(hosts);
+        var allowed = hosts.Where(host => !string.IsNullOrWhiteSpace(host)).Select(ParseHost).ToArray();
+        return Wrap(builder, (context, next) => IsAllowed(context.Request.Host, allowed) ? next(context) : Refuse(context, StatusCodes.Status403Forbidden));
+    }
+
+    private static HostString ParseHost(string entry)
+    {
+        var trimmed = entry.Trim();
+        // A bare IPv6 address has more than one colon and no brackets; HostString needs the brackets to find the port.
+        return new HostString(!trimmed.StartsWith('[') && trimmed.Count(c => c == ':') > 1 ? $"[{trimmed}]" : trimmed);
+    }
+
+    private static bool IsAllowed(HostString host, HostString[] allowed)
+    {
+        if (!host.HasValue || string.IsNullOrEmpty(host.Host))
+        {
+            return false;
+        }
+
+        foreach (var entry in allowed)
+        {
+            if (string.Equals(entry.Host, host.Host, StringComparison.OrdinalIgnoreCase) && (entry.Port is null || entry.Port == host.Port))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static TBuilder Wrap<TBuilder>(TBuilder builder, Func<HttpContext, RequestDelegate, Task> guard)
         where TBuilder : IEndpointConventionBuilder
     {

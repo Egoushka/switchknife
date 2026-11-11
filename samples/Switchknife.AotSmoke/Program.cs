@@ -393,13 +393,15 @@ static async Task<string?> McpGuardAsync()
     builder.Logging.ClearProviders();
     await using var app = builder.Build();
     RequestDelegate reached = context => context.Response.WriteAsync("reached");
-    app.MapPost("/mcp", reached).RequireMcpGuard("smoke-token");
+    app.MapPost("/mcp", reached).RequireMcpGuard("smoke-token").AllowHosts("127.0.0.1");
     await app.StartAsync();
 
     using var http = new HttpClient { BaseAddress = new Uri(app.Urls.First()) };
-    async Task<HttpStatusCode> PostAsync(string? token, string? origin)
+    async Task<HttpStatusCode> PostAsync(string? token, string? origin, string? host = null)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, "/mcp");
+        if (host is not null)
+            request.Headers.Host = host;
         if (token is not null)
             request.Headers.Add("Authorization", $"Bearer {token}");
         if (origin is not null)
@@ -409,10 +411,11 @@ static async Task<string?> McpGuardAsync()
     }
 
     var (ok, wrong, browser) = (await PostAsync("smoke-token", null), await PostAsync("nope", null), await PostAsync("smoke-token", "https://evil.example"));
+    var rebound = await PostAsync("smoke-token", null, "evil.example");
     await app.StopAsync();
-    return (ok, wrong, browser) == (HttpStatusCode.OK, HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden)
+    return (ok, wrong, browser, rebound) == (HttpStatusCode.OK, HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden, HttpStatusCode.Forbidden)
         ? null
-        : $"token {ok}, wrong token {wrong}, origin {browser}";
+        : $"token {ok}, wrong token {wrong}, origin {browser}, host {rebound}";
 }
 
 static async Task<string?> MigrationsAsync()

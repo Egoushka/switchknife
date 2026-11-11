@@ -31,6 +31,8 @@ public sealed class McpGuardExtensionsTests : IAsyncLifetime
         _app.MapPost("/unset", reached).RequireMcpGuard(null);
         _app.MapPost("/empty", reached).RequireMcpGuard("");
         _app.MapPost("/origin-only", reached).RejectOrigin();
+        _app.MapGet("/host", reached).AllowHosts("LocalHost", "127.0.0.1:5000", "::1");
+        _app.MapGet("/no-hosts", reached).AllowHosts();
         // Route handlers get their delegate after conventions run; the guard must still wrap it.
         var handlers = _app.MapGroup("/handlers").RequireMcpGuard(Token);
         handlers.MapGet("/{id}", (string id) => $"reached {id}");
@@ -45,9 +47,14 @@ public sealed class McpGuardExtensionsTests : IAsyncLifetime
         await _app.DisposeAsync();
     }
 
-    private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path, string? authorization, string? origin = null)
+    private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path, string? authorization, string? origin = null, string? host = null)
     {
         using var request = new HttpRequestMessage(method, path);
+        if (host is not null)
+        {
+            request.Headers.Host = host;
+        }
+
         if (authorization is not null)
         {
             request.Headers.TryAddWithoutValidation("Authorization", authorization);
@@ -130,6 +137,40 @@ public sealed class McpGuardExtensionsTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, browser.StatusCode);
     }
 
+    [Theory]
+    [InlineData("localhost")]
+    [InlineData("localhost:8080")]
+    [InlineData("LOCALHOST")]
+    [InlineData("127.0.0.1:5000")]
+    [InlineData("[::1]:3001")]
+    public async Task An_allowed_host_reaches_the_endpoint(string host)
+    {
+        var response = await SendAsync(HttpMethod.Get, "/host", null, host: host);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("evil.example")]
+    [InlineData("localhost.evil.example")]
+    [InlineData("127.0.0.1")]
+    [InlineData("127.0.0.1:5001")]
+    public async Task Any_other_host_is_403_without_an_origin(string host)
+    {
+        var response = await SendAsync(HttpMethod.Get, "/host", null, host: host);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(0, response.Content.Headers.ContentLength);
+    }
+
+    [Fact]
+    public async Task Allow_hosts_without_entries_refuses_every_request()
+    {
+        var response = await SendAsync(HttpMethod.Get, "/no-hosts", null, host: "localhost");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
     [Fact]
     public async Task A_route_handler_group_is_guarded_and_still_binds_its_parameters()
     {
@@ -145,5 +186,6 @@ public sealed class McpGuardExtensionsTests : IAsyncLifetime
     {
         Assert.Throws<ArgumentNullException>(() => McpGuardExtensions.RequireMcpGuard<IEndpointConventionBuilder>(null!, Token));
         Assert.Throws<ArgumentNullException>(() => McpGuardExtensions.RejectOrigin<IEndpointConventionBuilder>(null!));
+        Assert.Throws<ArgumentNullException>(() => McpGuardExtensions.AllowHosts<IEndpointConventionBuilder>(null!, "localhost"));
     }
 }
