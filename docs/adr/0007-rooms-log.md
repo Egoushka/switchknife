@@ -1,6 +1,6 @@
 # 7. Rooms: a hash-chained event log in the Journal's event table, with memories as projections
 
-- Status: proposed
+- Status: proposed (Superseded in part by Journal event stream (chargehand ADR 0090))
 - Date: 2026-11-01
 
 ## Conclusion
