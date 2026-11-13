@@ -20,6 +20,17 @@ public sealed class MigrationOptions
     /// warning and error lines keep their own level.
     /// </summary>
     public LogLevel DbUpInformationLevel { get; init; } = LogLevel.Information;
+
+    /// <summary>
+    /// The schema <see cref="JournalTable"/> lives in. Default <c>public</c>, which always exists. A schema of its own
+    /// (so an app and a library in one database do not share a journal) is created with <c>CREATE SCHEMA IF NOT EXISTS</c>
+    /// before any script runs, so it does not need to exist yet, even when a script of this same run would otherwise
+    /// create it first.
+    /// </summary>
+    public string JournalSchema { get; init; } = "public";
+
+    /// <summary>The name of DbUp's journal table, in <see cref="JournalSchema"/>. Default <c>schemaversions</c>, DbUp's own default.</summary>
+    public string JournalTable { get; init; } = "schemaversions";
 }
 
 /// <summary>The transaction a script runs in.</summary>
