@@ -7,7 +7,8 @@ namespace Switchknife.Migrations;
 
 /// <summary>
 /// Applies the SQL scripts embedded in an assembly to a PostgreSQL database with DbUp: in name order, each once,
-/// journalled in the database's <c>schemaversions</c> table. Creates the database first when it does not exist.
+/// journalled in the database's <c>public.schemaversions</c> table by default (<see cref="MigrationOptions.JournalSchema"/>,
+/// <see cref="MigrationOptions.JournalTable"/> configure another). Creates the database first when it does not exist.
 /// </summary>
 public sealed partial class DatabaseMigrator
 {
@@ -34,6 +35,14 @@ public sealed partial class DatabaseMigrator
         {
             throw new ArgumentOutOfRangeException(nameof(options), _options.Transaction, "Unknown transaction mode.");
         }
+        if (string.IsNullOrWhiteSpace(_options.JournalSchema))
+        {
+            throw new ArgumentException("Journal schema must not be blank.", nameof(options));
+        }
+        if (string.IsNullOrWhiteSpace(_options.JournalTable))
+        {
+            throw new ArgumentException("Journal table must not be blank.", nameof(options));
+        }
     }
 
     /// <summary>
@@ -51,6 +60,7 @@ public sealed partial class DatabaseMigrator
 
         var builder = DeployChanges.To
             .PostgresqlDatabase(_connectionString)
+            .JournalToPostgresqlTable(_options.JournalSchema, _options.JournalTable)
             .WithScriptsEmbeddedInAssembly(_scripts, _options.ScriptFilter);
         builder = _options.Transaction == MigrationTransaction.None ? builder.WithoutTransaction() : builder.WithTransactionPerScript();
 

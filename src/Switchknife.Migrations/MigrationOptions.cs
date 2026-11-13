@@ -15,6 +15,19 @@ public sealed class MigrationOptions
     public MigrationTransaction Transaction { get; init; } = MigrationTransaction.PerScript;
 
     /// <summary>
+    /// The schema the journal table lives in. Default <c>"public"</c>, DbUp's own default. Set this together with
+    /// <see cref="JournalTable"/> when an app and another package (for example Facts) share one database and must
+    /// not journal their migrations in the same table.
+    /// </summary>
+    public string JournalSchema { get; init; } = "public";
+
+    /// <summary>
+    /// The journal table's name. Default <c>"schemaversions"</c>, DbUp's own default. Unquoted, so PostgreSQL
+    /// lower-cases it unless the name is itself already lower case.
+    /// </summary>
+    public string JournalTable { get; init; } = "schemaversions";
+
+    /// <summary>
     /// The level DbUp's information lines (each script it runs, the journal checks) are written at. Default
     /// <see cref="LogLevel.Information"/>; <see cref="LogLevel.Debug"/> keeps a routine start quiet. DbUp's trace, debug,
     /// warning and error lines keep their own level.

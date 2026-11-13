@@ -17,6 +17,8 @@ public sealed class DatabaseMigratorTests
         Assert.False(options.ScriptFilter("App.migrations.0001_init.sql"));
         Assert.Equal(MigrationTransaction.PerScript, options.Transaction);
         Assert.Equal(LogLevel.Information, options.DbUpInformationLevel);
+        Assert.Equal("public", options.JournalSchema);
+        Assert.Equal("schemaversions", options.JournalTable);
     }
 
     [Theory]
@@ -41,6 +43,21 @@ public sealed class DatabaseMigratorTests
         var options = new MigrationOptions { Transaction = (MigrationTransaction)7 };
 
         var error = Assert.Throws<ArgumentOutOfRangeException>(
+            () => new DatabaseMigrator(ConnectionString, typeof(DatabaseMigratorTests).Assembly, NullLogger.Instance, options));
+
+        Assert.Equal("options", error.ParamName);
+    }
+
+    [Theory]
+    [InlineData("", "schemaversions")]
+    [InlineData("  ", "schemaversions")]
+    [InlineData("public", "")]
+    [InlineData("public", "  ")]
+    public void A_blank_journal_schema_or_table_is_refused_before_any_connection(string schema, string table)
+    {
+        var options = new MigrationOptions { JournalSchema = schema, JournalTable = table };
+
+        var error = Assert.Throws<ArgumentException>(
             () => new DatabaseMigrator(ConnectionString, typeof(DatabaseMigratorTests).Assembly, NullLogger.Instance, options));
 
         Assert.Equal("options", error.ParamName);

@@ -429,19 +429,24 @@ static async Task<string?> MigrationsAsync()
     try
     {
         // A missing database is created, both scripts run in name order, and a second run finds nothing to do.
+        // A third run with a configured journal schema and table re-applies the same scripts into its own journal.
         var log = new LineLogger();
         var migrator = new DatabaseMigrator(database, typeof(Made).Assembly, log);
         var first = migrator.Run();
         var second = migrator.Run();
+        var configuredJournal = new DatabaseMigrator(database, typeof(Made).Assembly, log, new MigrationOptions { JournalSchema = "app", JournalTable = "facts_journal" });
+        var third = configuredJournal.Run();
         await using var connection = new NpgsqlConnection(database);
         await connection.OpenAsync();
         await using var read = new NpgsqlCommand("select name from smoke_widgets where id = 1", connection);
         var widget = await read.ExecuteScalarAsync() as string;
+        await using var journaled = new NpgsqlCommand("select count(*) from app.facts_journal", connection);
+        var journalRows = (long)(await journaled.ExecuteScalarAsync() ?? 0L);
         var names = string.Join(",", first.Select(n => n[(n.IndexOf(".Migrations.", StringComparison.Ordinal) + 12)..]));
         var logged = log.Lines.Any(l => l.Contains("0002_first_widget.sql", StringComparison.Ordinal));
-        return (names, second.Count, widget, logged) == ("0001_widgets.sql,0002_first_widget.sql", 0, "first", true)
+        return (names, second.Count, widget, logged, third.Count, journalRows) == ("0001_widgets.sql,0002_first_widget.sql", 0, "first", true, 2, 2L)
             ? null
-            : $"first run {names}, second run {second.Count} script(s), widget {widget}, script logged {logged}";
+            : $"first run {names}, second run {second.Count} script(s), widget {widget}, script logged {logged}, configured-journal run {third.Count} script(s), journal rows {journalRows}";
     }
     finally
     {
