@@ -334,13 +334,15 @@ public sealed class FactsStoreTests(PostgresFixture postgres) : IClassFixture<Po
         var database = postgres.ConnectionStringFor(await postgres.NewDatabaseNameAsync());
         var logger = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
         var consumer = new Migrations.DatabaseMigrator(database, typeof(PostgresFixture).Assembly, logger);
-        var library = new Migrations.DatabaseMigrator(database, FactsSchema.Scripts, logger);
+        var library = new Migrations.DatabaseMigrator(
+            database, FactsSchema.Scripts, logger, new Migrations.MigrationOptions { JournalSchema = "facts", JournalTable = "schemaversions" });
 
         var first = (consumer.Run().Count, library.Run().Count);
         var second = (consumer.Run().Count, library.Run().Count);
 
         await using var data = NpgsqlDataSource.Create(database);
-        await using var command = data.CreateCommand("select to_regclass('consumer_notes') is not null and to_regclass('facts.facts') is not null");
+        await using var command = data.CreateCommand(
+            "select to_regclass('consumer_notes') is not null and to_regclass('facts.facts') is not null and to_regclass('facts.schemaversions') is not null");
         Assert.Equal((1, 1), first);
         Assert.Equal((0, 0), second);
         Assert.True((bool)(await command.ExecuteScalarAsync())!);
