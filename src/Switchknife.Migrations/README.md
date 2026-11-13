@@ -27,7 +27,7 @@ Options (`MigrationOptions`, all optional):
 | `ScriptFilter` | name contains `.Migrations.` | Pick another folder, or migrate only up to a script (a test that builds an older schema). |
 | `Transaction` | `PerScript` | `None` for statements PostgreSQL refuses inside a transaction: `create index concurrently`, TimescaleDB continuous aggregates. A script then fails part-way with its earlier statements applied, so write each one to run again safely (`if not exists`, `create or replace`). |
 | `DbUpInformationLevel` | `Information` | The level of DbUp's information lines (each script run, journal checks). `Debug` keeps a routine start to the one summary line. |
-| `JournalSchema` | `public` | Another schema for the journal table. |
+| `JournalSchema` | `public` | Another schema for the journal table. DbUp creates it (`create schema if not exists`) when it does not exist yet. |
 | `JournalTable` | `schemaversions` | Another journal table name, so an app and another package (for example Facts) that share one database do not journal their migrations in the same table. |
 
 Logging: DbUp's trace, debug, information, warning and error lines go to the `ILogger` you pass at the same level (information at `DbUpInformationLevel`). Each line is formatted by DbUp's composite format with the invariant culture and logged under the constant template `{Message}`, so it reads exactly as DbUp wrote it.
