@@ -4,8 +4,8 @@ namespace Switchknife.Facts;
 
 public sealed partial class FactsStore
 {
-        private const string IntervalColumns =
-        "select id, subject_id, predicate, object_value, text, lower(valid), upper(valid), recorded_at, object_id from facts.facts";
+    private const string IntervalColumns =
+    "select id, subject_id, predicate, object_value, text, lower(valid), upper(valid), recorded_at, object_id from facts.facts";
 
     private const string W0 = "coalesce($3, '-infinity'::timestamptz)";
 
@@ -15,7 +15,7 @@ public sealed partial class FactsStore
 
     private const string EndExpr = "coalesce(upper(valid), 'infinity'::timestamptz)";
 
-    private const string FactWindowSql = "select lower(valid), upper(valid) from facts.facts where namespace = $1 and id = $2";
+    private const string FactWindowSql = "select lower(valid), upper(valid), upper_inc(valid) from facts.facts where namespace = $1 and id = $2";
 
     /// <summary>
     /// The facts whose validity window stands in <paramref name="relation"/> to <c>[from, to)</c>, as believed at
@@ -63,6 +63,11 @@ public sealed partial class FactsStore
 
             from = reader.IsDBNull(0) ? null : reader.GetFieldValue<DateTimeOffset>(0);
             to = reader.IsDBNull(1) ? null : reader.GetFieldValue<DateTimeOffset>(1);
+            if (to is { } point && reader.GetBoolean(2))
+            {
+                // An event is the closed range [t, t]; as a window it is the smallest one that holds t.
+                to = point.AddTicks(10);
+            }
         }
 
         return await QueryWindowAsync(relation, from, to, subject: null, predicate: null, knownAt, excluded: factId, cancellationToken).ConfigureAwait(false);
@@ -127,7 +132,7 @@ public sealed partial class FactsStore
     // $3 is the window start and $4 its end; null reads as infinite.
     private static string Predicate(IntervalRelation relation) => relation switch
     {
-        IntervalRelation.Intersects => $"{StartExpr} < {W1} and {W0} < {EndExpr}",
+        IntervalRelation.Intersects => "valid && tstzrange($3, $4, '[)')",
         IntervalRelation.Before => $"{EndExpr} < {W0}",
         IntervalRelation.Meets => $"{EndExpr} = {W0}",
         IntervalRelation.Overlaps => $"{StartExpr} < {W0} and {W0} < {EndExpr} and {EndExpr} < {W1}",

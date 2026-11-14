@@ -6,7 +6,7 @@ public sealed partial class FactsStore
 {
     private const string SupersedeLoadSql =
         """
-        select f.id, f.subject_id, f.retired_at, f.retired_reason, f.superseded_by, p.cardinality
+        select f.id, f.subject_id, f.retired_at, f.retired_reason, f.superseded_by, p.cardinality, f.predicate
         from facts.facts f join facts.predicates p on p.namespace = f.namespace and p.name = f.predicate
         where f.namespace = $1 and f.id = any($2) order by f.id for update of f
         """;
@@ -21,11 +21,11 @@ public sealed partial class FactsStore
     /// <see cref="Cardinality.One"/> predicate supersedes by rule on write.
     /// </summary>
     /// <param name="oldFactId">The live row to close.</param>
-    /// <param name="newFactId">The live row that replaces it, about the same subject.</param>
+    /// <param name="newFactId">The live row that replaces it, about the same subject with the same predicate.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <returns><see langword="true"/> when the old row was closed; <see langword="false"/> when it was already superseded by <paramref name="newFactId"/>.</returns>
     /// <exception cref="ArgumentException">The two ids are the same.</exception>
-    /// <exception cref="InvalidOperationException">A row is unknown, retired (the old one by anything but this successor), about another subject, or an event.</exception>
+    /// <exception cref="InvalidOperationException">A row is unknown, retired (the old one by anything but this successor), about another subject or predicate, or not a <see cref="Cardinality.Many"/> fact.</exception>
     public async Task<bool> SupersedeAsync(Guid oldFactId, Guid newFactId, CancellationToken cancellationToken = default)
     {
         if (oldFactId == newFactId)
@@ -38,7 +38,7 @@ public sealed partial class FactsStore
         var transaction = await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
         await using var transactionScope = transaction.ConfigureAwait(false);
 
-        var rows = new Dictionary<Guid, (Guid Subject, bool Retired, Guid? SupersededBy, string Cardinality)>();
+        var rows = new Dictionary<Guid, (Guid Subject, bool Retired, Guid? SupersededBy, string Cardinality, string Predicate)>();
         var load = new NpgsqlCommand(SupersedeLoadSql, connection, transaction);
         await using (load.ConfigureAwait(false))
         {
@@ -48,7 +48,7 @@ public sealed partial class FactsStore
             await using var readerScope = reader.ConfigureAwait(false);
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
-                rows[reader.GetGuid(0)] = (reader.GetGuid(1), !reader.IsDBNull(2), reader.IsDBNull(4) ? null : reader.GetGuid(4), reader.GetString(5));
+                rows[reader.GetGuid(0)] = (reader.GetGuid(1), !reader.IsDBNull(2), reader.IsDBNull(4) ? null : reader.GetGuid(4), reader.GetString(5), reader.GetString(6));
             }
         }
 
@@ -82,9 +82,9 @@ public sealed partial class FactsStore
             throw new InvalidOperationException("A fact can only be superseded by a fact about the same subject.");
         }
 
-        if (old.Cardinality == ToText(Cardinality.Event) || replacement.Cardinality == ToText(Cardinality.Event))
+        if (old.Cardinality != ToText(Cardinality.Many) || old.Predicate != replacement.Predicate)
         {
-            throw new InvalidOperationException("An event is a point in time and is never superseded.");
+            throw new InvalidOperationException("Only a Many fact is superseded by hand, and by a fact of the same predicate: an event is never superseded and a One predicate supersedes by rule on write.");
         }
 
         var update = new NpgsqlCommand(SupersedeSql, connection, transaction);

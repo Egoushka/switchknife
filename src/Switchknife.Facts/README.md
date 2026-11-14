@@ -76,7 +76,7 @@ var then = await facts.AsOfAsync(anna, "likes", validAt: t, knownAt: t);        
 await facts.SupersedeAsync(oldFactId, newFactId);                                // close a Many fact by naming its replacement
 ```
 
-A superseded fact is never deleted: it keeps its row with `retired_reason = superseded`, the replacing fact's id (`SupersededBy`) and the time (`RetiredAt`). Search and `CurrentAsync` skip it; `knownAt` before the supersession still finds it, and `ExplainAsync` shows the chain. A `One` predicate supersedes by rule on write; `SupersedeAsync` is for `Many` facts and refuses events, retired rows and a successor about another subject.
+A superseded fact is never deleted: it keeps its row with `retired_reason = superseded`, the replacing fact's id (`SupersededBy`) and the time (`RetiredAt`). Search and `CurrentAsync` skip it; `knownAt` before the supersession still finds it, and `ExplainAsync` shows the chain. A `One` predicate supersedes by rule on write; `SupersedeAsync` is for `Many` facts and refuses events, `One` facts, retired rows and a successor about another subject or predicate.
 
 ## Intervals between validity windows
 

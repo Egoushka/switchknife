@@ -112,6 +112,25 @@ public sealed class IntervalTests(PostgresFixture postgres) : IClassFixture<Post
     }
 
     [Fact]
+    public async Task An_event_is_an_instant_for_intersects_and_works_as_a_window()
+    {
+        await using var db = await postgres.NewAsync();
+        await db.Store.DefinePredicateAsync("met", Cardinality.Event);
+        await db.Store.DefinePredicateAsync("holds", Cardinality.Many);
+        var subject = await db.Store.EnsureEntityAsync("thing", "Box");
+        db.At(1);
+        await db.Store.IngestAsync(
+            new NewEpisode("test", "a", "h1"),
+            [new NewFact(subject, "met", "Bob", Harness.Day(10)), new NewFact(subject, "holds", "wide", Harness.Day(5), Harness.Day(15))]);
+        db.At(2);
+
+        Assert.Equal(["Bob"], Names(await db.Store.QueryAsync(IntervalRelation.Intersects, Harness.Day(10), Harness.Day(20), predicate: "met")));
+        Assert.Empty(await db.Store.QueryAsync(IntervalRelation.Intersects, Harness.Day(11), Harness.Day(20), predicate: "met"));
+        var met = (await db.Store.QueryAsync(IntervalRelation.Intersects, null, null, predicate: "met")).Single().Id;
+        Assert.Equal(["wide"], Names(await db.Store.WhileAsync(met)));
+    }
+
+    [Fact]
     public async Task Belief_time_applies_and_a_future_instant_is_refused()
     {
         await using var db = await SeededAsync(postgres);

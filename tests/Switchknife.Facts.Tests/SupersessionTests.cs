@@ -88,7 +88,7 @@ public sealed class SupersessionTests(PostgresFixture postgres) : IClassFixture<
         var (db, anna, tea, coffee) = await WithTeaAndCoffeeAsync(postgres);
         await using var _ = db;
         var bob = await db.Store.EnsureEntityAsync("person", "Bob");
-        await db.Store.IngestAsync(new NewEpisode("test", "c", "h3"), [new NewFact(bob, "likes", "tea", Harness.Day(0)), new NewFact(anna, "met", "Bob", Harness.Day(2))]);
+        await db.Store.IngestAsync(new NewEpisode("test", "c", "h3"), [new NewFact(bob, "likes", "tea", Harness.Day(0)), new NewFact(anna, "met", "Bob", Harness.Day(2)), new NewFact(anna, "lives_in", "Kyiv", Harness.Day(0))]);
         var bobTea = await IdAsync(db, bob, "likes", "tea");
         var met = await IdAsync(db, anna, "met", "Bob");
         db.At(20);
@@ -100,6 +100,9 @@ public sealed class SupersessionTests(PostgresFixture postgres) : IClassFixture<
         await Assert.ThrowsAsync<InvalidOperationException>(() => db.Store.SupersedeAsync(coffee, tea));
         await Assert.ThrowsAsync<InvalidOperationException>(() => db.Store.SupersedeAsync(coffee, bobTea));
         await Assert.ThrowsAsync<InvalidOperationException>(() => db.Store.SupersedeAsync(met, coffee));
+        var kyiv = Assert.Single(await db.Store.HistoryAsync(anna, "lives_in")).Fact.Id;
+        await Assert.ThrowsAsync<InvalidOperationException>(() => db.Store.SupersedeAsync(kyiv, coffee));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => db.Store.SupersedeAsync(coffee, kyiv));
         await Assert.ThrowsAsync<InvalidOperationException>(() => db.Store.SupersedeAsync(coffee, Guid.NewGuid()));
     }
 
