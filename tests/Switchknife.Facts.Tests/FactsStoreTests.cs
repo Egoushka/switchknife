@@ -346,6 +346,24 @@ public sealed class FactsStoreTests(PostgresFixture postgres) : IClassFixture<Po
         Assert.True((bool)(await command.ExecuteScalarAsync())!);
     }
 
+    [Fact]
+    public async Task A_journal_configured_into_the_facts_schema_does_not_need_it_to_exist_first()
+    {
+        var database = postgres.ConnectionStringFor(await postgres.NewDatabaseNameAsync());
+        var logger = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+        var options = new Migrations.MigrationOptions { JournalSchema = "facts" };
+        var library = new Migrations.DatabaseMigrator(database, FactsSchema.Scripts, logger, options);
+
+        var first = library.Run();
+        var second = library.Run();
+
+        await using var data = NpgsqlDataSource.Create(database);
+        await using var command = data.CreateCommand("select to_regclass('facts.facts') is not null and to_regclass('facts.schemaversions') is not null");
+        Assert.Single(first);
+        Assert.Empty(second);
+        Assert.True((bool)(await command.ExecuteScalarAsync())!);
+    }
+
     private static async Task<object?> Scalar(Harness db, string sql)
     {
         await using var command = db.Data.CreateCommand(sql);

@@ -82,6 +82,27 @@ public sealed class PostgresTests(PostgresFixture postgres) : IClassFixture<Post
         Assert.Equal(1L, Scalar(database, "select count(*) from pg_indexes where indexname = 'widgets_id'"));
     }
 
+    [Fact]
+    public void A_configured_journal_table_is_used_instead_of_the_default()
+    {
+        var database = postgres.NewDatabase();
+        var options = new MigrationOptions
+        {
+            ScriptFilter = name => name.StartsWith(Good, StringComparison.Ordinal),
+            JournalSchema = "app",
+            JournalTable = "migration_log",
+        };
+        var migrator = new DatabaseMigrator(database, typeof(PostgresTests).Assembly, new CapturingLogger(), options);
+
+        var first = migrator.Run();
+        var second = migrator.Run();
+
+        Assert.Equal([Good + "0001_widgets.sql", Good + "0002_gadgets.sql"], first);
+        Assert.Empty(second);
+        Assert.Equal(2L, Scalar(database, "select count(*) from app.migration_log"));
+        Assert.Equal(0L, Scalar(database, "select count(*) from pg_tables where schemaname = 'public' and tablename = 'schemaversions'"));
+    }
+
     private static object? Scalar(string database, string sql)
     {
         using var connection = new NpgsqlConnection(database);

@@ -439,9 +439,36 @@ static async Task<string?> MigrationsAsync()
         var widget = await read.ExecuteScalarAsync() as string;
         var names = string.Join(",", first.Select(n => n[(n.IndexOf(".Migrations.", StringComparison.Ordinal) + 12)..]));
         var logged = log.Lines.Any(l => l.Contains("0002_first_widget.sql", StringComparison.Ordinal));
-        return (names, second.Count, widget, logged) == ("0001_widgets.sql,0002_first_widget.sql", 0, "first", true)
+        if ((names, second.Count, widget, logged) != ("0001_widgets.sql,0002_first_widget.sql", 0, "first", true))
+            return $"first run {names}, second run {second.Count} script(s), widget {widget}, script logged {logged}";
+
+        return await ConfiguredJournalAsync(server);
+    }
+    finally
+    {
+        await using var admin = new NpgsqlConnection(new NpgsqlConnectionStringBuilder(server) { Database = "postgres", Pooling = false }.ConnectionString);
+        await admin.OpenAsync();
+        await using var drop = new NpgsqlCommand($"drop database if exists {name} with (force)", admin);
+        await drop.ExecuteNonQueryAsync();
+    }
+}
+
+// The journal's schema is created before DbUp needs it, even though nothing has run yet to create it another way.
+static async Task<string?> ConfiguredJournalAsync(string server)
+{
+    var name = $"smoke_{Guid.NewGuid():N}";
+    var database = new NpgsqlConnectionStringBuilder(server) { Database = name, Pooling = false }.ConnectionString;
+    try
+    {
+        var migrator = new DatabaseMigrator(database, typeof(Made).Assembly, new LineLogger(), new MigrationOptions { JournalSchema = "app", JournalTable = "migration_log" });
+        var applied = migrator.Run();
+        await using var connection = new NpgsqlConnection(database);
+        await connection.OpenAsync();
+        await using var read = new NpgsqlCommand("select to_regclass('app.migration_log') is not null", connection);
+        var journaled = (bool)(await read.ExecuteScalarAsync())!;
+        return applied.Count == 2 && journaled
             ? null
-            : $"first run {names}, second run {second.Count} script(s), widget {widget}, script logged {logged}";
+            : $"configured journal: {applied.Count} script(s) applied, journal table present {journaled}";
     }
     finally
     {
