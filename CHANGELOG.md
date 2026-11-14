@@ -2,7 +2,7 @@
 
 Each package is versioned on its own by a tag `<package>/v<version>`. Entries are per package, newest first.
 
-## Unreleased: Switchknife.Facts
+## Switchknife.Facts 0.2.0 (2026-11-14)
 
 `SupersedeAsync` closes a fact by naming the fact that replaces it (the old row is kept, with the successor's id and the time), `CurrentAsync` answers "what do we believe now", and `QueryAsync` / `WhileAsync` query validity windows by Allen's interval relations. No schema change. Spec: [`docs/specs/2026-11-14-facts-supersession-intervals.md`](docs/specs/2026-11-14-facts-supersession-intervals.md).
 
