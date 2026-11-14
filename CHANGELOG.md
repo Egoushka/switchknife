@@ -2,6 +2,10 @@
 
 Each package is versioned on its own by a tag `<package>/v<version>`. Entries are per package, newest first.
 
+## Unreleased: Switchknife.Facts
+
+`SupersedeAsync` closes a fact by naming the fact that replaces it (the old row is kept, with the successor's id and the time), `CurrentAsync` answers "what do we believe now", and `QueryAsync` / `WhileAsync` query validity windows by Allen's interval relations. No schema change. Spec: [`docs/specs/2026-11-14-facts-supersession-intervals.md`](docs/specs/2026-11-14-facts-supersession-intervals.md).
+
 ## Unreleased: Switchknife.Knowledge
 
 `KnowledgeSearch`: per-namespace fan-out, idf-weighted OR full text, entity-level grouping and reciprocal-rank fusion across namespaces over Switchknife.Facts, plus the `Switchknife.Knowledge.Bench` harness (`recall`, `latency`). Stage K0 of [ADR 0005](docs/adr/0005-knowledge-kit.md); the stop line fires (0.234 recall@10 on the rebuild, 0.232 on the production corpus, against 0.27), see [`docs/benchmarks/knowledge-k0.md`](docs/benchmarks/knowledge-k0.md).

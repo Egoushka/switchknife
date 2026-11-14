@@ -68,6 +68,25 @@ var why = await facts.ExplainAsync(factId);   // FactExplanation, or null for an
 
 One round trip. The library never holds your text: hand `SourceKind`, `SourceRef` and `LocatorJson` to your own resolver to get a link or a snippet. Each source also carries the extractor and model that produced it, when it came from `ExtractAsync`.
 
+## What we believe now, and what we believed then
+
+```csharp
+var now = await facts.CurrentAsync(anna);                                       // valid now, believed now
+var then = await facts.AsOfAsync(anna, "likes", validAt: t, knownAt: t);          // what the store believed at t
+await facts.SupersedeAsync(oldFactId, newFactId);                                // close a Many fact by naming its replacement
+```
+
+A superseded fact is never deleted: it keeps its row with `retired_reason = superseded`, the replacing fact's id (`SupersededBy`) and the time (`RetiredAt`). Search and `CurrentAsync` skip it; `knownAt` before the supersession still finds it, and `ExplainAsync` shows the chain. A `One` predicate supersedes by rule on write; `SupersedeAsync` is for `Many` facts and refuses events, `One` facts, retired rows and a successor about another subject or predicate.
+
+## Intervals between validity windows
+
+```csharp
+var during = await facts.QueryAsync(IntervalRelation.During, from, to, subject: anna);   // what was true strictly inside [from, to)
+var alongside = await facts.WhileAsync(factId);                                          // what overlapped this fact, not itself
+```
+
+`IntervalRelation` is Allen's thirteen relations (`Before`, `Meets`, `Overlaps`, `Starts`, `During`, `Finishes`, `Equals` and their inverses) plus `Intersects`, any shared instant. Windows are half-open; an open end compares as infinite. Both calls take `knownAt` like `AsOfAsync`.
+
 ## Finding facts by meaning
 
 ```csharp
