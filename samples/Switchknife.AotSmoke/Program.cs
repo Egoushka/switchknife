@@ -10,6 +10,7 @@ using Npgsql;
 using Switchknife.Facts;
 using Switchknife.Facts.Extraction;
 using Switchknife.Facts.Testing;
+using Switchknife.Facts.Testing.Gold;
 using Switchknife.Hosting;
 using Switchknife.Journal;
 using Switchknife.Journal.Postgres;
@@ -33,6 +34,7 @@ var smokes = new (string, Func<Task<string?>>)[]
 {
     ("Switchknife.Facts", FactsAsync),
     ("Switchknife.Facts.Extraction", FactsExtraction),
+    ("Switchknife.Facts.Testing.Gold", FactsGoldAsync),
     ("Switchknife.Hosting", HostingAsync),
     ("Switchknife.Journal", JournalAsync),
     ("Switchknife.Journal.Postgres", JournalPostgresAsync),
@@ -185,6 +187,22 @@ static async Task<string?> FactsAsync()
         await using var drop = new NpgsqlCommand($"drop database if exists {name} with (force)", admin2);
         await drop.ExecuteNonQueryAsync();
     }
+}
+
+static async Task<string?> FactsGoldAsync()
+{
+    // A stub extractor is run over a one-item gold set through the kit and scored: the fact is found, so the item is recalled.
+    var context = new ExtractionContext(
+        new DateTimeOffset(2026, 11, 15, 10, 0, 0, TimeSpan.Zero),
+        [new EvidenceLine("l1", "Luna now costs 0.10 per million tokens.")],
+        [new PredicateSpec("price_change", Cardinality.Many)]);
+    var extractor = new ScriptedExtractor(
+        """{"facts":[{"subject":{"ref":null,"name":"Luna","kind":"product"},"predicate":"price_change","value":"0.10","object":null,"text":"Luna costs 0.10 per million tokens.","validFrom":null,"validTo":null,"replaces":null,"evidence":["l1"],"quote":null,"salience":0.8}]}""");
+    var item = new GoldItem("luna", [new GoldFact("price_change", [["luna"], ["0.10"]], "Luna price")]);
+    var score = await GoldRunner.RunAsync(extractor, [new GoldCase(item, context)]);
+    return (score.ItemsRecalled, score.StrictPrecision, score.KindMatched) == (1, 1.0, 1)
+        ? null
+        : $"recalled {score.ItemsRecalled}, precision {score.StrictPrecision}, kind {score.KindMatched}";
 }
 
 static Task<string?> FactsExtraction()
