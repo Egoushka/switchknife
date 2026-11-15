@@ -2,7 +2,7 @@
 
 Each package is versioned on its own by a tag `<package>/v<version>`. Entries are per package, newest first.
 
-## Unreleased: Switchknife.Facts.Testing
+## Switchknife.Facts.Testing 0.2.0 (2026-11-15)
 
 `GoldScorer` and `GoldRunner`: score an extractor against a gold set (items recalled, fact recall, strict precision, negatives clean, kind and deadline accuracy), with feed-eater's frozen match rule. Spec: [`docs/specs/2026-11-15-facts-goldset.md`](docs/specs/2026-11-15-facts-goldset.md). A release is due when the owner wants one (new public API, minor bump).
 
