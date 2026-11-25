@@ -2,6 +2,8 @@ name: ci
 
 on:
   pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -13,6 +15,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork || github.event.pull_request.user.type == 'Bot'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -31,6 +34,7 @@ jobs:
 
   # Every package works, not only builds, without the JIT.
   aot:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork || github.event.pull_request.user.type == 'Bot'
     runs-on: ubuntu-latest
     services:
       postgres: # the Switchknife.Migrations and Switchknife.Facts cases migrate a real database
@@ -52,10 +56,21 @@ jobs:
       - run: scripts/aot-smoke.sh linux-x64
 
   ci-gate:
-    if: always()
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork || github.event.pull_request.user.type == 'Bot')
     needs: [build, aot]
     runs-on: ubuntu-latest
+    permissions:
+      statuses: write
     steps:
       - env:
           NEEDS: ${{ toJSON(needs) }}
         run: echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null
+      # An owner PR is gated by the `fast-tier` status `ws ship` posts; a Dependabot PR
+      # runs the full suite instead and earns the same status here.
+      - name: Post fast-tier for a bot PR
+        if: github.event_name == 'pull_request' && github.event.pull_request.user.type == 'Bot' && !github.event.pull_request.head.repo.fork
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: gh api "repos/$REPO/statuses/$SHA" -f state=success -f context=fast-tier -f description="full CI passed on a bot PR"
