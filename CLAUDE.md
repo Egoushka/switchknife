@@ -21,3 +21,7 @@ scripts/aot-smoke.sh                   # publishes samples/Switchknife.AotSmoke 
 - Public repository: no hostnames, IP addresses, key names, home paths or employer names in any file.
 - Commits: Conventional Commits.
 - Architecturally significant decisions get an ADR under `docs/adr/`, numbered, one per decision.
+
+## CI gate
+
+The only required status check is `fast-tier`. `ws ship` posts it after the local fast tier; a fork or Dependabot PR runs the full CI instead. The full suite also runs once on push to main.
